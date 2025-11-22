@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="welcome-card">
+        <h1>Willkommen bei Verve!</h1>
+        <p>Dein persönlicher Vokabeltrainer.</p>
+    </div>
+
+    <div class="card">
+        <h2>Deine Vokabelsets</h2>
+        <p>Hier siehst du alle deine verfügbaren Vokabelsets. Wähle eines aus der Seitenleiste, um zu beginnen.</p>
+
+        {% if not sets %}
+        <div class="empty-state">
+            <p>Du hast noch keine Vokabelsets.</p>
+            <button class="btn btn-primary" onclick="openCreateSetModal()">
+                <i data-feather="plus"></i>
+                Neues Set erstellen
+            </button>
+        </div>
+        {% else %}
+        <div class="sets-grid">
+            {% for set in sets %}
+            <div class="set-card" onclick="window.location.href='{{ url_for('main.set_overview', set_id=set.id) }}'">
+                <div class="set-card-header">
+                    <h3>{{ set.name.replace('_', ' ') | title }}</h3>
+                </div>
+                <div class="set-card-stats">
+                    <div class="stat">
+                        <span class="stat-value">{{ set.card_count }}</span>
+                        <span class="stat-label">Karten</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ set.due_count }}</span>
+                        <span class="stat-label">Fällig</span>
+                    </div>
+                </div>
+                <div class="set-card-actions">
+                    <a href="{{ url_for('main.learn_set', set_id=set.id) }}" class="btn btn-sm btn-primary">Lernen</a>
+                    <a href="{{ url_for('main.stats', set_id=set.id) }}" class="btn btn-info btn-sm"
+                        style="background-color: var(--level-{{ set.max_level }}); color: white;">Statistik</a>
+                    <button class="btn btn-sm btn-danger btn-icon" style="margin-left: auto;"
+                        onclick="event.stopPropagation(); deleteVocabSet({{ set.id }}, '{{ set.name }}')">
+                        <i data-feather="trash-2"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Create New Set Card -->
+            <div class="set-card create-new-card" onclick="openCreateSetModal()">
+                <div class="create-new-content">
+                    <div class="create-icon">
+                        <i data-feather="plus-circle"></i>
+                    </div>
+                    <h3>Neues Set erstellen</h3>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Set Modal -->
+<div id="createSetModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Neues Vokabelset erstellen</h2>
+            <span class="close" onclick="closeCreateSetModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="createSetForm" onsubmit="handleCreateSet(event)">
+                <div class="form-group">
+                    <label for="setName">Name des Sets</label>
+                    <input type="text" id="setName" name="setName" required pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+"
+                        title="Nur Buchstaben, Zahlen, Bindestriche, Unterstriche und Umlaute erlaubt"
+                        placeholder="z.B. Spanisch_Grundwortschatz" class="form-control">
+                    <small class="text-muted" style="display: block; margin-top: 5px;">Erlaubte Zeichen: Buchstaben,
+                        Zahlen, -, _ und Umlaute</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateSetModal()">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Erstellen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

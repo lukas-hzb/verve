@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2>Vokabeln importieren</h2>
+            <p>Erstellen Sie ein neues Lernset aus einer Datei oder durch Texteingabe.</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="import-form" id="importForm">
+            <div class="form-group">
+                <label for="set_name">Name des Sets</label>
+                <input type="text" id="set_name" name="set_name" class="form-control" required
+                    placeholder="z.B. Spanisch Kapitel 1">
+            </div>
+
+            <div class="import-tabs">
+                <div class="tab active" onclick="switchTab('file')">Datei hochladen</div>
+                <div class="tab" onclick="switchTab('text')">Text eingeben</div>
+            </div>
+            <input type="hidden" name="import_type" id="import_type" value="file">
+
+            <div id="file-section" class="import-section">
+                <div class="form-group">
+                    <label for="file">Datei auswählen (CSV, TSV, TXT)</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="file" name="file" accept=".csv,.tsv,.txt" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div id="text-section" class="import-section" style="display: none;">
+                <div class="form-group">
+                    <label for="text_content">Vokabeln eingeben</label>
+                    <textarea id="text_content" name="text_content" class="form-control" rows="3"
+                        placeholder="Dog, Hund&#10;Cat, Katze"></textarea>
+                </div>
+            </div>
+
+            <div class="separator-settings">
+                <h3>Einstellungen</h3>
+                <div class="row">
+                    <div class="col">
+                        <label for="field_separator">Trennzeichen (Vorder-/Rückseite)</label>
+                        <select id="field_separator" name="field_separator" class="form-control separator-select"
+                            onchange="toggleCustom('field'); updatePreview()">
+                            <option value="\t">Tabulator (\t)</option>
+                            <option value=",">Komma (,)</option>
+                            <option value=";">Semikolon (;)</option>
+                            <option value="|">Pipe (|)</option>
+                            <option value="custom">Benutzerdefiniert</option>
+                        </select>
+                        <input type="text" id="custom_field_separator" name="custom_field_separator"
+                            class="form-control mt-2" style="display: none;" placeholder="z.B. - oder \t"
+                            oninput="updatePreview()">
+                    </div>
+                    <div class="col">
+                        <label for="card_separator">Trennzeichen (Karten)</label>
+                        <select id="card_separator" name="card_separator" class="form-control separator-select"
+                            onchange="toggleCustom('card'); updatePreview()">
+                            <option value="\n">Neue Zeile (\n)</option>
+                            <option value=";">Semikolon (;)</option>
+                            <option value="|">Pipe (|)</option>
+                            <option value="custom">Benutzerdefiniert</option>
+                        </select>
+                        <input type="text" id="custom_card_separator" name="custom_card_separator"
+                            class="form-control mt-2" style="display: none;" placeholder="z.B. \n\n oder ;"
+                            oninput="updatePreview()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="preview-section" class="preview-section" style="display: none;">
+                <h3>Vorschau (Erste Karte)</h3>
+                <div class="preview-card">
+                    <div class="preview-side">
+                        <strong>Vorderseite:</strong>
+                        <div id="preview-front" class="preview-content"></div>
+                    </div>
+                    <div class="preview-divider"></div>
+                    <div class="preview-side">
+                        <strong>Rückseite:</strong>
+                        <div id="preview-back" class="preview-content"></div>
+                    </div>
+                </div>
+                <p class="preview-note" id="preview-note"></p>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i data-feather="upload"></i> Importieren
+                </button>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Abbrechen</a>
+            </div>
+        </form>
+
+        <div class="import-instructions">
+            <h3>Hinweise zum Format</h3>
+            <p>Standardmäßig wird erwartet, dass Vorder- und Rückseite durch einen <strong>Tabulator</strong> getrennt
+                sind und jede Karte in einer <strong>neuen Zeile</strong> steht.</p>
+            <p>Beispiel (Komma als Trennzeichen):</p>
+            <pre>Hund, Dog
+Katze, Cat
+Haus, House</pre>
+        </div>
+    </div>
+</div>
+
+<style>
+    .import-tabs {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        font-weight: 500;
+    }
+
+    .tab.active {
+        border-bottom-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .separator-settings {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: var(--secondary-color);
+        border-radius: var(--radius-md);
+    }
+
+    .separator-settings h3 {
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 12px;
+    }
+
+    .row {
+        display: flex;
+        gap: 20px;
+    }
+
+    .col {
+        flex: 1;
+    }
+
+    .mt-2 {
+        margin-top: 10px;
+    }
+
+    .help-text {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    .help-text code {
+        background: var(--secondary-color);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+
+    .separator-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+    }
+
+    .preview-section {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #f0f9ff;
+        border: 1px solid #b3d9ff;
+        border-radius: var(--radius-md);
+    }
+
+    .preview-section h3 {
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: var(--primary-color);
+    }
+
+    .preview-card {
+        background: white;
+        border-radius: var(--radius-md);
+        padding: 12px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .preview-side {
+        flex: 1;
+    }
+
+    .preview-side strong {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .preview-content {
+        padding: 10px;
+        background: var(--secondary-color);
+        border-radius: var(--radius-sm);
+        min-height: 35px;
+        font-family: monospace;
+        font-size: 14px;
+        word-break: break-word;
+    }
+
+    .preview-divider {
+        width: 2px;
+        height: 50px;
+        background: var(--secondary-color);
+    }
+
+    .preview-note {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    .import-instructions {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .import-instructions h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+    }
+</style>
+
+<script>
+    function switchTab(type) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+
+        document.getElementById('import_type').value = type;
+
+        if (type === 'file') {
+            document.getElementById('file-section').style.display = 'block';
+            document.getElementById('text-section').style.display = 'none';
+            document.getElementById('file').required = true;
+            document.getElementById('text_content').required = false;
+            // Clear text input when switching to file
+            document.getElementById('text_content').value = '';
+            updatePreview();
+        } else {
+            document.getElementById('file-section').style.display = 'none';
+            document.getElementById('text-section').style.display = 'block';
+            document.getElementById('file').required = false;
+            document.getElementById('text_content').required = true;
+            // Clear file input when switching to text
+            const fileInput = document.getElementById('file');
+            fileInput.value = '';
+            updatePreview();
+        }
+    }
+
+    function toggleCustom(type) {
+        const select = document.getElementById(type + '_separator');
+        const customInput = document.getElementById('custom_' + type + '_separator');
+
+        if (select.value === 'custom') {
+            customInput.style.display = 'block';
+            customInput.required = true;
+        } else {
+            customInput.style.display = 'none';
+            customInput.required = false;
+        }
+    }
+
+    function updatePreview() {
+        const importType = document.getElementById('import_type').value;
+        let content = '';
+
+        if (importType === 'text') {
+            content = document.getElementById('text_content').value;
+        } else {
+            // For file input, we can't preview without reading the file
+            document.getElementById('preview-section').style.display = 'none';
+            return;
+        }
+
+        if (!content.trim()) {
+            document.getElementById('preview-section').style.display = 'none';
+            return;
+        }
+
+        // Get separators
+        let cardSep = document.getElementById('card_separator').value;
+        let fieldSep = document.getElementById('field_separator').value;
+
+        if (cardSep === 'custom') {
+            cardSep = document.getElementById('custom_card_separator').value || '\n';
+        }
+        if (fieldSep === 'custom') {
+            fieldSep = document.getElementById('custom_field_separator').value || '\t';
+        }
+
+        // Handle escape sequences
+        cardSep = cardSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+        fieldSep = fieldSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+
+        // Parse first card
+        let cards;
+        if (cardSep === '\n') {
+            cards = content.split(/\r?\n/);
+        } else {
+            cards = content.split(cardSep);
+        }
+
+        // Find first non-empty card
+        let firstCard = null;
+        for (let card of cards) {
+            card = card.trim();
+            if (card) {
+                firstCard = card;
+                break;
+            }
+        }
+
+        if (!firstCard) {
+            document.getElementById('preview-section').style.display = 'none';
+            return;
+        }
+
+        // Split into front and back
+        const parts = firstCard.split(fieldSep);
+        const front = parts[0] ? parts[0].trim() : '';
+        const back = parts[1] ? parts[1].trim() : '';
+
+        // Update preview
+        document.getElementById('preview-front').textContent = front || '(leer)';
+        document.getElementById('preview-back').textContent = back || '(leer)';
+
+        const totalCards = cards.filter(c => c.trim()).length;
+        document.getElementById('preview-note').textContent = `Insgesamt ${totalCards} Karte(n) erkannt`;
+
+        document.getElementById('preview-section').style.display = 'block';
+    }
+
+    // Update preview when text changes
+    document.addEventListener('DOMContentLoaded', function () {
+        const textArea = document.getElementById('text_content');
+        if (textArea) {
+            textArea.addEventListener('input', updatePreview);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar-large" onclick="document.getElementById('avatar').click()"
+                style="cursor: pointer; position: relative; overflow: hidden;">
+                {% if current_user.avatar_file %}
+                <img id="avatar-preview-img" src="{{ url_for('static', filename=current_user.avatar_file) }}"
+                    alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                {% else %}
+                <span id="avatar-initials">{{ current_user.username[0].upper() }}</span>
+                <img id="avatar-preview-img" src="" alt="Avatar"
+                    style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                {% endif %}
+                <div class="avatar-overlay">
+                    <i data-feather="camera" style="cursor: pointer;" title="Upload new avatar"></i>
+                    {% if current_user.avatar_file %}
+                    <i data-feather="x" onclick="event.stopPropagation(); resetAvatar();"
+                        style="cursor: pointer; margin-left: 10px;" title="Remove avatar"></i>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="profile-info">
+                <h1>{{ current_user.username }}</h1>
+                <p class="text-muted">{{ current_user.email }}</p>
+                <p class="text-muted">Mitglied seit {{ current_user.created_at.strftime('%d.%m.%Y') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-overview">
+        <div class="card stat-card">
+            <div class="stat-icon" style="background-color: rgba(108, 99, 255, 0.1); color: var(--primary-color);">
+                <i data-feather="package"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ sets|length }}</h3>
+                <p>Lernsets</p>
+            </div>
+        </div>
+
+        <div class="card stat-card">
+            <div class="stat-icon" style="background-color: rgba(40, 167, 69, 0.1); color: var(--success-color);">
+                <i data-feather="check-circle"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_cards }}</h3>
+                <p>Karten gesamt</p>
+            </div>
+        </div>
+
+        <div class="card stat-card">
+            <div class="stat-icon" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107;">
+                <i data-feather="clock"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ due_cards }}</h3>
+                <p>Karten fällig</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="account-settings">
+        <h2>Account Settings</h2>
+
+        <form action="{{ url_for('auth.update_profile') }}" method="POST" enctype="multipart/form-data"
+            class="profile-form" id="profile-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="{{ current_user.username }}" required
+                    class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ current_user.email }}" required
+                    class="form-control">
+            </div>
+            <div class="form-group" style="display: none;">
+                <label for="avatar">Avatar (Optional)</label>
+                <input type="file" id="avatar" name="avatar" accept=".jpg,.jpeg,.png,.gif" class="form-control"
+                    onchange="previewAvatar(this)">
+                <input type="hidden" id="remove-avatar" name="remove_avatar" value="false">
+            </div>
+            <div class="profile-actions" style="display: flex; gap: var(--spacing-md); align-items: center;">
+                <button type="submit" id="save-profile-btn" class="btn btn-primary" disabled>Save Changes</button>
+            </div>
+        </form>
+
+        <div class="card danger-zone">
+            <h2>Danger Zone</h2>
+            <p>Actions in this section can affect your account security.</p>
+            <div class="account-actions">
+                <a href="{{ url_for('auth.change_password') }}" class="btn btn-danger">Passwort ändern</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
+                <button type="button" class="btn btn-danger" onclick="openDeleteModal()">Account
+                    löschen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div id="delete-account-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Account löschen</h2>
+            <button class="close" onclick="closeDeleteModal()" aria-label="Close">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-warning">
+                <i data-feather="alert-triangle"></i>
+                <div>
+                    <h3>Sind Sie sicher?</h3>
+                    <p>Diese Aktion kann nicht rückgängig gemacht werden. Alle Ihre Lernsets und Fortschritte werden
+                        unwiderruflich gelöscht.</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Abbrechen</button>
+                <form action="{{ url_for('auth.delete_account') }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Account löschen</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteModal() {
+        const modal = document.getElementById('delete-account-modal');
+        modal.style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('delete-account-modal');
+        modal.style.display = 'none';
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function (event) {
+        const modal = document.getElementById('delete-account-modal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
+
+
+
+<script>
+    // Make everything explicitly global by attaching to window
+    window.originalValues = {
+        username: '',
+        email: '',
+        hasAvatar: false
+    };
+
+    window.avatarChanged = false;
+    window.avatarRemoved = false;
+
+    // Initialize after DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const avatarImg = document.getElementById('avatar-preview-img');
+
+        // Set initial values
+        if (usernameInput) {
+            window.originalValues.username = usernameInput.value;
+            usernameInput.addEventListener('input', window.checkFormChanges);
+        }
+        if (emailInput) {
+            window.originalValues.email = emailInput.value;
+            emailInput.addEventListener('input', window.checkFormChanges);
+        }
+        if (avatarImg && avatarImg.src && avatarImg.style.display !== 'none') {
+            window.originalValues.hasAvatar = true;
+        }
+
+        // Run initial check
+        window.checkFormChanges();
+    });
+
+    window.checkFormChanges = function () {
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const saveBtn = document.getElementById('save-profile-btn');
+
+        const hasChanges =
+            username !== window.originalValues.username ||
+            email !== window.originalValues.email ||
+            window.avatarChanged ||
+            window.avatarRemoved;
+
+        if (saveBtn) {
+            saveBtn.disabled = !hasChanges;
+        }
+    };
+
+    window.previewAvatar = function (input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                var img = document.getElementById('avatar-preview-img');
+                var initials = document.getElementById('avatar-initials');
+                const overlay = document.querySelector('.avatar-overlay');
+
+                img.src = e.target.result;
+                img.style.display = 'block';
+                if (initials) {
+                    initials.style.display = 'none';
+                }
+
+                overlay.innerHTML = `
+                        <i data-feather="camera" style="cursor: pointer;" title="Upload new avatar"></i>
+                        <i data-feather="x" onclick="event.stopPropagation(); resetAvatar();" style="cursor: pointer; margin-left: 10px;" title="Remove avatar"></i>
+                    `;
+
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+
+                window.avatarChanged = true;
+                window.avatarRemoved = false;
+                document.getElementById('remove-avatar').value = 'false';
+                window.checkFormChanges();
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.resetAvatar = function () {
+        const img = document.getElementById('avatar-preview-img');
+        const fileInput = document.getElementById('avatar');
+        let initials = document.getElementById('avatar-initials');
+        const overlay = document.querySelector('.avatar-overlay');
+
+        fileInput.value = '';
+        img.style.display = 'none';
+        img.src = '';
+
+        if (!initials) {
+            initials = document.createElement('span');
+            initials.id = 'avatar-initials';
+            initials.textContent = '{{ current_user.username[0].upper() }}';
+            img.parentElement.insertBefore(initials, img);
+        } else {
+            initials.style.display = 'block';
+        }
+
+        overlay.innerHTML = '<i data-feather="camera" style="cursor: pointer;" title="Upload new avatar"></i>';
+
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+
+        window.avatarRemoved = true;
+        window.avatarChanged = false;
+        document.getElementById('remove-avatar').value = 'true';
+        window.checkFormChanges();
+    };
+</script>
+{% endblock %}

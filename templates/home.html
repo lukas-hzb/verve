@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="home">
+    <h1>Welcome to VocabApp!</h1>
+    <p>Upload your .tsv vocabulary sets to the <code>vocab_sets</code> folder. Each file should have the columns:</p>
+    <ul>
+        <li>word</li>
+        <li>definition</li>
+        <li>level (1-5)</li>
+        <li>interval (in days)</li>
+        <li>ef (easiness factor)</li>
+        <li>last_review (datetime)</li>
+    </ul>
+    <p>The app uses SM2 for spaced repetition. Learn and track your progress!</p>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anmelden - Verve</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Verve</h1>
+                <p>Willkommen zurück!</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+                <div class="form-group">
+                    <label for="username_or_email">Benutzername oder E-Mail</label>
+                    <input type="text" id="username_or_email" name="username_or_email"
+                        value="{{ username_or_email or '' }}" class="form-control" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Passwort</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+
+                <div class="form-group form-checkbox">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Angemeldet bleiben</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i data-feather="log-in"></i>
+                    Anmelden
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Noch kein Konto? <a href="{{ url_for('auth.register') }}">Jetzt registrieren</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+    </script>
+</body>
+
+</html>

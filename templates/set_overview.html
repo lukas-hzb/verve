@@ -1,0 +1,571 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="set-header"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+        <h2>{{ set_name.replace('_', ' ') | title }} Overview</h2>
+        <div class="actions">
+            <button class="btn btn-secondary" onclick="openRenameModal()">
+                <i data-feather="edit-2"></i> Rename
+            </button>
+            <button class="btn btn-secondary" onclick="openAddCardModal()">
+                <i data-feather="plus"></i> Add Card
+            </button>
+            <button class="btn btn-secondary" onclick="openImportModal()">
+                <i data-feather="upload"></i> Import
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Actions Cards -->
+    <div class="quick-actions-grid">
+        <a href="{{ url_for('main.learn_set', set_id=set_id) }}" class="card action-card">
+            <div class="stat-icon" style="background-color: rgba(108, 99, 255, 0.1); color: var(--primary-color);">
+                <i data-feather="book-open"></i>
+            </div>
+            <div class="stat-details">
+                <h3>Learn</h3>
+                <p>Start learning session</p>
+            </div>
+        </a>
+
+        <a href="{{ url_for('main.stats', set_id=set_id) }}" class="card action-card">
+            <div class="stat-icon" style="background-color: rgba(40, 167, 69, 0.1); color: var(--success-color);">
+                <i data-feather="bar-chart-2"></i>
+            </div>
+            <div class="stat-details">
+                <h3>Statistics</h3>
+                <p>View progress and stats</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="card">
+        <h3>Cards</h3>
+        <div id="cards-list">
+            <!-- Cards will be loaded via JS -->
+        </div>
+    </div>
+
+    <div class="card danger-zone">
+        <h2>Danger Zone</h2>
+        <p>Deleting a set is permanent and cannot be undone.</p>
+        <button class="btn btn-danger" onclick="confirmDeleteSet()">Delete Set</button>
+        <form id="deleteSetForm" action="/set/{{ set_id }}/delete" method="POST" style="display: none;"></form>
+    </div>
+</div>
+
+<!-- Rename Set Modal -->
+<div id="renameModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Rename Set</h2>
+            <button class="close" onclick="closeRenameModal()" aria-label="Close">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form action="/set/{{ set_id }}/rename" method="POST">
+                <div class="form-group">
+                    <label for="new_name">New Name</label>
+                    <input type="text" id="new_name" name="new_name" value="{{ set_name }}" required
+                        pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+" title="Allowed characters: Letters, numbers, -, _ and umlauts"
+                        class="form-control">
+                    <small class="text-muted" style="display: block; margin-top: 5px;">Allowed characters: Letters,
+                        numbers, -, _ and umlauts</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRenameModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Card Modal -->
+<div id="addCardModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Add New Card</h2>
+            <button class="close" onclick="closeAddCardModal()" aria-label="Close">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addCardForm" onsubmit="handleAddCard(event)">
+                <div class="form-group">
+                    <label for="front">Front</label>
+                    <input type="text" id="front" name="front" required class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="back">Back</label>
+                    <input type="text" id="back" name="back" required class="form-control" />
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddCardModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div id="importModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Import Cards</h2>
+            <button class="close" onclick="closeImportModal()" aria-label="Close">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form action="{{ url_for('main.import_into_set', set_id=set_id) }}" method="POST"
+                enctype="multipart/form-data" id="importForm">
+                <div class="import-tabs">
+                    <div class="tab active" onclick="switchTab('file')">File Upload</div>
+                    <div class="tab" onclick="switchTab('text')">Text Input</div>
+                </div>
+                <input type="hidden" name="import_type" id="import_type" value="file">
+
+                <div id="file-section" class="import-section">
+                    <div class="form-group">
+                        <label>Select File (CSV, TSV, TXT)</label>
+                        <div class="file-input-wrapper">
+                            <button type="button" class="btn btn-secondary file-input-btn"
+                                onclick="document.getElementById('import-file').click()">
+                                <i data-feather="upload"></i>
+                                <span>Choose File</span>
+                            </button>
+                            <span id="file-name" class="file-name-display">No file selected</span>
+                            <input type="file" id="import-file" name="file" accept=".csv,.tsv,.txt"
+                                style="display: none;" onchange="updateFileName(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="text-section" class="import-section" style="display: none;">
+                    <div class="form-group">
+                        <label for="text_content">Enter Vocabulary</label>
+                        <textarea id="text_content" name="text_content" class="form-control" rows="3"
+                            placeholder="Dog, Hund&#10;Cat, Katze"></textarea>
+                    </div>
+                </div>
+
+                <div class="separator-settings">
+                    <h3>Settings</h3>
+                    <div class="row">
+                        <div class="col">
+                            <label for="field_separator">Field Separator</label>
+                            <select id="field_separator" name="field_separator" class="form-control separator-select"
+                                onchange="toggleCustom('field'); updatePreview()">
+                                <option value="\t">Tab (\t)</option>
+                                <option value=",">Comma (,)</option>
+                                <option value=";">Semicolon (;)</option>
+                                <option value="|">Pipe (|)</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <input type="text" id="custom_field_separator" name="custom_field_separator"
+                                class="form-control mt-2" style="display: none;" placeholder="e.g. - or \t"
+                                oninput="updatePreview()">
+                        </div>
+                        <div class="col">
+                            <label for="card_separator">Card Separator</label>
+                            <select id="card_separator" name="card_separator" class="form-control separator-select"
+                                onchange="toggleCustom('card'); updatePreview()">
+                                <option value="\n">Newline (\n)</option>
+                                <option value=";">Semicolon (;)</option>
+                                <option value="|">Pipe (|)</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <input type="text" id="custom_card_separator" name="custom_card_separator"
+                                class="form-control mt-2" style="display: none;" placeholder="e.g. \n\n or ;"
+                                oninput="updatePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="preview-section" class="preview-section" style="display: none;">
+                    <h3>Preview (First Card)</h3>
+                    <div class="preview-card">
+                        <div class="preview-side">
+                            <strong>Front:</strong>
+                            <div id="preview-front" class="preview-content"></div>
+                        </div>
+                        <div class="preview-divider"></div>
+                        <div class="preview-side">
+                            <strong>Back:</strong>
+                            <div id="preview-back" class="preview-content"></div>
+                        </div>
+                    </div>
+                    <p class="preview-note" id="preview-note"></p>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Import</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .import-tabs {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--secondary-color);
+    }
+
+    .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        font-weight: 500;
+    }
+
+    .tab.active {
+        border-bottom-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .separator-settings {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: var(--secondary-color);
+        border-radius: var(--radius-md);
+    }
+
+    .separator-settings h3 {
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 12px;
+    }
+
+    .row {
+        display: flex;
+        gap: 20px;
+    }
+
+    .col {
+        flex: 1;
+    }
+
+    .mt-2 {
+        margin-top: 10px;
+    }
+
+    .help-text {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    .help-text code {
+        background: var(--secondary-color);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+
+    .separator-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+    }
+
+    .preview-section {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #f0f9ff;
+        border: 1px solid #b3d9ff;
+        border-radius: var(--radius-md);
+    }
+
+    .preview-section h3 {
+        font-size: 16px;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: var(--primary-color);
+    }
+
+    .preview-card {
+        background: white;
+        border-radius: var(--radius-md);
+        padding: 12px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .preview-side {
+        flex: 1;
+    }
+
+    .preview-side strong {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .preview-content {
+        padding: 10px;
+        background: var(--secondary-color);
+        border-radius: var(--radius-sm);
+        min-height: 35px;
+        font-family: monospace;
+        font-size: 14px;
+        word-break: break-word;
+    }
+
+    .preview-divider {
+        width: 2px;
+        height: 50px;
+        background: var(--secondary-color);
+    }
+
+    .preview-note {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+</style>
+
+<script>
+    async function fetchCards() {
+        const response = await fetch(`/api/set/${window.setId}/cards`);
+        const data = await response.json();
+        const container = document.getElementById('cards-list');
+        container.innerHTML = '';
+
+        if (data.cards.length === 0) {
+            container.innerHTML = '<p class="text-muted">No cards in this set yet.</p>';
+            return;
+        }
+
+        data.cards.forEach(card => {
+            const div = document.createElement('div');
+            div.className = 'card-item';
+            div.style.display = 'flex';
+            div.style.justifyContent = 'space-between';
+            div.style.alignItems = 'center';
+            div.style.padding = 'var(--spacing-sm) 0';
+            div.style.borderBottom = '1px solid var(--secondary-color)';
+
+            div.innerHTML = `
+                <div>
+                    <strong>${card.front}</strong> – ${card.back}
+                </div>
+                <button class="btn btn-sm btn-danger btn-icon" onclick="deleteCard(${card.id})" title="Delete Card">
+                    <i data-feather="trash-2"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        });
+        feather.replace();
+    }
+
+    function openAddCardModal() { document.getElementById('addCardModal').style.display = 'block'; }
+    function closeAddCardModal() { document.getElementById('addCardModal').style.display = 'none'; }
+
+    function openImportModal() { document.getElementById('importModal').style.display = 'block'; }
+    function closeImportModal() { document.getElementById('importModal').style.display = 'none'; }
+
+    function updateFileName(input) {
+        const fileNameDisplay = document.getElementById('file-name');
+        if (input.files && input.files[0]) {
+            fileNameDisplay.textContent = input.files[0].name;
+        } else {
+            fileNameDisplay.textContent = 'No file selected';
+        }
+    }
+
+    async function handleAddCard(event) {
+        event.preventDefault();
+        const front = document.getElementById('front').value;
+        const back = document.getElementById('back').value;
+        const response = await fetch(`/set/${window.setId}/add_card`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ front, back })
+        });
+        if (response.ok) {
+            closeAddCardModal();
+            document.getElementById('front').value = '';
+            document.getElementById('back').value = '';
+            fetchCards();
+        } else {
+            const data = await response.json();
+            alert('Failed to add card: ' + (data.error || 'Unknown error'));
+        }
+    }
+
+    function deleteCard(cardId) {
+        window.showConfirmationModal({
+            title: "Delete Card",
+            message: "Are you sure you want to delete this card?",
+            confirmText: "Delete",
+            confirmClass: "btn-danger",
+            onConfirm: async () => {
+                const response = await fetch(`/api/set/${window.setId}/card/${cardId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    fetchCards();
+                } else {
+                    const data = await response.json();
+                    alert('Failed to delete card: ' + (data.error || 'Unknown error'));
+                }
+            }
+        });
+    }
+
+    function confirmDeleteSet() {
+        window.showConfirmationModal({
+            title: "Delete Set",
+            message: "Are you sure you want to delete this set? This cannot be undone.",
+            confirmText: "Delete Set",
+            confirmClass: "btn-danger",
+            onConfirm: () => {
+                document.getElementById('deleteSetForm').submit();
+            }
+        });
+    }
+
+    // Set global setId for JS
+    window.setId = Number("{{ set_id }}");
+    fetchCards();
+
+    function openRenameModal() { document.getElementById('renameModal').style.display = 'block'; }
+    function closeRenameModal() { document.getElementById('renameModal').style.display = 'none'; }
+
+    // Close modals when clicking outside
+    window.onclick = function (event) {
+        if (event.target.className === 'modal') {
+            event.target.style.display = "none";
+        }
+    }
+
+    function switchTab(type) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+
+        document.getElementById('import_type').value = type;
+
+        if (type === 'file') {
+            document.getElementById('file-section').style.display = 'block';
+            document.getElementById('text-section').style.display = 'none';
+            // document.getElementById('import-file').required = true; // Hidden input validation is tricky
+            document.getElementById('text_content').required = false;
+            // Clear text input when switching to file
+            document.getElementById('text_content').value = '';
+            updatePreview();
+        } else {
+            document.getElementById('file-section').style.display = 'none';
+            document.getElementById('text-section').style.display = 'block';
+            document.getElementById('import-file').required = false;
+            document.getElementById('text_content').required = true;
+            // Clear file input when switching to text
+            const fileInput = document.getElementById('import-file');
+            fileInput.value = '';
+            const fileNameDisplay = document.getElementById('file-name');
+            if (fileNameDisplay) {
+                fileNameDisplay.textContent = 'No file selected';
+            }
+            updatePreview();
+        }
+    }
+
+    function toggleCustom(type) {
+        const select = document.getElementById(type + '_separator');
+        const customInput = document.getElementById('custom_' + type + '_separator');
+
+        if (select.value === 'custom') {
+            customInput.style.display = 'block';
+            customInput.required = true;
+        } else {
+            customInput.style.display = 'none';
+            customInput.required = false;
+        }
+    }
+
+    function updatePreview() {
+        const importType = document.getElementById('import_type').value;
+        let content = '';
+
+        if (importType === 'text') {
+            content = document.getElementById('text_content').value;
+        } else {
+            document.getElementById('preview-section').style.display = 'none';
+            return;
+        }
+
+        if (!content.trim()) {
+            document.getElementById('preview-section').style.display = 'none';
+            return;
+        }
+
+        let cardSep = document.getElementById('card_separator').value;
+        let fieldSep = document.getElementById('field_separator').value;
+
+        if (cardSep === 'custom') {
+            cardSep = document.getElementById('custom_card_separator').value || '\n';
+        }
+        if (fieldSep === 'custom') {
+            fieldSep = document.getElementById('custom_field_separator').value || '\t';
+        }
+
+        cardSep = cardSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+        fieldSep = fieldSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+
+        let cards;
+        if (cardSep === '\n') {
+            cards = content.split(/\r?\n/);
+        } else {
+            cards = content.split(cardSep);
+        }
+
+        let firstCard = null;
+        for (let card of cards) {
+            card = card.trim();
+            if (card) {
+                firstCard = card;
+                break;
+            }
+        }
+
+        if (!firstCard) {
+            document.getElementById('preview-section').style.display = 'none';
+            return;
+        }
+
+        const parts = firstCard.split(fieldSep);
+        const front = parts[0] ? parts[0].trim() : '';
+        const back = parts[1] ? parts[1].trim() : '';
+
+        document.getElementById('preview-front').textContent = front || '(empty)';
+        document.getElementById('preview-back').textContent = back || '(empty)';
+
+        const totalCards = cards.filter(c => c.trim()).length;
+        document.getElementById('preview-note').textContent = `Total ${totalCards} card(s) recognized`;
+
+        document.getElementById('preview-section').style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const textArea = document.getElementById('text_content');
+        if (textArea) {
+            textArea.addEventListener('input', updatePreview);
+        }
+    });
+</script>
+
+
+{% endblock %}

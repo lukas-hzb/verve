@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verve</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+
+<body>
+    <div class="sidebar {% if sidebar_collapsed %}collapsed{% endif %}">
+        <div class="sidebar-header">
+            <button class="sidebar-toggle"><i data-feather="menu"></i></button>
+            <span class="sidebar-brand">Verve</span>
+        </div>
+
+
+
+        <ul class="sidebar-nav">
+            <li><a href="{{ url_for('main.index') }}"><i data-feather="home"></i><span>Home</span></a></li>
+            <li class="sidebar-separator"></li>
+            <li class="sidebar-nav-header"><span>Sets</span></li>
+            {% for set in sets %}
+            <li>
+                <a href="{{ url_for('main.set_overview', set_id=set.id) }}">
+                    <i data-feather="package"></i>
+                    <span>
+                        {{ set.name.replace('_', ' ') | title }}
+
+                    </span>
+                </a>
+            </li>
+            {% endfor %}
+            <li class="sidebar-separator"></li>
+            {% if set_id %}
+            <li class="sidebar-nav-header"><span>{{ set_name.replace('_', ' ') | title }}</span></li>
+            <li><a href="{{ url_for('main.learn_set', set_id=set_id) }}"><i
+                        data-feather="book-open"></i><span>Learn</span></a></li>
+            <li><a href="{{ url_for('main.stats', set_id=set_id) }}"><i
+                        data-feather="bar-chart-2"></i><span>Statistics</span></a></li>
+            {% endif %}
+        </ul>
+
+        <!-- Profile Link at Bottom -->
+        {% if current_user.is_authenticated %}
+        <div class="sidebar-profile-bottom">
+            <a href="{{ url_for('auth.profile') }}" class="profile-link-bottom">
+                <div class="sidebar-avatar">
+                    {% if current_user.avatar_file %}
+                    <img src="{{ url_for('static', filename=current_user.avatar_file) }}" alt="Avatar"
+                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    {% else %}
+                    {{ current_user.username[0].upper() }}
+                    {% endif %}
+                </div>
+                <span>Profile</span>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    <div class="main-content {% if sidebar_collapsed %}collapsed{% endif %}">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+
+    <!-- Generic Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="confirmationTitle">Confirm Action</h2>
+                <button class="close" onclick="closeConfirmationModal()" aria-label="Close">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-warning">
+                    <i data-feather="alert-triangle"></i>
+                    <div>
+                        <p id="confirmationMessage">Are you sure you want to proceed?</p>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeConfirmationModal()">Cancel</button>
+                    <button type="button" id="confirmationConfirmBtn" class="btn btn-danger">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}" type="module"></script>
+    <script>
+        feather.replace();
+    </script>
+</body>
+
+</html>

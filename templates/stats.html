@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="stats-header">
+        <h1>{{ set_name.replace('_', ' ') | title }} Stats</h1>
+    </div>
+
+    <div class="card">
+        <h2>Overview</h2>
+        <p>Total Cards: <span id="total-cards"></span></p>
+    </div>
+
+    <div class="card">
+        <h2>Progress by Level</h2>
+        <div id="level-progress"></div>
+    </div>
+
+    <div class="card danger-zone">
+        <h2>Danger Zone</h2>
+        <p>Resetting the set will move all cards back to Level 1. This action cannot be undone.</p>
+        <button class="btn btn-danger" id="reset-set-btn">Reset Set</button>
+    </div>
+</div>
+<script>
+    // Set the setId for the StatsManager module
+    window.statsSetId = {{ set_id }};
+</script>
+{% endblock %}
