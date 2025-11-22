@@ -1,10 +1,6 @@
 # Core Flask framework
 Flask==2.3.3
 
-# Data processing
-pandas==2.2.0
-numpy==1.26.4
-
 # Database and ORM
 Flask-SQLAlchemy==3.1.1
 

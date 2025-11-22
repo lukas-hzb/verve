@@ -215,10 +215,18 @@ class VocabService:
             try:
                 next_review_dt = datetime.fromisoformat(next_review.replace('Z', '+00:00'))
             except ValueError:
-                import pandas as pd
-                next_review_dt = pd.to_datetime(next_review)
-        else:
-            next_review_dt = next_review
+                # Fallback for other formats if needed, or just fail
+                # Previously used pandas.to_datetime which is heavy
+                try:
+                    # Try common format YYYY-MM-DD HH:MM:SS
+                    next_review_dt = datetime.strptime(next_review, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    # Last resort: try to parse just date
+                    try:
+                        next_review_dt = datetime.strptime(next_review, "%Y-%m-%d")
+                    except ValueError:
+                         from app.utils.exceptions import InvalidInputError
+                         raise InvalidInputError("next_review", f"Invalid date format: {next_review}")
         
         # Load vocab set and update card
         vocab_set = VocabService.get_vocab_set(set_id, user_id)
