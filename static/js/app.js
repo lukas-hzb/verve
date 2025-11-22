@@ -31,6 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
         initializeStatsPage(currentPath);
     }
 
+    // Initialize search bar on home page
+    initializeSearchBar();
+
     // Expose global functions for HTML event handlers
     setupGlobalFunctions();
 });
@@ -59,6 +62,44 @@ function initializeStatsPage(path) {
     if (setId) {
         new StatsManager(setId);
     }
+}
+
+
+/**
+ * Initialize the search bar for filtering sets on the home page
+ */
+function initializeSearchBar() {
+    const searchInput = document.getElementById('setSearchInput');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', function () {
+        const searchTerm = this.value.toLowerCase().trim();
+        const setCards = document.querySelectorAll('.set-card');
+        const createNewCard = document.querySelector('.create-new-card');
+
+        setCards.forEach(card => {
+            // Get the set name from the h3 inside the card
+            const setNameElement = card.querySelector('h3');
+            if (!setNameElement) return;
+
+            const setName = setNameElement.textContent.toLowerCase();
+
+            if (setName.includes(searchTerm)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Hide create new card when searching, show when search is empty
+        if (createNewCard) {
+            if (searchTerm) {
+                createNewCard.style.display = 'none';
+            } else {
+                createNewCard.style.display = '';
+            }
+        }
+    });
 }
 
 /**

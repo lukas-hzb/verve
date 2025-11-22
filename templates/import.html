@@ -4,26 +4,26 @@
 <div class="container">
     <div class="card">
         <div class="card-header">
-            <h2>Vokabeln importieren</h2>
-            <p>Erstellen Sie ein neues Lernset aus einer Datei oder durch Texteingabe.</p>
+            <h2>Import Vocabulary</h2>
+            <p>Create a new study set from a file or by text input.</p>
         </div>
 
         <form method="POST" enctype="multipart/form-data" class="import-form" id="importForm">
             <div class="form-group">
-                <label for="set_name">Name des Sets</label>
+                <label for="set_name">Set Name</label>
                 <input type="text" id="set_name" name="set_name" class="form-control" required
-                    placeholder="z.B. Spanisch Kapitel 1">
+                    placeholder="e.g. Spanish Chapter 1">
             </div>
 
             <div class="import-tabs">
-                <div class="tab active" onclick="switchTab('file')">Datei hochladen</div>
-                <div class="tab" onclick="switchTab('text')">Text eingeben</div>
+                <div class="tab active" onclick="switchTab('file')">Upload File</div>
+                <div class="tab" onclick="switchTab('text')">Enter Text</div>
             </div>
             <input type="hidden" name="import_type" id="import_type" value="file">
 
             <div id="file-section" class="import-section">
                 <div class="form-group">
-                    <label for="file">Datei auswählen (CSV, TSV, TXT)</label>
+                    <label for="file">Select File (CSV, TSV, TXT)</label>
                     <div class="file-upload-wrapper">
                         <input type="file" id="file" name="file" accept=".csv,.tsv,.txt" class="form-control">
                     </div>
@@ -32,55 +32,55 @@
 
             <div id="text-section" class="import-section" style="display: none;">
                 <div class="form-group">
-                    <label for="text_content">Vokabeln eingeben</label>
+                    <label for="text_content">Enter Vocabulary</label>
                     <textarea id="text_content" name="text_content" class="form-control" rows="3"
                         placeholder="Dog, Hund&#10;Cat, Katze"></textarea>
                 </div>
             </div>
 
             <div class="separator-settings">
-                <h3>Einstellungen</h3>
+                <h3>Settings</h3>
                 <div class="row">
                     <div class="col">
-                        <label for="field_separator">Trennzeichen (Vorder-/Rückseite)</label>
+                        <label for="field_separator">Separator (Front/Back)</label>
                         <select id="field_separator" name="field_separator" class="form-control separator-select"
                             onchange="toggleCustom('field'); updatePreview()">
-                            <option value="\t">Tabulator (\t)</option>
-                            <option value=",">Komma (,)</option>
-                            <option value=";">Semikolon (;)</option>
+                            <option value="\t">Tab (\t)</option>
+                            <option value=",">Comma (,)</option>
+                            <option value=";">Semicolon (;)</option>
                             <option value="|">Pipe (|)</option>
-                            <option value="custom">Benutzerdefiniert</option>
+                            <option value="custom">Custom</option>
                         </select>
                         <input type="text" id="custom_field_separator" name="custom_field_separator"
-                            class="form-control mt-2" style="display: none;" placeholder="z.B. - oder \t"
+                            class="form-control mt-2" style="display: none;" placeholder="e.g. - or \t"
                             oninput="updatePreview()">
                     </div>
                     <div class="col">
-                        <label for="card_separator">Trennzeichen (Karten)</label>
+                        <label for="card_separator">Separator (Cards)</label>
                         <select id="card_separator" name="card_separator" class="form-control separator-select"
                             onchange="toggleCustom('card'); updatePreview()">
-                            <option value="\n">Neue Zeile (\n)</option>
-                            <option value=";">Semikolon (;)</option>
+                            <option value="\n">New Line (\n)</option>
+                            <option value=";">Semicolon (;)</option>
                             <option value="|">Pipe (|)</option>
-                            <option value="custom">Benutzerdefiniert</option>
+                            <option value="custom">Custom</option>
                         </select>
                         <input type="text" id="custom_card_separator" name="custom_card_separator"
-                            class="form-control mt-2" style="display: none;" placeholder="z.B. \n\n oder ;"
+                            class="form-control mt-2" style="display: none;" placeholder="e.g. \n\n or ;"
                             oninput="updatePreview()">
                     </div>
                 </div>
             </div>
 
             <div id="preview-section" class="preview-section" style="display: none;">
-                <h3>Vorschau (Erste Karte)</h3>
+                <h3>Preview (First Card)</h3>
                 <div class="preview-card">
                     <div class="preview-side">
-                        <strong>Vorderseite:</strong>
+                        <strong>Front:</strong>
                         <div id="preview-front" class="preview-content"></div>
                     </div>
                     <div class="preview-divider"></div>
                     <div class="preview-side">
-                        <strong>Rückseite:</strong>
+                        <strong>Back:</strong>
                         <div id="preview-back" class="preview-content"></div>
                     </div>
                 </div>
@@ -89,17 +89,18 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
-                    <i data-feather="upload"></i> Importieren
+                    <i data-feather="upload"></i> Import
                 </button>
-                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Abbrechen</a>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
 
         <div class="import-instructions">
-            <h3>Hinweise zum Format</h3>
-            <p>Standardmäßig wird erwartet, dass Vorder- und Rückseite durch einen <strong>Tabulator</strong> getrennt
-                sind und jede Karte in einer <strong>neuen Zeile</strong> steht.</p>
-            <p>Beispiel (Komma als Trennzeichen):</p>
+            <h3>Format Instructions</h3>
+            <p>By default, Front and Back are expected to be separated by a <strong>Tab</strong> and each card on a
+                <strong>new line</strong>.
+            </p>
+            <p>Example (Comma as separator):</p>
             <pre>Hund, Dog
 Katze, Cat
 Haus, House</pre>
@@ -350,11 +351,11 @@ Haus, House</pre>
         const back = parts[1] ? parts[1].trim() : '';
 
         // Update preview
-        document.getElementById('preview-front').textContent = front || '(leer)';
-        document.getElementById('preview-back').textContent = back || '(leer)';
+        document.getElementById('preview-front').textContent = front || '(empty)';
+        document.getElementById('preview-back').textContent = back || '(empty)';
 
         const totalCards = cards.filter(c => c.trim()).length;
-        document.getElementById('preview-note').textContent = `Insgesamt ${totalCards} Karte(n) erkannt`;
+        document.getElementById('preview-note').textContent = `Total ${totalCards} card(s) recognized`;
 
         document.getElementById('preview-section').style.display = 'block';
     }

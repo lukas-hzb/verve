@@ -2,24 +2,71 @@
 
 {% block content %}
 <div class="container">
+    <!-- Dashboard Header (Purple Banner) -->
     <div class="welcome-card">
-        <h1>Willkommen bei Verve!</h1>
-        <p>Dein persönlicher Vokabeltrainer.</p>
+        <h1>Welcome back, {{ current_user.username }}!</h1>
+        <p>Ready to expand your vocabulary today?</p>
     </div>
 
-    <div class="card">
-        <h2>Deine Vokabelsets</h2>
-        <p>Hier siehst du alle deine verfügbaren Vokabelsets. Wähle eines aus der Seitenleiste, um zu beginnen.</p>
+    <!-- Stats Overview -->
+    {% if sets %}
+    <div class="stats-overview">
+        <div class="stat-summary-card">
+            <div class="stat-summary-icon icon-style-success">
+                <i data-feather="check-circle"></i>
+            </div>
+            <div class="stat-summary-info">
+                {% set total_cards = namespace(value=0) %}
+                {% for set in sets %}
+                {% set total_cards.value = total_cards.value + set.card_count %}
+                {% endfor %}
+                <span class="stat-summary-value">{{ total_cards.value }}</span>
+                <span class="stat-summary-label">Total Cards</span>
+            </div>
+        </div>
+        <div class="stat-summary-card">
+            <div class="stat-summary-icon icon-style-warning">
+                <i data-feather="clock"></i>
+            </div>
+            <div class="stat-summary-info">
+                {% set total_due = namespace(value=0) %}
+                {% for set in sets %}
+                {% set total_due.value = total_due.value + set.due_count %}
+                {% endfor %}
+                <span class="stat-summary-value">{{ total_due.value }}</span>
+                <span class="stat-summary-label">Due Today</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
+    <!-- Sets Grid -->
+    <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
         {% if not sets %}
-        <div class="empty-state">
-            <p>Du hast noch keine Vokabelsets.</p>
+        <div style="margin-bottom: var(--spacing-lg);">
+            <h2 style="margin: 0;">Your Sets</h2>
+        </div>
+        <div class="card empty-state">
+            <i data-feather="layers" class="empty-state-icon"></i>
+            <h3>No Sets Yet</h3>
+            <p>Create your first vocabulary set to start learning.</p>
             <button class="btn btn-primary" onclick="openCreateSetModal()">
-                <i data-feather="plus"></i>
-                Neues Set erstellen
+                <i data-feather="plus"></i> Create Set
             </button>
         </div>
         {% else %}
+        <!-- Sets Header with Search Bar -->
+        <div class="sets-header">
+            <h2>Your Sets</h2>
+            <div class="search-bar-container">
+                <div class="search-bar">
+                    <input type="text" id="setSearchInput" class="form-control" placeholder="Search sets..."
+                        autocomplete="off">
+                    <i data-feather="search" class="search-icon"></i>
+                </div>
+            </div>
+        </div>
+
         <div class="sets-grid">
             {% for set in sets %}
             <div class="set-card" onclick="window.location.href='{{ url_for('main.set_overview', set_id=set.id) }}'">
@@ -29,17 +76,19 @@
                 <div class="set-card-stats">
                     <div class="stat">
                         <span class="stat-value">{{ set.card_count }}</span>
-                        <span class="stat-label">Karten</span>
+                        <span class="stat-label">Cards</span>
                     </div>
                     <div class="stat">
                         <span class="stat-value">{{ set.due_count }}</span>
-                        <span class="stat-label">Fällig</span>
+                        <span class="stat-label">Due</span>
                     </div>
                 </div>
                 <div class="set-card-actions">
-                    <a href="{{ url_for('main.learn_set', set_id=set.id) }}" class="btn btn-sm btn-primary">Lernen</a>
+                    <a href="{{ url_for('main.learn_set', set_id=set.id) }}" class="btn btn-sm btn-primary"
+                        onclick="event.stopPropagation();">Learn</a>
                     <a href="{{ url_for('main.stats', set_id=set.id) }}" class="btn btn-info btn-sm"
-                        style="background-color: var(--level-{{ set.max_level }}); color: white;">Statistik</a>
+                        style="background-color: var(--level-{{ set.max_level }}); color: white;"
+                        onclick="event.stopPropagation();">Stats</a>
                     <button class="btn btn-sm btn-danger btn-icon" style="margin-left: auto;"
                         onclick="event.stopPropagation(); deleteVocabSet({{ set.id }}, '{{ set.name }}')">
                         <i data-feather="trash-2"></i>
@@ -49,12 +98,14 @@
             {% endfor %}
 
             <!-- Create New Set Card -->
-            <div class="set-card create-new-card" onclick="openCreateSetModal()">
+            <div class="create-new-card" onclick="openCreateSetModal()">
+                <div class="set-card-header">
+                    <h3>Create New Set</h3>
+                </div>
                 <div class="create-new-content">
                     <div class="create-icon">
-                        <i data-feather="plus-circle"></i>
+                        <i data-feather="plus"></i>
                     </div>
-                    <h3>Neues Set erstellen</h3>
                 </div>
             </div>
         </div>
@@ -66,22 +117,22 @@
 <div id="createSetModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Neues Vokabelset erstellen</h2>
+            <h2>Create New Vocabulary Set</h2>
             <span class="close" onclick="closeCreateSetModal()">&times;</span>
         </div>
         <div class="modal-body">
             <form id="createSetForm" onsubmit="handleCreateSet(event)">
                 <div class="form-group">
-                    <label for="setName">Name des Sets</label>
+                    <label for="setName">Set Name</label>
                     <input type="text" id="setName" name="setName" required pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+"
-                        title="Nur Buchstaben, Zahlen, Bindestriche, Unterstriche und Umlaute erlaubt"
-                        placeholder="z.B. Spanisch_Grundwortschatz" class="form-control">
-                    <small class="text-muted" style="display: block; margin-top: 5px;">Erlaubte Zeichen: Buchstaben,
-                        Zahlen, -, _ und Umlaute</small>
+                        title="Only letters, numbers, hyphens, underscores and umlauts allowed"
+                        placeholder="e.g. Spanish_Basics" class="form-control">
+                    <small class="text-muted" style="display: block; margin-top: 5px;">Allowed characters: Letters,
+                        numbers, -, _ and umlauts</small>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateSetModal()">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary">Erstellen</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateSetModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
                 </div>
             </form>
         </div>

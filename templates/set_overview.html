@@ -2,8 +2,7 @@
 
 {% block content %}
 <div class="container">
-    <div class="set-header"
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+    <div class="set-header flex-between" style="margin-bottom: var(--spacing-lg);">
         <h2>{{ set_name.replace('_', ' ') | title }} Overview</h2>
         <div class="actions">
             <button class="btn btn-secondary" onclick="openRenameModal()">
@@ -21,7 +20,7 @@
     <!-- Quick Actions Cards -->
     <div class="quick-actions-grid">
         <a href="{{ url_for('main.learn_set', set_id=set_id) }}" class="card action-card">
-            <div class="stat-icon" style="background-color: rgba(108, 99, 255, 0.1); color: var(--primary-color);">
+            <div class="stat-icon icon-style-primary">
                 <i data-feather="book-open"></i>
             </div>
             <div class="stat-details">
@@ -31,7 +30,7 @@
         </a>
 
         <a href="{{ url_for('main.stats', set_id=set_id) }}" class="card action-card">
-            <div class="stat-icon" style="background-color: rgba(40, 167, 69, 0.1); color: var(--success-color);">
+            <div class="stat-icon icon-style-info">
                 <i data-feather="bar-chart-2"></i>
             </div>
             <div class="stat-details">
@@ -212,130 +211,7 @@
     </div>
 </div>
 
-<style>
-    .import-tabs {
-        display: flex;
-        margin-bottom: 20px;
-        border-bottom: 1px solid var(--secondary-color);
-    }
 
-    .tab {
-        padding: 10px 20px;
-        cursor: pointer;
-        border-bottom: 2px solid transparent;
-        font-weight: 500;
-    }
-
-    .tab.active {
-        border-bottom-color: var(--primary-color);
-        color: var(--primary-color);
-    }
-
-    .separator-settings {
-        margin-top: 15px;
-        padding: 15px;
-        background-color: var(--secondary-color);
-        border-radius: var(--radius-md);
-    }
-
-    .separator-settings h3 {
-        font-size: 16px;
-        margin-top: 0;
-        margin-bottom: 12px;
-    }
-
-    .row {
-        display: flex;
-        gap: 20px;
-    }
-
-    .col {
-        flex: 1;
-    }
-
-    .mt-2 {
-        margin-top: 10px;
-    }
-
-    .help-text {
-        font-size: 14px;
-        color: var(--text-muted);
-        margin-bottom: 15px;
-    }
-
-    .help-text code {
-        background: var(--secondary-color);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-family: monospace;
-    }
-
-    .separator-select {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        padding-right: 36px;
-    }
-
-    .preview-section {
-        margin-top: 15px;
-        padding: 15px;
-        background-color: #f0f9ff;
-        border: 1px solid #b3d9ff;
-        border-radius: var(--radius-md);
-    }
-
-    .preview-section h3 {
-        font-size: 16px;
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: var(--primary-color);
-    }
-
-    .preview-card {
-        background: white;
-        border-radius: var(--radius-md);
-        padding: 12px;
-        display: flex;
-        gap: 15px;
-        align-items: center;
-    }
-
-    .preview-side {
-        flex: 1;
-    }
-
-    .preview-side strong {
-        display: block;
-        margin-bottom: 6px;
-        color: var(--text-muted);
-        font-size: 13px;
-    }
-
-    .preview-content {
-        padding: 10px;
-        background: var(--secondary-color);
-        border-radius: var(--radius-sm);
-        min-height: 35px;
-        font-family: monospace;
-        font-size: 14px;
-        word-break: break-word;
-    }
-
-    .preview-divider {
-        width: 2px;
-        height: 50px;
-        background: var(--secondary-color);
-    }
-
-    .preview-note {
-        margin-top: 8px;
-        font-size: 12px;
-        color: var(--text-muted);
-        font-style: italic;
-    }
-</style>
 
 <script>
     async function fetchCards() {

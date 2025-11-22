@@ -42,14 +42,14 @@ def create_default_vocab_set() -> None:
     from datetime import datetime
     
     # Check if default set already exists
-    default_set = VocabSet.query.filter_by(name="Hauptstaedte", is_shared=True).first()
+    default_set = VocabSet.query.filter_by(name="Hauptstädte", is_shared=True).first()
     if default_set:
         return  # Already exists
     
     try:
         # Create the shared vocab set (user_id=None for shared sets)
         vocab_set = VocabSet(
-            name="Hauptstaedte",
+            name="Hauptstädte",
             user_id=None,
             is_shared=True,
             created_at=datetime.now(),
@@ -70,7 +70,7 @@ def create_default_vocab_set() -> None:
             db.session.add(card)
         
         db.session.commit()
-        print(f"✓ Created default shared vocabulary set: Hauptstaedte with {len(HAUPTSTAEDTE_DATA)} cards")
+        print(f"✓ Created default shared vocabulary set: Hauptstädte with {len(HAUPTSTAEDTE_DATA)} cards")
         
     except Exception as e:
         db.session.rollback()

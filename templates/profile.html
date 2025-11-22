@@ -25,39 +25,39 @@
             <div class="profile-info">
                 <h1>{{ current_user.username }}</h1>
                 <p class="text-muted">{{ current_user.email }}</p>
-                <p class="text-muted">Mitglied seit {{ current_user.created_at.strftime('%d.%m.%Y') }}</p>
+                <p class="text-muted">Member since {{ current_user.created_at.strftime('%d.%m.%Y') }}</p>
             </div>
         </div>
     </div>
 
     <div class="stats-overview">
         <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(108, 99, 255, 0.1); color: var(--primary-color);">
+            <div class="stat-icon icon-style-primary">
                 <i data-feather="package"></i>
             </div>
             <div class="stat-details">
                 <h3>{{ sets|length }}</h3>
-                <p>Lernsets</p>
+                <p>Sets</p>
             </div>
         </div>
 
         <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(40, 167, 69, 0.1); color: var(--success-color);">
+            <div class="stat-icon icon-style-success">
                 <i data-feather="check-circle"></i>
             </div>
             <div class="stat-details">
                 <h3>{{ total_cards }}</h3>
-                <p>Karten gesamt</p>
+                <p>Total Cards</p>
             </div>
         </div>
 
         <div class="card stat-card">
-            <div class="stat-icon" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107;">
+            <div class="stat-icon icon-style-warning">
                 <i data-feather="clock"></i>
             </div>
             <div class="stat-details">
                 <h3>{{ due_cards }}</h3>
-                <p>Karten fällig</p>
+                <p>Due Cards</p>
             </div>
         </div>
     </div>
@@ -92,10 +92,9 @@
             <h2>Danger Zone</h2>
             <p>Actions in this section can affect your account security.</p>
             <div class="account-actions">
-                <a href="{{ url_for('auth.change_password') }}" class="btn btn-danger">Passwort ändern</a>
+                <a href="{{ url_for('auth.change_password') }}" class="btn btn-danger">Change Password</a>
                 <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
-                <button type="button" class="btn btn-danger" onclick="openDeleteModal()">Account
-                    löschen</button>
+                <button type="button" class="btn btn-danger" onclick="openDeleteModal()">Delete Account</button>
             </div>
         </div>
     </div>
@@ -105,7 +104,7 @@
 <div id="delete-account-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Account löschen</h2>
+            <h2>Delete Account</h2>
             <button class="close" onclick="closeDeleteModal()" aria-label="Close">
                 <i data-feather="x"></i>
             </button>
@@ -114,15 +113,14 @@
             <div class="modal-warning">
                 <i data-feather="alert-triangle"></i>
                 <div>
-                    <h3>Sind Sie sicher?</h3>
-                    <p>Diese Aktion kann nicht rückgängig gemacht werden. Alle Ihre Lernsets und Fortschritte werden
-                        unwiderruflich gelöscht.</p>
+                    <h3>Are you sure?</h3>
+                    <p>This action cannot be undone. All your sets and progress will be permanently deleted.</p>
                 </div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Abbrechen</button>
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                 <form action="{{ url_for('auth.delete_account') }}" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">Account löschen</button>
+                    <button type="submit" class="btn btn-danger">Delete Account</button>
                 </form>
             </div>
         </div>

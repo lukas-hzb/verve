@@ -110,7 +110,7 @@ class UserService:
         # Check if user already has the default set
         existing_set = VocabSet.query.filter_by(
             user_id=user_id,
-            name="Hauptstaedte",
+            name="Hauptstädte",
             is_shared=False
         ).first()
         
@@ -119,7 +119,7 @@ class UserService:
             return
         
         # Get the shared default set
-        default_set = VocabSet.query.filter_by(is_shared=True, name="Hauptstaedte").first()
+        default_set = VocabSet.query.filter_by(is_shared=True, name="Hauptstädte").first()
         
         if not default_set:
             # If no shared set exists, user will only see their own sets
@@ -127,7 +127,7 @@ class UserService:
         
         # Create a copy of the default set for this user
         user_set = VocabSet(
-            name=f"Hauptstaedte",
+            name=f"Hauptstädte",
             user_id=user_id,
             is_shared=False,
             created_at=datetime.now(),
