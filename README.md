@@ -10,7 +10,8 @@ A modern, Flask-based spaced repetition system for efficient vocabulary learning
 - **Progress Tracking**: Visual statistics showing your learning progress
 - **Keyboard Shortcuts**: Efficient navigation with keyboard controls
 - **Modern UI**: Clean, responsive design with collapsible sidebar
-- **Undo Functionality**: Revert accidental card ratings
+- **Undo Functionality**: Revert accidental card ratings with the "Back" button
+- **Profile Management**: Secure account deletion and data management
 - **Card Shuffling**: Randomize card order for varied practice
 
 ## Installation
@@ -77,6 +78,7 @@ Book	Buch	1	2023-01-01
    - Press **A** or click "Didn't Know" if you didn't know the answer
    - Press **D** or click "Knew It!" if you knew the answer
 5. The SM2 algorithm automatically schedules the next review
+6. Made a mistake? Click the "Back" button to undo your last rating
 
 ### Practice Mode
 
