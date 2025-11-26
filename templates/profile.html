@@ -63,7 +63,10 @@
     </div>
 
     <div class="account-settings">
-        <h2>Account Settings</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+            <h2 style="margin: 0;">Account Settings</h2>
+            <button type="submit" form="profile-form" id="save-profile-btn" class="btn btn-primary" disabled>Save Changes</button>
+        </div>
 
         <form action="{{ url_for('auth.update_profile') }}" method="POST" enctype="multipart/form-data"
             class="profile-form" id="profile-form">
@@ -82,9 +85,6 @@
                 <input type="file" id="avatar" name="avatar" accept=".jpg,.jpeg,.png,.gif" class="form-control"
                     onchange="previewAvatar(this)">
                 <input type="hidden" id="remove-avatar" name="remove_avatar" value="false">
-            </div>
-            <div class="profile-actions" style="display: flex; gap: var(--spacing-md); align-items: center;">
-                <button type="submit" id="save-profile-btn" class="btn btn-primary" disabled>Save Changes</button>
             </div>
         </form>
 
