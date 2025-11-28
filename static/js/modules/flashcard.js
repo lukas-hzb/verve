@@ -11,6 +11,8 @@ export class FlashcardManager {
         this.undoHistory = [];
         this.isPracticeMode = false;
         this.areControlsDisabled = false;
+        this.syncQueue = [];
+        this.isSyncProcessing = false;
 
         // DOM elements
         this.cardFront = document.getElementById("card-front");
@@ -98,12 +100,13 @@ export class FlashcardManager {
 
     async fetchAndLoadCards() {
         const url = this.isPracticeMode
-            ? `/api/set/${this.setId}/all`
-            : `/api/set/${this.setId}`;
+            ? `/api/set/${this.setId}/cards`
+            : `/api/set/${this.setId}/due_cards`;
 
         try {
             const response = await fetch(url);
-            this.cards = await response.json();
+            const data = await response.json();
+            this.cards = data.cards || [];
 
             this.undoHistory = [];
             this.updateBackButtonState();
@@ -186,29 +189,22 @@ export class FlashcardManager {
         this.cardContainer.classList.add(animationClass);
         this.disableControls();
 
-        setTimeout(async () => {
+        setTimeout(() => {
             const originalCard = { ...this.cards[this.currentCardIndex] };
             this.undoHistory.push(originalCard);
             this.updateBackButtonState();
 
-            // Update card on server (only in learning mode)
+            // Queue sync operation for background processing (only in learning mode)
             if (!this.isPracticeMode) {
-                try {
-                    await fetch("/api/update_card", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            set_id: this.setId,
-                            card_front: originalCard.front,
-                            quality: quality
-                        })
-                    });
-                } catch (error) {
-                    console.error("Error updating card:", error);
-                }
+                this.queueSync({
+                    cardFront: originalCard.front,
+                    quality: quality,
+                    timestamp: Date.now(),
+                    retries: 0
+                });
             }
 
-            // Move to next card or show completion
+            // Move to next card or show completion immediately
             if (this.currentCardIndex + 1 < this.cards.length) {
                 this.prepareNextCard();
             } else {
@@ -259,7 +255,10 @@ export class FlashcardManager {
             this.updateCardContent(cardToRestore);
             this.loadCard(cardIndexInSet);
 
-            // Restore on server (only in learning mode)
+            // Cancel any pending sync for this card
+            this.cancelPendingSync(cardToRestore.front);
+
+            // Restore on server immediately (only in learning mode)
             if (!this.isPracticeMode) {
                 try {
                     await fetch("/api/restore_card", {
@@ -326,6 +325,63 @@ export class FlashcardManager {
         this.updateBackButtonState();
         if (this.shuffleBtn) this.shuffleBtn.disabled = false;
         if (this.practiceModeCheckbox) this.practiceModeCheckbox.disabled = false;
+    }
+
+    /**
+     * Queue a sync operation for background processing
+     */
+    queueSync(syncItem) {
+        this.syncQueue.push(syncItem);
+        this.processSyncQueue();
+    }
+
+    /**
+     * Process the sync queue in the background
+     */
+    async processSyncQueue() {
+        if (this.isSyncProcessing || this.syncQueue.length === 0) return;
+
+        this.isSyncProcessing = true;
+
+        while (this.syncQueue.length > 0) {
+            const syncItem = this.syncQueue[0];
+
+            try {
+                await fetch(`/api/set/${this.setId}/rate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        card_front: syncItem.cardFront,
+                        quality: syncItem.quality
+                    })
+                });
+
+                // Successfully synced, remove from queue
+                this.syncQueue.shift();
+            } catch (error) {
+                console.error("Error syncing card:", error);
+
+                // Retry logic with exponential backoff
+                syncItem.retries++;
+                if (syncItem.retries >= 3) {
+                    console.error(`Failed to sync card after 3 retries:`, syncItem.cardFront);
+                    this.syncQueue.shift(); // Remove failed item
+                } else {
+                    // Wait before retrying (exponential backoff: 1s, 2s, 4s)
+                    const delay = Math.pow(2, syncItem.retries - 1) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        this.isSyncProcessing = false;
+    }
+
+    /**
+     * Cancel any pending sync for a specific card
+     */
+    cancelPendingSync(cardFront) {
+        this.syncQueue = this.syncQueue.filter(item => item.cardFront !== cardFront);
     }
 }
 

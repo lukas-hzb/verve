@@ -215,6 +215,17 @@ def add_card(set_id: str):
         return jsonify({"error": str(e)}), 500
 
 
+@main_bp.route("/api/set/<string:set_id>/due_cards")
+@login_required
+def get_due_cards(set_id: str):
+    """Get all due cards for a set."""
+    try:
+        due_cards = VocabService.get_due_cards(set_id, current_user.id)
+        return jsonify({"cards": due_cards})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @main_bp.route("/api/set/<string:set_id>/next_card")
 @login_required
 def get_next_card(set_id: str):

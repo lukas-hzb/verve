@@ -76,7 +76,7 @@ class UserService:
     @staticmethod
     def assign_default_vocab_set(user_id: str) -> None:
         db = get_db()
-        from datetime import datetime
+        from datetime import datetime, timezone, timedelta
         from app.models import Card
         
         # Check if user already has the default set
@@ -101,8 +101,8 @@ class UserService:
             name="Hauptstädte",
             user_id=user_id,
             is_shared=False,
-            created_at=datetime.now(),
-            updated_at=datetime.now()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
         _, set_ref = db.collection('sets').add(user_set.to_dict())
         
@@ -112,6 +112,8 @@ class UserService:
         
         batch = db.batch()
         count = 0
+        # Set next_review to past so cards are immediately due
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         for card_doc in cards_stream:
             card_data = card_doc.to_dict()
             new_card = Card(
@@ -119,7 +121,7 @@ class UserService:
                 front=card_data.get('front'),
                 back=card_data.get('back'),
                 level=1,
-                next_review=datetime.now()
+                next_review=yesterday
             )
             new_card_ref = db.collection('cards').document()
             batch.set(new_card_ref, new_card.to_dict())

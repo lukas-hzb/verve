@@ -61,21 +61,22 @@ def error_response(message: str, code: int = 400) -> tuple:
     }), code
 
 
-@api_bp.route("/set/<int:set_id>")
+@api_bp.route("/set/<string:set_id>")
+@api_bp.route("/set/<string:set_id>/due_cards")
 @login_required
-def get_due_cards(set_id: int):
+def get_due_cards(set_id: str):
     """
     Get all cards that are due for review in a vocabulary set.
     
     Args:
-        set_id: ID of the vocabulary set
+        set_id: ID of the vocabulary set (Firestore string ID)
         
     Returns:
-        JSON array of due cards
+        JSON response with cards array
     """
     try:
         due_cards = VocabService.get_due_cards(set_id, current_user.id)
-        return jsonify(due_cards)
+        return jsonify({'cards': due_cards})
     except VocabSetNotFoundError as e:
         return error_response(str(e), 404)
     except UnauthorizedAccessError as e:
@@ -85,21 +86,22 @@ def get_due_cards(set_id: int):
         return error_response("An error occurred while fetching cards", 500)
 
 
-@api_bp.route("/set/<int:set_id>/all")
+@api_bp.route("/set/<string:set_id>/all")
+@api_bp.route("/set/<string:set_id>/cards")
 @login_required
-def get_all_cards(set_id: int):
+def get_all_cards(set_id: str):
     """
     Get all cards in a vocabulary set.
     
     Args:
-        set_id: ID of the vocabulary set
+        set_id: ID of the vocabulary set (Firestore string ID)
         
     Returns:
-        JSON array of all cards
+        JSON response with cards array
     """
     try:
         all_cards = VocabService.get_all_cards(set_id, current_user.id)
-        return jsonify(all_cards)
+        return jsonify({'cards': all_cards})
     except VocabSetNotFoundError as e:
         return error_response(str(e), 404)
     except UnauthorizedAccessError as e:
@@ -110,14 +112,15 @@ def get_all_cards(set_id: int):
 
 
 @api_bp.route("/update_card", methods=["POST"])
+@api_bp.route("/set/<string:set_id>/rate", methods=["POST"])
 @login_required
-def update_card():
+def update_card(set_id: str = None):
     """
     Update a card based on user performance.
     
     Expected JSON body:
         {
-            "set_id": int,
+            "set_id": str (optional if in URL),
             "card_front": str,
             "quality": int (0-5)
         }
@@ -131,8 +134,9 @@ def update_card():
         if not data:
             return error_response("No JSON data provided", 400)
         
-        # Extract and validate required fields
-        set_id = data.get('set_id')
+        # Extract and validate required fields (set_id from URL or body)
+        if set_id is None:
+            set_id = data.get('set_id')
         card_front = data.get('card_front')
         quality = data.get('quality')
         
@@ -163,7 +167,7 @@ def restore_card():
     
     Expected JSON body:
         {
-            "set_id": int,
+            "set_id": str (Firestore ID),
             "card_front": str,
             "level": int,
             "next_review": str (ISO format)
@@ -203,14 +207,14 @@ def restore_card():
         return error_response("An error occurred while restoring the card", 500)
 
 
-@api_bp.route("/stats/<int:set_id>")
+@api_bp.route("/stats/<string:set_id>")
 @login_required
-def get_stats(set_id: int):
+def get_stats(set_id: str):
     """
     Get statistics for a vocabulary set.
     
     Args:
-        set_id: ID of the vocabulary set
+        set_id: ID of the vocabulary set (Firestore string ID)
         
     Returns:
         JSON object with statistics including:
@@ -230,14 +234,14 @@ def get_stats(set_id: int):
         return error_response("An error occurred while fetching statistics", 500)
 
 
-@api_bp.route("/reset_set/<int:set_id>", methods=["POST"])
+@api_bp.route("/reset_set/<string:set_id>", methods=["POST"])
 @login_required
-def reset_set(set_id: int):
+def reset_set(set_id: str):
     """
     Reset all cards in a vocabulary set to level 1.
     
     Args:
-        set_id: ID of the vocabulary set
+        set_id: ID of the vocabulary set (Firestore string ID)
         
     Returns:
         JSON response with reset status
@@ -293,14 +297,14 @@ def create_vocab_set():
         return error_response("An error occurred while creating the vocabulary set", 500)
 
 
-@api_bp.route("/vocab_sets/<int:set_id>", methods=["DELETE"])
+@api_bp.route("/vocab_sets/<string:set_id>", methods=["DELETE"])
 @login_required
-def delete_vocab_set(set_id: int):
+def delete_vocab_set(set_id: str):
     """
     Delete a vocabulary set (only if user owns it).
     
     Args:
-        set_id: ID of the vocabulary set
+        set_id: ID of the vocabulary set (Firestore string ID)
         
     Returns:
         JSON response with deletion status

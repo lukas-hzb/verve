@@ -4,6 +4,8 @@
 
 Prüfe, ob alle von dir verwendeten Services und Methoden zur speicherung von Daten, zur Anmeldung etc. auch in einer veröffentlichten Version der Webapp funktionieren werden! Achte neben der Funktionalität auch auf Sicherheit!
 
+Zentriere den Haken der Checkbox "Angemeldet bleiben" auf der Login-Seite! Prüfe die Funktion der Auswahl.
+
 Sonstiges:
 - Bestätigung des Accounts über Email
 - Füge auch die Möglichkeit der Anmeldung mit Google hinzu!

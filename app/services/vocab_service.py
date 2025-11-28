@@ -238,3 +238,76 @@ class VocabService:
         db.collection('sets').document(set_id).delete()
         
         return {'status': 'success'}
+
+    @staticmethod
+    def get_statistics(set_id: str, user_id: str) -> Dict:
+        """Get statistics for a vocabulary set."""
+        vset = VocabService.get_vocab_set(set_id, user_id)
+        return vset.get_statistics()
+
+    @staticmethod
+    def reset_set(set_id: str, user_id: str) -> Dict:
+        """Reset all cards in a set to level 1."""
+        db = get_db()
+        vset = VocabService.get_vocab_set(set_id, user_id)
+        
+        # Reset all cards to level 1
+        cards = db.collection('cards').where('vocab_set_id', '==', set_id).stream()
+        batch = db.batch()
+        count = 0
+        
+        for card_doc in cards:
+            batch.update(card_doc.reference, {
+                'level': 1,
+                'next_review': datetime.now(timezone.utc)
+            })
+            count += 1
+            if count >= 400:
+                batch.commit()
+                batch = db.batch()
+                count = 0
+        
+        if count > 0:
+            batch.commit()
+        
+        # Update set timestamp
+        db.collection('sets').document(set_id).update({'updated_at': datetime.now()})
+        
+        return {'status': 'success', 'message': f'Reset {count} cards to level 1'}
+
+    @staticmethod
+    def restore_card(set_id: str, card_front: str, level: int, next_review: str, user_id: str) -> Dict:
+        """Restore a card to a previous state (for undo functionality)."""
+        db = get_db()
+        card_front = validate_card_front(card_front)
+        
+        vset = VocabService.get_vocab_set(set_id, user_id)
+        card = vset.find_card(card_front)
+        
+        if not card:
+            raise CardNotFoundError(card_front, vset.name)
+        
+        # Parse next_review from ISO format
+        if isinstance(next_review, str):
+            # Handle ISO format string
+            next_review_date = datetime.fromisoformat(next_review.replace('Z', '+00:00'))
+        else:
+            next_review_date = next_review
+
+        
+        # Update card
+        db.collection('cards').document(card.id).update({
+            'level': level,
+            'next_review': next_review_date
+        })
+        
+        # Update set timestamp
+        db.collection('sets').document(set_id).update({'updated_at': datetime.now()})
+        
+        card.level = level
+        card.next_review = next_review_date
+        
+        return {
+            'status': 'success',
+            'card': card.to_dict()
+        }
