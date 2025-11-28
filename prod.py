@@ -1,3 +1,9 @@
+"""
+Run script for the Verve application in production.
+
+This is the entry point for running the Flask application.
+"""
+
 import os
 from app import create_app
 

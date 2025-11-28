@@ -1,5 +1,5 @@
 """
-Run script for the Verve application.
+Run script for the Verve application locally.
 
 This is the entry point for running the Flask application.
 """
