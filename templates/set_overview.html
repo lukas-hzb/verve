@@ -316,7 +316,7 @@
     }
 
     // Set global setId for JS
-    window.setId = Number("{{ set_id }}");
+    window.setId = "{{ set_id }}";
     fetchCards();
 
     function openRenameModal() { document.getElementById('renameModal').style.display = 'block'; }
