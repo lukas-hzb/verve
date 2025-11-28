@@ -3,7 +3,7 @@ Vocabulary Service - Business Logic Layer.
 Adapted for Firestore.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 from google.cloud.firestore_v1.base_query import FieldFilter
 
@@ -204,12 +204,12 @@ class VocabService:
             front=front,
             back=back,
             level=1,
-            next_review=datetime.now()
+            next_review=datetime.now(timezone.utc)
         )
         _, ref = db.collection('cards').add(card.to_dict())
         card.id = ref.id
         
-        db.collection('sets').document(set_id).update({'updated_at': datetime.now()})
+        db.collection('sets').document(set_id).update({'updated_at': datetime.now(timezone.utc)})
         return card
 
     @staticmethod

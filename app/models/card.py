@@ -3,7 +3,7 @@ Card model for vocabulary flashcards.
 Adapted for Firestore.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 class Card:
     """Card model representing a single flashcard."""
@@ -14,7 +14,7 @@ class Card:
         self.front = front
         self.back = back
         self.level = level
-        self.next_review = next_review or datetime.now()
+        self.next_review = next_review or datetime.now(timezone.utc)
 
     def to_dict(self):
         return {
