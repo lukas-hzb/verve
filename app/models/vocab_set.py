@@ -1,33 +1,47 @@
 """
 Vocabulary Set Data Model.
-
-This module provides the SQLAlchemy model for vocabulary sets,
-replacing the previous dataclass-based implementation.
+Adapted for Firestore.
 """
 
 from datetime import datetime
 from typing import List, Optional
-from app.database import db
 
+class VocabSet:
+    """Represents a vocabulary set."""
+    
+    def __init__(self, id=None, name=None, user_id=None, is_shared=False, created_at=None, updated_at=None):
+        self.id = id
+        self.name = name
+        self.user_id = user_id
+        self.is_shared = is_shared
+        self.created_at = created_at or datetime.now()
+        self.updated_at = updated_at or datetime.now()
+        self.cards = []  # Will be populated separately if needed
 
-class VocabSet(db.Model):
-    """Represents a vocabulary set with multiple cards."""
-    
-    __tablename__ = 'vocab_sets'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # None for shared sets
-    is_shared = db.Column(db.Boolean, nullable=False, default=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
-    
-    # Relationships
-    cards = db.relationship('Card', backref='vocab_set', lazy=True, cascade='all, delete-orphan')
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'user_id': self.user_id,
+            'is_shared': self.is_shared,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
+        }
+
+    @staticmethod
+    def from_dict(id, data):
+        if not data:
+            return None
+        return VocabSet(
+            id=id,
+            name=data.get('name'),
+            user_id=data.get('user_id'),
+            is_shared=data.get('is_shared', False),
+            created_at=data.get('created_at'),
+            updated_at=data.get('updated_at')
+        )
     
     def get_due_cards(self) -> List['Card']:
         """Get all cards that are due for review."""
-        from app.models.card import Card
         return [card for card in self.cards if card.is_due()]
     
     def get_all_cards(self) -> List['Card']:
@@ -35,58 +49,12 @@ class VocabSet(db.Model):
         return self.cards
     
     def find_card(self, front: str) -> Optional['Card']:
-        """
-        Find a card by its front text.
-        
-        Args:
-            front: The front text of the card to find
-            
-        Returns:
-            The card if found, None otherwise
-        """
         for card in self.cards:
             if card.front == front:
                 return card
         return None
     
-    def update_card(self, front: str, level: int, next_review: datetime) -> None:
-        """
-        Update a card's review data.
-        
-        Args:
-            front: The front text of the card to update
-            level: New level for the card
-            next_review: New next review date
-            
-        Raises:
-            CardNotFoundError: If the card is not found
-        """
-        from app.utils.exceptions import CardNotFoundError
-        
-        card = self.find_card(front)
-        if card is None:
-            raise CardNotFoundError(front, self.name)
-        
-        card.level = level
-        card.next_review = next_review
-        self.updated_at = datetime.now()
-        db.session.commit()
-    
-    def reset_all_cards(self) -> None:
-        """Reset all cards to level 1 with immediate review."""
-        for card in self.cards:
-            card.level = 1
-            card.next_review = datetime.now()
-        self.updated_at = datetime.now()
-        db.session.commit()
-    
     def get_statistics(self) -> dict:
-        """
-        Get statistics about the vocabulary set.
-        
-        Returns:
-            Dictionary with statistics including total cards and level distribution
-        """
         level_counts = {}
         for card in self.cards:
             level = card.level

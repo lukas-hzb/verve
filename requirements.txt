@@ -13,3 +13,6 @@ email-validator==2.1.0
 
 # Development tools (optional)
 # python-dotenv==1.0.0  # For environment variable management
+
+# Firebase
+firebase-admin==6.2.0

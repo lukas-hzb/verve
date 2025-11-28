@@ -1,56 +1,43 @@
 """
 User Service - Business Logic for User Management.
-
-This module provides the business logic for user authentication,
-registration, and profile management.
+Adapted for Firestore.
 """
 
 from typing import Optional
-from app.database import db
+from app.firestore_db import get_db
 from app.models import User, VocabSet
 from app.utils.validators import validate_username, validate_email, validate_password
 from app.utils.exceptions import UserAlreadyExistsError, InvalidCredentialsError
-
 
 class UserService:
     """Service class for user management operations."""
     
     @staticmethod
     def create_user(username: str, email: str, password: str) -> User:
-        """
-        Create a new user account.
+        db = get_db()
         
-        Args:
-            username: Desired username
-            email: User's email address
-            password: Plain text password
-            
-        Returns:
-            Created User instance
-            
-        Raises:
-            InvalidInputError: If any input is invalid
-            UserAlreadyExistsError: If username or email already exists
-        """
         # Validate inputs
         username = validate_username(username)
         email = validate_email(email)
         password = validate_password(password)
         
-        # Check if username already exists
-        if User.query.filter_by(username=username).first():
+        # Check if username exists
+        docs = db.collection('users').where('username', '==', username).limit(1).stream()
+        if any(docs):
             raise UserAlreadyExistsError("username", username)
         
-        # Check if email already exists
-        if User.query.filter_by(email=email).first():
+        # Check if email exists
+        docs = db.collection('users').where('email', '==', email).limit(1).stream()
+        if any(docs):
             raise UserAlreadyExistsError("email", email)
         
         # Create user
         user = User(username=username, email=email)
         user.set_password(password)
         
-        db.session.add(user)
-        db.session.commit()
+        # Add to Firestore (auto-ID)
+        _, doc_ref = db.collection('users').add(user.to_dict())
+        user.id = doc_ref.id
         
         # Assign default vocabulary set
         UserService.assign_default_vocab_set(user.id)
@@ -59,116 +46,95 @@ class UserService:
     
     @staticmethod
     def authenticate_user(username_or_email: str, password: str) -> User:
-        """
-        Authenticate a user with username/email and password.
+        db = get_db()
         
-        Args:
-            username_or_email: Username or email address
-            password: Plain text password
+        # Try to find user by username
+        docs = list(db.collection('users').where('username', '==', username_or_email).limit(1).stream())
+        if not docs:
+            # Try by email
+            docs = list(db.collection('users').where('email', '==', username_or_email).limit(1).stream())
             
-        Returns:
-            Authenticated User instance
+        if not docs:
+            raise InvalidCredentialsError()
             
-        Raises:
-            InvalidCredentialsError: If credentials are invalid
-        """
-        # Try to find user by username or email
-        user = User.query.filter(
-            (User.username == username_or_email) | (User.email == username_or_email)
-        ).first()
+        user_data = docs[0].to_dict()
+        user = User.from_dict(docs[0].id, user_data)
         
-        if not user or not user.check_password(password):
+        if not user.check_password(password):
             raise InvalidCredentialsError()
         
         return user
     
     @staticmethod
-    def get_user_by_id(user_id: int) -> Optional[User]:
-        """
-        Get a user by their ID.
-        
-        Args:
-            user_id: The user's ID
-            
-        Returns:
-            User instance or None if not found
-        """
-        return User.query.get(user_id)
+    def get_user_by_id(user_id: str) -> Optional[User]:
+        db = get_db()
+        doc = db.collection('users').document(str(user_id)).get()
+        if not doc.exists:
+            return None
+        return User.from_dict(doc.id, doc.to_dict())
     
     @staticmethod
-    def assign_default_vocab_set(user_id: int) -> None:
-        """
-        Assign the default shared vocabulary set to a new user.
-        This creates a user-specific copy of the shared set.
-        
-        Args:
-            user_id: The user's ID
-        """
+    def assign_default_vocab_set(user_id: str) -> None:
+        db = get_db()
         from datetime import datetime
         from app.models import Card
         
         # Check if user already has the default set
-        existing_set = VocabSet.query.filter_by(
-            user_id=user_id,
-            name="Hauptstädte",
-            is_shared=False
-        ).first()
+        docs = db.collection('sets').where('user_id', '==', user_id)\
+                 .where('name', '==', "Hauptstädte")\
+                 .where('is_shared', '==', False).limit(1).stream()
         
-        if existing_set:
-            # User already has the default set, don't create duplicates
+        if any(docs):
             return
         
         # Get the shared default set
-        default_set = VocabSet.query.filter_by(is_shared=True, name="Hauptstädte").first()
+        docs = list(db.collection('sets').where('is_shared', '==', True)\
+                    .where('name', '==', "Hauptstädte").limit(1).stream())
         
-        if not default_set:
-            # If no shared set exists, user will only see their own sets
+        if not docs:
             return
+            
+        default_set_doc = docs[0]
         
-        # Create a copy of the default set for this user
+        # Create user set
         user_set = VocabSet(
-            name=f"Hauptstädte",
+            name="Hauptstädte",
             user_id=user_id,
             is_shared=False,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
-        db.session.add(user_set)
-        db.session.flush()
+        _, set_ref = db.collection('sets').add(user_set.to_dict())
         
-        # Copy all cards from the shared set to the user's set
-        # Reset progress so user starts fresh
-        for card in default_set.cards:
-            user_card = Card(
-                vocab_set_id=user_set.id,
-                front=card.front,
-                back=card.back,
+        # Copy cards
+        # First query cards for default set
+        cards_stream = db.collection('cards').where('vocab_set_id', '==', default_set_doc.id).stream()
+        
+        batch = db.batch()
+        count = 0
+        for card_doc in cards_stream:
+            card_data = card_doc.to_dict()
+            new_card = Card(
+                vocab_set_id=set_ref.id,
+                front=card_data.get('front'),
+                back=card_data.get('back'),
                 level=1,
                 next_review=datetime.now()
             )
-            db.session.add(user_card)
+            new_card_ref = db.collection('cards').document()
+            batch.set(new_card_ref, new_card.to_dict())
+            count += 1
+            if count >= 400:
+                batch.commit()
+                batch = db.batch()
+                count = 0
         
-        db.session.commit()
+        if count > 0:
+            batch.commit()
 
     @staticmethod
-    def update_user_profile(user_id: int, username: str, email: str, avatar_file=None, remove_avatar=False) -> User:
-        """
-        Update a user's profile information.
-        
-        Args:
-            user_id: The user's ID
-            username: New username
-            email: New email
-            avatar_file: Optional file object for avatar
-            remove_avatar: If True, remove the current avatar
-            
-        Returns:
-            Updated User instance
-            
-        Raises:
-            InvalidInputError: If inputs are invalid
-            UserAlreadyExistsError: If username/email taken by another user
-        """
+    def update_user_profile(user_id: str, username: str, email: str, avatar_file=None, remove_avatar=False) -> User:
+        db = get_db()
         import os
         from werkzeug.utils import secure_filename
         from flask import current_app
@@ -177,75 +143,108 @@ class UserService:
         if not user:
             raise ValueError("User not found")
             
-        # Validate inputs
         username = validate_username(username)
         email = validate_email(email)
         
-        # Check if username taken by ANOTHER user
-        existing_user = User.query.filter(User.username == username, User.id != user_id).first()
-        if existing_user:
-            raise UserAlreadyExistsError("username", username)
-            
-        # Check if email taken by ANOTHER user
-        existing_email = User.query.filter(User.email == email, User.id != user_id).first()
-        if existing_email:
-            raise UserAlreadyExistsError("email", email)
+        # Check unique username
+        docs = list(db.collection('users').where('username', '==', username).stream())
+        for d in docs:
+            if d.id != user_id:
+                raise UserAlreadyExistsError("username", username)
+
+        # Check unique email
+        docs = list(db.collection('users').where('email', '==', email).stream())
+        for d in docs:
+            if d.id != user_id:
+                raise UserAlreadyExistsError("email", email)
             
         user.username = username
         user.email = email
         
-        # Handle avatar removal
         if remove_avatar:
             user.avatar_file = None
-        # Handle avatar upload
         elif avatar_file and avatar_file.filename:
             filename = secure_filename(avatar_file.filename)
-            # Use user ID to make filename unique and avoid collisions
             file_ext = os.path.splitext(filename)[1]
             if file_ext.lower() not in ['.jpg', '.jpeg', '.png', '.gif']:
                  from app.utils.exceptions import InvalidInputError
-                 raise InvalidInputError("avatar", "Invalid file type. Allowed: jpg, jpeg, png, gif")
+                 raise InvalidInputError("avatar", "Invalid file type")
                  
             new_filename = f"avatar_{user.id}{file_ext}"
-            
-            # Ensure upload directory exists
             upload_folder = current_app.config['UPLOAD_FOLDER'] / "avatars"
             upload_folder.mkdir(parents=True, exist_ok=True)
-            
             avatar_path = upload_folder / new_filename
             avatar_file.save(str(avatar_path))
-            
-            # Save RELATIVE path to DB (relative to static folder)
             user.avatar_file = f"uploads/avatars/{new_filename}"
         
-        db.session.commit()
+        db.collection('users').document(user_id).set(user.to_dict(), merge=True)
         return user
 
     @staticmethod
-    def change_password(user_id: int, current_password: str, new_password: str) -> None:
-        """
-        Change a user's password.
-        
-        Args:
-            user_id: The user's ID
-            current_password: The current password
-            new_password: The new password
-            
-        Raises:
-            InvalidCredentialsError: If current password is incorrect
-            InvalidInputError: If new password is invalid
-        """
+    def change_password(user_id: str, current_password: str, new_password: str) -> None:
         user = UserService.get_user_by_id(user_id)
         if not user:
             raise ValueError("User not found")
             
-        # Verify current password
         if not user.check_password(current_password):
             raise InvalidCredentialsError("Ungültiges aktuelles Passwort")
             
-        # Validate new password
         new_password = validate_password(new_password)
-        
-        # Update password
         user.set_password(new_password)
-        db.session.commit()
+        
+        get_db().collection('users').document(user_id).update({
+            'password_hash': user.password_hash
+        })
+
+    @staticmethod
+    def delete_user(user_id: str) -> None:
+        """
+        Permanently delete a user and all associated data.
+        """
+        db = get_db()
+        from flask import current_app
+        
+        user = UserService.get_user_by_id(user_id)
+        if not user:
+            return
+            
+        # 1. Delete all sets and cards
+        # Get all sets for user
+        sets = db.collection('sets').where('user_id', '==', user_id).stream()
+        
+        batch = db.batch()
+        count = 0
+        
+        for s in sets:
+            # Delete cards for this set
+            cards = db.collection('cards').where('vocab_set_id', '==', s.id).stream()
+            for c in cards:
+                batch.delete(c.reference)
+                count += 1
+                if count >= 400:
+                    batch.commit()
+                    batch = db.batch()
+                    count = 0
+            
+            # Delete set
+            batch.delete(s.reference)
+            count += 1
+            if count >= 400:
+                batch.commit()
+                batch = db.batch()
+                count = 0
+                
+        if count > 0:
+            batch.commit()
+            
+        # 2. Delete avatar
+        if user.avatar_file:
+            try:
+                avatar_path = current_app.config['UPLOAD_FOLDER'] / user.avatar_file.replace('uploads/', '')
+                if avatar_path.exists():
+                    avatar_path.unlink()
+            except Exception as e:
+                current_app.logger.error(f"Failed to delete avatar file: {e}")
+                
+        # 3. Delete user
+        db.collection('users').document(user_id).delete()

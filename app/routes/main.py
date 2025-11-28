@@ -100,9 +100,9 @@ def import_set():
     )
 
 
-@main_bp.route("/set/<int:set_id>")
+@main_bp.route("/set/<string:set_id>")
 @login_required
-def learn_set(set_id: int):
+def learn_set(set_id: str):
     """
     Render the learning page for a vocabulary set.
     
@@ -126,9 +126,9 @@ def learn_set(set_id: int):
         return redirect(url_for('main.index'))
 
 
-@main_bp.route("/stats/<int:set_id>")
+@main_bp.route("/stats/<string:set_id>")
 @login_required
-def stats(set_id: int):
+def stats(set_id: str):
     """
     Render the statistics page for a vocabulary set.
     
@@ -152,9 +152,9 @@ def stats(set_id: int):
         return redirect(url_for('main.index'))
 
 
-@main_bp.route("/api/set/<int:set_id>/cards")
+@main_bp.route("/api/set/<string:set_id>/cards")
 @login_required
-def get_set_cards(set_id: int):
+def get_set_cards(set_id: str):
     """Return all cards of a set as JSON for overview page."""
     try:
         cards = VocabService.get_all_cards(set_id, current_user.id)
@@ -163,9 +163,9 @@ def get_set_cards(set_id: int):
         return jsonify({"error": str(e)}), 500
 
 
-@main_bp.route("/set/<int:set_id>/overview")
+@main_bp.route("/set/<string:set_id>/overview")
 @login_required
-def set_overview(set_id: int):
+def set_overview(set_id: str):
     """Render the overview page for a vocabulary set.
 
     Args:
@@ -191,9 +191,9 @@ def set_overview(set_id: int):
         return redirect(url_for('main.index'))
 
 # Re-add the original add_card route
-@main_bp.route("/set/<int:set_id>/add_card", methods=["POST"])
+@main_bp.route("/set/<string:set_id>/add_card", methods=["POST"])
 @login_required
-def add_card(set_id: int):
+def add_card(set_id: str):
     """Add a new card to a vocabulary set."""
     try:
         data = request.get_json()
@@ -215,9 +215,9 @@ def add_card(set_id: int):
         return jsonify({"error": str(e)}), 500
 
 
-@main_bp.route("/api/set/<int:set_id>/next_card")
+@main_bp.route("/api/set/<string:set_id>/next_card")
 @login_required
-def get_next_card(set_id: int):
+def get_next_card(set_id: str):
     """Get the next due card for a set."""
     try:
         due_cards = VocabService.get_due_cards(set_id, current_user.id)
@@ -231,9 +231,9 @@ def get_next_card(set_id: int):
         return jsonify({"error": str(e)}), 500
 
 
-@main_bp.route("/api/set/<int:set_id>/rate", methods=["POST"])
+@main_bp.route("/api/set/<string:set_id>/rate", methods=["POST"])
 @login_required
-def rate_card(set_id: int):
+def rate_card(set_id: str):
     """Rate a card."""
     try:
         data = request.get_json()
@@ -255,9 +255,9 @@ def rate_card(set_id: int):
 
 
 
-@main_bp.route("/set/<int:set_id>/delete", methods=["POST"])
+@main_bp.route("/set/<string:set_id>/delete", methods=["POST"])
 @login_required
-def delete_set(set_id: int):
+def delete_set(set_id: str):
     """Delete a vocabulary set."""
     try:
         VocabService.delete_set(set_id, current_user.id)
@@ -268,9 +268,9 @@ def delete_set(set_id: int):
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
-@main_bp.route("/set/<int:set_id>/rename", methods=["POST"])
+@main_bp.route("/set/<string:set_id>/rename", methods=["POST"])
 @login_required
-def rename_set(set_id: int):
+def rename_set(set_id: str):
     """Rename a vocabulary set."""
     try:
         new_name = request.form.get("new_name")
@@ -286,9 +286,9 @@ def rename_set(set_id: int):
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
-@main_bp.route("/set/<int:set_id>/import", methods=["POST"])
+@main_bp.route("/set/<string:set_id>/import", methods=["POST"])
 @login_required
-def import_into_set(set_id: int):
+def import_into_set(set_id: str):
     """Import cards into an existing set."""
     try:
         import_type = request.form.get("import_type", "file")
@@ -337,9 +337,9 @@ def import_into_set(set_id: int):
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
-@main_bp.route("/api/set/<int:set_id>/card/<int:card_id>", methods=["DELETE"])
+@main_bp.route("/api/set/<string:set_id>/card/<string:card_id>", methods=["DELETE"])
 @login_required
-def delete_card(set_id: int, card_id: int):
+def delete_card(set_id: str, card_id: str):
     """Delete a card from a set."""
     try:
         VocabService.delete_card(set_id, card_id, current_user.id)

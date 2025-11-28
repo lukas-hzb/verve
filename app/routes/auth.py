@@ -193,49 +193,16 @@ def change_password():
 def delete_account():
     """Permanently delete the current user's account and ALL associated data."""
     try:
-        from app.models.vocab_set import VocabSet
-        from app.models.card import Card
-        from app.database import db
-        import os
-        from flask import current_app
+        # Delete user and all data via service
+        UserService.delete_user(current_user.id)
         
-        # Get user ID before deletion
-        user_id = current_user.id
-        avatar_file = current_user.avatar_file
-        
-        # Step 1: Delete all cards belonging to user's vocab sets
-        # Since foreign keys are disabled, we need to manually cascade
-        user_set_ids = [vs.id for vs in VocabSet.query.filter_by(user_id=user_id).all()]
-        if user_set_ids:
-            Card.query.filter(Card.vocab_set_id.in_(user_set_ids)).delete(synchronize_session=False)
-        
-        # Step 2: Delete all vocab sets
-        VocabSet.query.filter_by(user_id=user_id).delete()
-        
-        # Step 3: Delete avatar file from filesystem if exists
-        if avatar_file:
-            try:
-                avatar_path = current_app.config['UPLOAD_FOLDER'] / avatar_file
-                if avatar_path.exists():
-                    avatar_path.unlink()
-            except Exception as e:
-                # Log but don't fail the deletion if avatar removal fails
-                current_app.logger.error(f"Failed to delete avatar file: {e}")
-        
-        # Step 4: Delete the user account
-        db.session.delete(current_user)
-        
-        # Commit all deletions
-        db.session.commit()
-        
-        # Step 5: Log out the user
+        # Log out the user
         logout_user()
         
         flash('Ihr Account und alle zugehörigen Daten wurden erfolgreich gelöscht.', 'success')
         return redirect(url_for('main.index'))
         
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Error deleting account: {e}")
         flash(f'Ein Fehler ist aufgetreten: {str(e)}', 'error')
         return redirect(url_for('auth.profile'))

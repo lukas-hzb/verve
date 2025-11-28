@@ -19,11 +19,9 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
     # Database settings
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        f'sqlite:///{BASE_DIR / "verve.db"}'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Session settings
+    # Firebase
+    FIREBASE_CREDENTIALS = BASE_DIR / "firebaseAdmin.json"
     PERMANENT_SESSION_LIFETIME = 365 * 24 * 60 * 60  # 1 year in seconds
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
@@ -35,6 +33,10 @@ class Config:
     # Logging
     LOG_FILE = BASE_DIR / "verve.log"
     LOG_LEVEL = "INFO"
+
+    # Firebase settings
+    FIREBASE_CREDENTIALS = BASE_DIR / "firebaseAdmin.json"
+    FIREBASE_BUCKET = os.environ.get('FIREBASE_BUCKET') or 'verve-2ae85.appspot.com'
     
     @staticmethod
     def init_app(app):

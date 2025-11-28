@@ -45,3 +45,6 @@ build/
 # Backup files
 *.bak
 *.tmp
+
+# Firebase
+firebaseAdmin.json
