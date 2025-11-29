@@ -172,12 +172,31 @@ class UserService:
                  from app.utils.exceptions import InvalidInputError
                  raise InvalidInputError("avatar", "Invalid file type")
                  
-            new_filename = f"avatar_{user.id}{file_ext}"
-            upload_folder = current_app.config['UPLOAD_FOLDER'] / "avatars"
-            upload_folder.mkdir(parents=True, exist_ok=True)
-            avatar_path = upload_folder / new_filename
-            avatar_file.save(str(avatar_path))
-            user.avatar_file = f"uploads/avatars/{new_filename}"
+            # Process image with Pillow
+            import base64
+            import io
+            from PIL import Image
+            
+            # Open image
+            img = Image.open(avatar_file)
+            
+            # Convert to RGB if necessary (e.g. PNG with transparency)
+            if img.mode in ('RGBA', 'P'):
+                img = img.convert('RGB')
+                
+            # Resize to thumbnail (150x150)
+            img.thumbnail((150, 150))
+            
+            # Save to buffer as JPEG
+            buffer = io.BytesIO()
+            img.save(buffer, format="JPEG", quality=70)
+            buffer.seek(0)
+            
+            # Encode to base64
+            img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            
+            # Create data URI
+            user.avatar_file = f"data:image/jpeg;base64,{img_str}"
         
         db.collection('users').document(user_id).set(user.to_dict(), merge=True)
         return user
@@ -240,13 +259,8 @@ class UserService:
             batch.commit()
             
         # 2. Delete avatar
-        if user.avatar_file:
-            try:
-                avatar_path = current_app.config['UPLOAD_FOLDER'] / user.avatar_file.replace('uploads/', '')
-                if avatar_path.exists():
-                    avatar_path.unlink()
-            except Exception as e:
-                current_app.logger.error(f"Failed to delete avatar file: {e}")
+        # Nothing to do for Base64 stored in document
+        pass
                 
         # 3. Delete user
         db.collection('users').document(user_id).delete()

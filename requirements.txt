@@ -16,3 +16,4 @@ email-validator==2.1.0
 
 # Firebase
 firebase-admin==6.2.0
+Pillow==10.0.0
