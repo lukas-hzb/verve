@@ -1,13 +1,13 @@
 """
 Vocabulary Service - Business Logic Layer.
-Adapted for Firestore.
+Adapted for SQLAlchemy.
 """
 
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
-from google.cloud.firestore_v1.base_query import FieldFilter
 
-from app.firestore_db import get_db
+from app.database import db
 from app.models import VocabSet, Card
 from app.services.sm2_algorithm import calculate_next_review, get_initial_interval_for_level
 from app.utils.validators import validate_set_name, validate_quality_score, validate_card_front, validate_set_ownership
@@ -17,20 +17,11 @@ class VocabService:
     
     @staticmethod
     def get_all_set_names(user_id: str) -> List[Dict]:
-        db = get_db()
         # Get user sets
-        sets_stream = db.collection('sets').where('user_id', '==', user_id).stream()
+        user_sets = VocabSet.query.filter_by(user_id=user_id).all()
         
         result = []
-        for doc in sets_stream:
-            vset = VocabSet.from_dict(doc.id, doc.to_dict())
-            
-            # Get cards for this set to calc stats
-            # Note: This is N+1 query, but Firestore is fast. 
-            # For optimization, we could store stats on the set document.
-            cards = list(db.collection('cards').where('vocab_set_id', '==', vset.id).stream())
-            vset.cards = [Card.from_dict(c.id, c.to_dict()) for c in cards]
-            
+        for vset in user_sets:
             stats = vset.get_statistics()
             level_counts = stats['level_counts']
             max_level = max(level_counts.items(), key=lambda x: x[1])[0] if level_counts else 1
@@ -39,7 +30,7 @@ class VocabService:
                 'id': vset.id,
                 'name': vset.name,
                 'is_shared': vset.is_shared,
-                'card_count': len(vset.cards),
+                'card_count': stats['total_cards'],
                 'due_count': stats['due_cards'],
                 'level_counts': level_counts,
                 'max_level': max_level
@@ -48,38 +39,26 @@ class VocabService:
 
     @staticmethod
     def get_vocab_set(set_id: str, user_id: str) -> VocabSet:
-        db = get_db()
-        doc = db.collection('sets').document(str(set_id)).get()
-        if not doc.exists:
+        vset = VocabSet.query.get(set_id)
+        if not vset:
             raise VocabSetNotFoundError(f"Set ID {set_id}")
             
-        vset = VocabSet.from_dict(doc.id, doc.to_dict())
-        
-        # Populate cards
-        cards = list(db.collection('cards').where('vocab_set_id', '==', vset.id).stream())
-        vset.cards = [Card.from_dict(c.id, c.to_dict()) for c in cards]
-        
         validate_set_ownership(user_id, vset)
         return vset
 
     @staticmethod
     def get_vocab_set_by_name(set_name: str, user_id: str) -> Optional[VocabSet]:
-        db = get_db()
         set_name = validate_set_name(set_name)
         
         # Try user set
-        docs = list(db.collection('sets').where('name', '==', set_name)\
-                    .where('user_id', '==', user_id).limit(1).stream())
-        if docs:
-            vset = VocabSet.from_dict(docs[0].id, docs[0].to_dict())
-            # populate cards if needed
+        vset = VocabSet.query.filter_by(name=set_name, user_id=user_id).first()
+        if vset:
             return vset
             
         # Try shared set
-        docs = list(db.collection('sets').where('name', '==', set_name)\
-                    .where('is_shared', '==', True).limit(1).stream())
-        if docs:
-            return VocabSet.from_dict(docs[0].id, docs[0].to_dict())
+        vset = VocabSet.query.filter_by(name=set_name, is_shared=True).first()
+        if vset:
+            return vset
             
         return None
 
@@ -95,7 +74,6 @@ class VocabService:
 
     @staticmethod
     def update_card_performance(set_id: str, card_front: str, quality: int, user_id: str) -> Dict:
-        db = get_db()
         card_front = validate_card_front(card_front)
         quality = validate_quality_score(quality)
         
@@ -112,19 +90,17 @@ class VocabService:
             quality=quality, level=current_level, last_interval=last_interval, ease_factor=2.5
         )
         
-        next_review = datetime.now() + timedelta(days=interval_days)
+        # Calculate next review time
+        next_review = datetime.utcnow() + timedelta(days=interval_days)
         
-        # Update in Firestore
-        db.collection('cards').document(card.id).update({
-            'level': new_level,
-            'next_review': next_review
-        })
-        
-        # Update set updated_at
-        db.collection('sets').document(set_id).update({'updated_at': datetime.now()})
-        
+        # Update card
         card.level = new_level
         card.next_review = next_review
+        
+        # Update set updated_at
+        vset.updated_at = datetime.utcnow()
+        
+        db.session.commit()
         
         return {
             'status': 'success',
@@ -136,22 +112,21 @@ class VocabService:
 
     @staticmethod
     def delete_card(set_id: str, card_id: str, user_id: str) -> None:
-        db = get_db()
         vset = VocabService.get_vocab_set(set_id, user_id) # checks access
         
-        card_doc = db.collection('cards').document(str(card_id)).get()
-        if not card_doc.exists:
+        card = Card.query.get(card_id)
+        if not card:
             raise ValueError("Card not found")
             
-        if card_doc.to_dict().get('vocab_set_id') != set_id:
+        if card.vocab_set_id != set_id:
              raise ValueError("Card not in this set")
              
-        db.collection('cards').document(str(card_id)).delete()
-        db.collection('sets').document(set_id).update({'updated_at': datetime.now()})
+        db.session.delete(card)
+        vset.updated_at = datetime.utcnow()
+        db.session.commit()
 
     @staticmethod
     def rename_set(set_id: str, new_name: str, user_id: str) -> VocabSet:
-        db = get_db()
         vset = VocabService.get_vocab_set(set_id, user_id)
         
         if vset.user_id != user_id:
@@ -159,39 +134,34 @@ class VocabService:
             
         validate_set_name(new_name)
         
-        db.collection('sets').document(set_id).update({
-            'name': new_name,
-            'updated_at': datetime.now()
-        })
         vset.name = new_name
+        vset.updated_at = datetime.utcnow()
+        db.session.commit()
         return vset
 
     @staticmethod
     def create_user_set(user_id: str, set_name: str) -> VocabSet:
-        db = get_db()
         set_name = validate_set_name(set_name)
         
         # Check existing
-        docs = list(db.collection('sets').where('name', '==', set_name)\
-                    .where('user_id', '==', user_id).limit(1).stream())
-        if docs:
+        if VocabSet.query.filter_by(name=set_name, user_id=user_id).first():
             from app.utils.exceptions import InvalidInputError
             raise InvalidInputError("set_name", "Set exists")
             
         vset = VocabSet(
+            id=str(uuid.uuid4()),
             name=set_name,
             user_id=user_id,
             is_shared=False,
-            created_at=datetime.now(),
-            updated_at=datetime.now()
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
         )
-        _, ref = db.collection('sets').add(vset.to_dict())
-        vset.id = ref.id
+        db.session.add(vset)
+        db.session.commit()
         return vset
 
     @staticmethod
     def add_card(set_id: str, front: str, back: str, user_id: str) -> Card:
-        db = get_db()
         front = validate_card_front(front)
         
         vset = VocabService.get_vocab_set(set_id, user_id)
@@ -200,42 +170,29 @@ class VocabService:
              raise InvalidInputError("front", "Card exists")
              
         card = Card(
+            id=str(uuid.uuid4()),
             vocab_set_id=set_id,
             front=front,
             back=back,
             level=1,
-            next_review=datetime.now(timezone.utc)
+            next_review=datetime.utcnow()
         )
-        _, ref = db.collection('cards').add(card.to_dict())
-        card.id = ref.id
+        db.session.add(card)
         
-        db.collection('sets').document(set_id).update({'updated_at': datetime.now(timezone.utc)})
+        vset.updated_at = datetime.utcnow()
+        db.session.commit()
         return card
 
     @staticmethod
     def delete_set(set_id: str, user_id: str) -> Dict:
-        db = get_db()
         vset = VocabService.get_vocab_set(set_id, user_id)
         
+        # Access check
         if not vset.is_shared and vset.user_id != user_id:
             raise UnauthorizedAccessError("vocabulary set", set_id)
             
-        # Delete all cards
-        cards = db.collection('cards').where('vocab_set_id', '==', set_id).stream()
-        batch = db.batch()
-        count = 0
-        for c in cards:
-            batch.delete(c.reference)
-            count += 1
-            if count >= 400:
-                batch.commit()
-                batch = db.batch()
-                count = 0
-        if count > 0:
-            batch.commit()
-            
-        # Delete set
-        db.collection('sets').document(set_id).delete()
+        db.session.delete(vset)
+        db.session.commit()
         
         return {'status': 'success'}
 
@@ -248,37 +205,20 @@ class VocabService:
     @staticmethod
     def reset_set(set_id: str, user_id: str) -> Dict:
         """Reset all cards in a set to level 1."""
-        db = get_db()
         vset = VocabService.get_vocab_set(set_id, user_id)
         
-        # Reset all cards to level 1
-        cards = db.collection('cards').where('vocab_set_id', '==', set_id).stream()
-        batch = db.batch()
-        count = 0
+        for card in vset.cards:
+            card.level = 1
+            card.next_review = datetime.utcnow()
         
-        for card_doc in cards:
-            batch.update(card_doc.reference, {
-                'level': 1,
-                'next_review': datetime.now(timezone.utc)
-            })
-            count += 1
-            if count >= 400:
-                batch.commit()
-                batch = db.batch()
-                count = 0
+        vset.updated_at = datetime.utcnow()
+        db.session.commit()
         
-        if count > 0:
-            batch.commit()
-        
-        # Update set timestamp
-        db.collection('sets').document(set_id).update({'updated_at': datetime.now()})
-        
-        return {'status': 'success', 'message': f'Reset {count} cards to level 1'}
+        return {'status': 'success', 'message': f'Reset {len(vset.cards.all())} cards to level 1'}
 
     @staticmethod
     def restore_card(set_id: str, card_front: str, level: int, next_review: str, user_id: str) -> Dict:
         """Restore a card to a previous state (for undo functionality)."""
-        db = get_db()
         card_front = validate_card_front(card_front)
         
         vset = VocabService.get_vocab_set(set_id, user_id)
@@ -287,27 +227,35 @@ class VocabService:
         if not card:
             raise CardNotFoundError(card_front, vset.name)
         
-        # Parse next_review from ISO format
+        # Parse next_review from ISO format or use as is
         if isinstance(next_review, str):
-            # Handle ISO format string
-            next_review_date = datetime.fromisoformat(next_review.replace('Z', '+00:00'))
+            try:
+                # Handle ISO format string
+                next_review_date = datetime.fromisoformat(next_review.replace('Z', '+00:00'))
+            except ValueError:
+                # Fallback if format is different
+                next_review_date = datetime.utcnow()
         else:
             next_review_date = next_review
 
+        # Ensure naive datetime for SQLAlchemy if needed, or stick to UTC convention
+        # We are using utcnow() everywhere, so we should convert to naive UTC or keep offset aware if DB supports it.
+        # SQLite acts weird with TZs, Postgres is better. 
+        # Safest is to strip TZ if present and assume UTC, or rely on drivers.
+        # For this implementation, I'll rely on the object logic.
         
-        # Update card
-        db.collection('cards').document(card.id).update({
-            'level': level,
-            'next_review': next_review_date
-        })
-        
-        # Update set timestamp
-        db.collection('sets').document(set_id).update({'updated_at': datetime.now()})
+        if next_review_date.tzinfo:
+            next_review_date = next_review_date.replace(tzinfo=None)
+
         
         card.level = level
         card.next_review = next_review_date
+        
+        vset.updated_at = datetime.utcnow()
+        db.session.commit()
         
         return {
             'status': 'success',
             'card': card.to_dict()
         }
+

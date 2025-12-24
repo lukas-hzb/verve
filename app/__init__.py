@@ -42,10 +42,10 @@ def create_app(config_name: str = 'default') -> Flask:
     setup_logging(app)
     
     # Initialize database
-    # from app.database import init_db
-    # init_db(app)
-    from app.firestore_db import init_firestore
-    init_firestore(app)
+    from app.database import init_db
+    init_db(app)
+    # from app.firestore_db import init_firestore
+    # init_firestore(app)
     
     # Initialize Flask-Login
     setup_login_manager(app)

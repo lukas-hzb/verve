@@ -1,47 +1,22 @@
-"""
-User model for authentication and user management.
-Adapted for Firestore.
-"""
-
 from datetime import datetime
 from flask_login import UserMixin
 import bcrypt
+from app.database import db
 
-class User(UserMixin):
+class User(UserMixin, db.Model):
     """User model for authentication."""
-    
-    def __init__(self, id=None, username=None, email=None, password_hash=None, created_at=None, avatar_file=None):
-        self.id = id  # String ID from Firestore
-        self.username = username
-        self.email = email
-        self.password_hash = password_hash
-        self.created_at = created_at or datetime.now()
-        self.avatar_file = avatar_file
-        
-    def to_dict(self):
-        """Convert to dictionary for Firestore."""
-        return {
-            'username': self.username,
-            'email': self.email,
-            'password_hash': self.password_hash,
-            'created_at': self.created_at,
-            'avatar_file': self.avatar_file
-        }
+    __tablename__ = 'users'
 
-    @staticmethod
-    def from_dict(id, data):
-        """Create User from Firestore document."""
-        if not data:
-            return None
-        return User(
-            id=id,
-            username=data.get('username'),
-            email=data.get('email'),
-            password_hash=data.get('password_hash'),
-            created_at=data.get('created_at'),
-            avatar_file=data.get('avatar_file')
-        )
-    
+    id = db.Column(db.String(36), primary_key=True)  # UUID
+    username = db.Column(db.String(64), unique=True, index=True)
+    email = db.Column(db.String(120), unique=True, index=True)
+    password_hash = db.Column(db.String(128))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    avatar_file = db.Column(db.Text, nullable=True) # Store as Base64 string for now to match previous logic
+
+    # Relationships
+    sets = db.relationship('VocabSet', backref='owner', lazy='dynamic', cascade='all, delete-orphan')
+
     def set_password(self, password: str) -> None:
         """Hash and set the user's password."""
         password_bytes = password.encode('utf-8')
@@ -56,5 +31,14 @@ class User(UserMixin):
         hash_bytes = self.password_hash.encode('utf-8')
         return bcrypt.checkpw(password_bytes, hash_bytes)
     
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'created_at': self.created_at,
+            'avatar_file': self.avatar_file
+        }
+
     def __repr__(self):
         return f'<User {self.username}>'

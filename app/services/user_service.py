@@ -1,43 +1,43 @@
 """
 User Service - Business Logic for User Management.
-Adapted for Firestore.
+Adapted for SQLAlchemy.
 """
 
+import uuid
 from typing import Optional
-from app.firestore_db import get_db
-from app.models import User, VocabSet
+from app.database import db
+from app.models import User, VocabSet, Card
 from app.utils.validators import validate_username, validate_email, validate_password
-from app.utils.exceptions import UserAlreadyExistsError, InvalidCredentialsError
+from app.utils.exceptions import UserAlreadyExistsError, InvalidCredentialsError, InvalidInputError
 
 class UserService:
     """Service class for user management operations."""
     
     @staticmethod
     def create_user(username: str, email: str, password: str) -> User:
-        db = get_db()
-        
         # Validate inputs
         username = validate_username(username)
         email = validate_email(email)
         password = validate_password(password)
         
         # Check if username exists
-        docs = db.collection('users').where('username', '==', username).limit(1).stream()
-        if any(docs):
+        if User.query.filter_by(username=username).first():
             raise UserAlreadyExistsError("username", username)
         
         # Check if email exists
-        docs = db.collection('users').where('email', '==', email).limit(1).stream()
-        if any(docs):
+        if User.query.filter_by(email=email).first():
             raise UserAlreadyExistsError("email", email)
         
         # Create user
-        user = User(username=username, email=email)
+        user = User(
+            id=str(uuid.uuid4()),
+            username=username, 
+            email=email
+        )
         user.set_password(password)
         
-        # Add to Firestore (auto-ID)
-        _, doc_ref = db.collection('users').add(user.to_dict())
-        user.id = doc_ref.id
+        db.session.add(user)
+        db.session.commit()
         
         # Assign default vocabulary set
         UserService.assign_default_vocab_set(user.id)
@@ -46,20 +46,15 @@ class UserService:
     
     @staticmethod
     def authenticate_user(username_or_email: str, password: str) -> User:
-        db = get_db()
-        
         # Try to find user by username
-        docs = list(db.collection('users').where('username', '==', username_or_email).limit(1).stream())
-        if not docs:
+        user = User.query.filter_by(username=username_or_email).first()
+        if not user:
             # Try by email
-            docs = list(db.collection('users').where('email', '==', username_or_email).limit(1).stream())
+            user = User.query.filter_by(email=username_or_email).first()
             
-        if not docs:
+        if not user:
             raise InvalidCredentialsError()
             
-        user_data = docs[0].to_dict()
-        user = User.from_dict(docs[0].id, user_data)
-        
         if not user.check_password(password):
             raise InvalidCredentialsError()
         
@@ -67,79 +62,60 @@ class UserService:
     
     @staticmethod
     def get_user_by_id(user_id: str) -> Optional[User]:
-        db = get_db()
-        doc = db.collection('users').document(str(user_id)).get()
-        if not doc.exists:
-            return None
-        return User.from_dict(doc.id, doc.to_dict())
+        return User.query.get(user_id)
     
     @staticmethod
     def assign_default_vocab_set(user_id: str) -> None:
-        db = get_db()
-        from datetime import datetime, timezone, timedelta
-        from app.models import Card
+        from datetime import datetime
         
         # Check if user already has the default set
-        docs = db.collection('sets').where('user_id', '==', user_id)\
-                 .where('name', '==', "Hauptstädte")\
-                 .where('is_shared', '==', False).limit(1).stream()
-        
-        if any(docs):
+        existing_set = VocabSet.query.filter_by(user_id=user_id, name="Hauptstädte", is_shared=False).first()
+        if existing_set:
             return
         
         # Get the shared default set
-        docs = list(db.collection('sets').where('is_shared', '==', True)\
-                    .where('name', '==', "Hauptstädte").limit(1).stream())
-        
-        if not docs:
+        default_set = VocabSet.query.filter_by(is_shared=True, name="Hauptstädte").first()
+        if not default_set:
             return
             
-        default_set_doc = docs[0]
-        
         # Create user set
+        new_set_id = str(uuid.uuid4())
         user_set = VocabSet(
+            id=new_set_id,
             name="Hauptstädte",
             user_id=user_id,
             is_shared=False,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
         )
-        _, set_ref = db.collection('sets').add(user_set.to_dict())
+        db.session.add(user_set)
         
         # Copy cards
-        # First query cards for default set
-        cards_stream = db.collection('cards').where('vocab_set_id', '==', default_set_doc.id).stream()
+        # We process efficiently by querying and bulk inserting if possible, 
+        # but standard add loop is fine for this scale
         
-        batch = db.batch()
-        count = 0
         # Set next_review to past so cards are immediately due
-        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
-        for card_doc in cards_stream:
-            card_data = card_doc.to_dict()
+        # Use timezone naive or UTC as appropriate. Models default to utcnow.
+        from datetime import timedelta
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        
+        for card in default_set.cards:
             new_card = Card(
-                vocab_set_id=set_ref.id,
-                front=card_data.get('front'),
-                back=card_data.get('back'),
+                id=str(uuid.uuid4()),
+                vocab_set_id=new_set_id,
+                front=card.front,
+                back=card.back,
                 level=1,
                 next_review=yesterday
             )
-            new_card_ref = db.collection('cards').document()
-            batch.set(new_card_ref, new_card.to_dict())
-            count += 1
-            if count >= 400:
-                batch.commit()
-                batch = db.batch()
-                count = 0
+            db.session.add(new_card)
         
-        if count > 0:
-            batch.commit()
+        db.session.commit()
 
     @staticmethod
     def update_user_profile(user_id: str, username: str, email: str, avatar_file=None, remove_avatar=False) -> User:
-        db = get_db()
         import os
         from werkzeug.utils import secure_filename
-        from flask import current_app
         
         user = UserService.get_user_by_id(user_id)
         if not user:
@@ -149,16 +125,14 @@ class UserService:
         email = validate_email(email)
         
         # Check unique username
-        docs = list(db.collection('users').where('username', '==', username).stream())
-        for d in docs:
-            if d.id != user_id:
-                raise UserAlreadyExistsError("username", username)
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user and existing_user.id != user_id:
+            raise UserAlreadyExistsError("username", username)
 
         # Check unique email
-        docs = list(db.collection('users').where('email', '==', email).stream())
-        for d in docs:
-            if d.id != user_id:
-                raise UserAlreadyExistsError("email", email)
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email and existing_email.id != user_id:
+             raise UserAlreadyExistsError("email", email)
             
         user.username = username
         user.email = email
@@ -169,7 +143,6 @@ class UserService:
             filename = secure_filename(avatar_file.filename)
             file_ext = os.path.splitext(filename)[1]
             if file_ext.lower() not in ['.jpg', '.jpeg', '.png', '.gif']:
-                 from app.utils.exceptions import InvalidInputError
                  raise InvalidInputError("avatar", "Invalid file type")
                  
             # Process image with Pillow
@@ -180,25 +153,24 @@ class UserService:
             # Open image
             img = Image.open(avatar_file)
             
-            # Convert to RGB if necessary (e.g. PNG with transparency)
+            # Convert to RGB if necessary
             if img.mode in ('RGBA', 'P'):
                 img = img.convert('RGB')
                 
-            # Resize to thumbnail (150x150)
+            # Resize
             img.thumbnail((150, 150))
             
-            # Save to buffer as JPEG
+            # Save to buffer
             buffer = io.BytesIO()
             img.save(buffer, format="JPEG", quality=70)
             buffer.seek(0)
             
-            # Encode to base64
+            # Encode
             img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
             
-            # Create data URI
             user.avatar_file = f"data:image/jpeg;base64,{img_str}"
         
-        db.collection('users').document(user_id).set(user.to_dict(), merge=True)
+        db.session.commit()
         return user
 
     @staticmethod
@@ -212,55 +184,21 @@ class UserService:
             
         new_password = validate_password(new_password)
         user.set_password(new_password)
-        
-        get_db().collection('users').document(user_id).update({
-            'password_hash': user.password_hash
-        })
+        db.session.commit()
 
     @staticmethod
     def delete_user(user_id: str) -> None:
         """
         Permanently delete a user and all associated data.
         """
-        db = get_db()
-        from flask import current_app
-        
         user = UserService.get_user_by_id(user_id)
         if not user:
             return
             
-        # 1. Delete all sets and cards
-        # Get all sets for user
-        sets = db.collection('sets').where('user_id', '==', user_id).stream()
+        # SQLAlchemy cascade='all, delete-orphan' on User.sets handles sets and cards
+        # But we made Card relationship on VocabSet, and VocabSet relationship on User.
+        # So deleting user deletes their sets. Deleting sets deletes their cards.
         
-        batch = db.batch()
-        count = 0
-        
-        for s in sets:
-            # Delete cards for this set
-            cards = db.collection('cards').where('vocab_set_id', '==', s.id).stream()
-            for c in cards:
-                batch.delete(c.reference)
-                count += 1
-                if count >= 400:
-                    batch.commit()
-                    batch = db.batch()
-                    count = 0
-            
-            # Delete set
-            batch.delete(s.reference)
-            count += 1
-            if count >= 400:
-                batch.commit()
-                batch = db.batch()
-                count = 0
-                
-        if count > 0:
-            batch.commit()
-            
-        # 2. Delete avatar
-        # Nothing to do for Base64 stored in document
-        pass
-                
-        # 3. Delete user
-        db.collection('users').document(user_id).delete()
+        db.session.delete(user)
+        db.session.commit()
+
