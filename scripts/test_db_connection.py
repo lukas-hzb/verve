@@ -1,10 +1,13 @@
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 import sqlalchemy
 from sqlalchemy import create_engine, text
 
-load_dotenv()
+# Load .env from project root
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
 
 uri = os.getenv('SQLALCHEMY_DATABASE_URI')
 print(f"Loaded URI: {uri.split('@')[1] if '@' in uri else 'INVALID URI'}") # Don't print password
