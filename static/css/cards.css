@@ -70,14 +70,16 @@
 }
 
 .card-header-title {
-    font-size: var(--font-size-3xl);
+    font-size: var(--font-size-4xl);
+    font-weight: 800;
     color: white;
     position: relative;
     z-index: 1;
 }
 
 .card-header-secondary-title {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-3xl);
+    font-weight: 800;
     color: var(--color-text-main);
 }
 
@@ -431,4 +433,10 @@
     border-color: var(--color-primary);
     background-color: var(--color-bg-surface-hover);
     transform: translateY(-2px);
+}
+
+/* UTILITY CLASSES */
+.text-urgent {
+    color: var(--color-accent-2) !important;
+    font-weight: 600 !important;
 }

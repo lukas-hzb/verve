@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="padding: 7px var(--space-6) var(--space-6) var(--space-6); max-width: 1400px; width: 100%; margin: 0 auto;">
+<div
+    style="padding: 15px var(--space-6) var(--space-6) var(--space-6); max-width: 1400px; width: 100%; margin: 0 auto;">
 
     <!-- Welcome Header -->
-    <div style="margin-bottom: var(--space-8);">
+    <div style="margin-bottom: var(--space-6);">
         <div class="card-header">
             <h1 class="card-header-title">Welcome back, {{ current_user.username }}!</h1>
             <p class="card-header-subtitle">Here's what's happening with your sets.</p>
@@ -93,7 +94,7 @@
 
             {% for set in sets %}
             <div class="card-normal set-card link-card"
-                onclick="window.location.href='{{ url_for('main.set_overview', set_id=set.id) }}'"
+                onclick="window.location.href='{{ url_for('main.set_overview', set_id=set.id) }}';"
                 style="cursor: pointer; display: flex; flex-direction: column; height: 100%;">
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
@@ -103,7 +104,7 @@
                             style="color: var(--color-primary); font-size: 20px;">inventory_2</span>
                     </div>
                     <span class="material-symbols-outlined" style="color: var(--color-text-muted);"
-                        onclick="event.stopPropagation(); deleteVocabSet('{{ set.id }}', '{{ set.name }}')">delete</span>
+                        onclick='event.stopPropagation(); deleteVocabSet("{{ set.id }}", {{ set.name | tojson }})'>delete</span>
                 </div>
 
                 <h3 class="card-normal-title" style="margin-bottom: var(--space-2); flex-grow: 1;">{{
@@ -113,14 +114,13 @@
                     <div
                         style="display: flex; justify-content: space-between; margin-bottom: var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-sm);">
                         <span>{{ set.card_count }} Cards</span>
-                        <span
-                            style="{{ 'color: var(--color-accent-2); font-weight: 600;' if set.due_count > 0 else '' }}">{{
+                        <span class="{{ 'text-urgent' if set.due_count > 0 else '' }}">{{
                             set.due_count }} Due</span>
                     </div>
 
                     <button class="btn-primary btn-level-{{ set.max_level if set.max_level <= 6 else 6 }}"
                         style="width: 100%; justify-content: center;"
-                        onclick="event.stopPropagation(); window.location.href='{{ url_for('main.learn_set', set_id=set.id) }}'">
+                        onclick="event.stopPropagation(); window.location.href='{{ url_for('main.learn_set', set_id=set.id) }}';">
                         Learn
                     </button>
                 </div>

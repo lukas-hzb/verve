@@ -1,10 +1,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div style="padding: 7px var(--space-6) var(--space-6) var(--space-6); max-width: 1000px; width: 100%; margin: 0 auto;">
+<div
+    style="padding: 15px var(--space-6) var(--space-6) var(--space-6); max-width: 1000px; width: 100%; margin: 0 auto;">
 
     <!-- Secondary Header for Stats -->
-    <div style="margin-bottom: var(--space-8);">
+    <div style="margin-bottom: var(--space-6);">
         <div class="card-header-secondary">
             <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') | title }} Stats</h1>
             <div class="button-group">

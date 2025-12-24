@@ -95,7 +95,7 @@
     position: relative;
     list-style: none;
     transition: all 0.4s ease;
-    margin: 8px var(--sidebar-padding);
+    margin: 4px var(--sidebar-padding);
     border-radius: var(--radius-btn);
     white-space: nowrap;
 }
@@ -114,7 +114,7 @@
     display: flex;
     align-items: center;
     text-decoration: none;
-    padding: 10px 0;
+    padding: 8px 0;
     width: 100%;
     overflow: hidden;
 }
@@ -134,7 +134,7 @@
 
 /* Closed State Adjustments */
 .sidebar.close .nav-links li {
-    margin: 8px var(--sidebar-padding);
+    margin: 4px var(--sidebar-padding);
 }
 
 .sidebar.close .nav-links li .material-symbols-outlined {
@@ -233,6 +233,7 @@
 /* Profile item positioning and hover */
 .sidebar .nav-links li.sidebar-profile-item {
     margin-top: auto;
+    margin-bottom: 8px;
 }
 
 /* Override hover for profile to match collapse/expand button */

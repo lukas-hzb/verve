@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap"
         rel="stylesheet">
 
     <!-- Material Symbols -->
@@ -42,7 +42,7 @@
                 </a>
             </li>
 
-            <div style="height: 1px; background-color: var(--color-border); margin: 8px 20px;"></div>
+            <div style="height: 1px; background-color: var(--color-border); margin: 4px 20px;"></div>
 
             {% for set in sets %}
             <li>
@@ -54,7 +54,7 @@
             {% endfor %}
 
             {% if set_id %}
-            <div style="height: 1px; background-color: var(--color-border); margin: 8px 20px;"></div>
+            <div style="height: 1px; background-color: var(--color-border); margin: 4px 20px;"></div>
             <li>
                 <a href="{{ url_for('main.learn_set', set_id=set_id) }}">
                     <span class="material-symbols-outlined">menu_book</span>
