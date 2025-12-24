@@ -1,49 +1,62 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="card">
-        <div class="card-header">
-            <h2>Import Vocabulary</h2>
-            <p>Create a new study set from a file or by text input.</p>
+<div style="padding: 7px var(--space-6) var(--space-6) var(--space-6); max-width: 800px; width: 100%; margin: 0 auto;">
+
+    <div class="card-normal">
+        <div style="margin-bottom: var(--space-6);">
+            <h1 style="margin-bottom: var(--space-2);">Import Vocabulary</h1>
+            <p style="color: var(--color-text-muted);">Create a new study set from a file or by text input.</p>
         </div>
 
         <form method="POST" enctype="multipart/form-data" class="import-form" id="importForm">
-            <div class="form-group">
-                <label for="set_name">Set Name</label>
-                <input type="text" id="set_name" name="set_name" class="form-control" required
+            <div class="card-input-group">
+                <label for="set_name" class="card-input-label">Set Name</label>
+                <input type="text" id="set_name" name="set_name" class="card-input" required
                     placeholder="e.g. Spanish Chapter 1">
             </div>
 
-            <div class="import-tabs">
-                <div class="tab active" onclick="switchTab('file')">Upload File</div>
-                <div class="tab" onclick="switchTab('text')">Enter Text</div>
+            <div class="button-group" style="margin-bottom: var(--space-4);">
+                <div class="btn-secondary active" id="tab-file" onclick="switchTab('file')"
+                    style="cursor: pointer; text-align: center; flex: 1;">Upload File</div>
+                <div class="btn-secondary" id="tab-text" onclick="switchTab('text')"
+                    style="cursor: pointer; text-align: center; flex: 1;">Enter Text</div>
             </div>
+
             <input type="hidden" name="import_type" id="import_type" value="file">
 
             <div id="file-section" class="import-section">
-                <div class="form-group">
-                    <label for="file">Select File (CSV, TSV, TXT)</label>
-                    <div class="file-upload-wrapper">
-                        <input type="file" id="file" name="file" accept=".csv,.tsv,.txt" class="form-control">
+                <div class="card-input-group">
+                    <label for="file" class="card-input-label">Select File (CSV, TSV, TXT)</label>
+                    <div style="height: 100px; border: 2px dashed var(--color-border); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;"
+                        onclick="document.getElementById('file').click()">
+                        <span class="material-symbols-outlined"
+                            style="font-size: 32px; color: var(--color-text-muted);">upload_file</span>
+                        <span style="color: var(--color-text-muted); margin-top: var(--space-2);">Click to upload
+                            file</span>
+                        <input type="file" id="file" name="file" accept=".csv,.tsv,.txt" style="display: none;"
+                            onchange="updateFileName(this)">
+                        <span id="file-name" style="margin-top: var(--space-2); font-weight: 500;"></span>
                     </div>
                 </div>
             </div>
 
             <div id="text-section" class="import-section" style="display: none;">
-                <div class="form-group">
-                    <label for="text_content">Enter Vocabulary</label>
-                    <textarea id="text_content" name="text_content" class="form-control" rows="3"
+                <div class="card-input-group">
+                    <label for="text_content" class="card-input-label">Enter Vocabulary</label>
+                    <textarea id="text_content" name="text_content" class="card-input" rows="5"
                         placeholder="Dog, Hund&#10;Cat, Katze"></textarea>
                 </div>
             </div>
 
-            <div class="separator-settings">
-                <h3>Settings</h3>
-                <div class="row">
-                    <div class="col">
-                        <label for="field_separator">Separator (Front/Back)</label>
-                        <select id="field_separator" name="field_separator" class="form-control separator-select"
+            <div
+                style="background-color: var(--color-bg-surface-hover); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
+                <h3 class="card-normal-title" style="margin-bottom: var(--space-3); font-size: var(--font-size-lg);">
+                    Settings</h3>
+                <div style="display: flex; gap: var(--space-4);">
+                    <div style="flex: 1;">
+                        <label for="field_separator" class="card-input-label">Separator (Front/Back)</label>
+                        <select id="field_separator" name="field_separator" class="card-input"
                             onchange="toggleCustom('field'); updatePreview()">
                             <option value="\t">Tab (\t)</option>
                             <option value=",">Comma (,)</option>
@@ -52,12 +65,12 @@
                             <option value="custom">Custom</option>
                         </select>
                         <input type="text" id="custom_field_separator" name="custom_field_separator"
-                            class="form-control mt-2" style="display: none;" placeholder="e.g. - or \t"
-                            oninput="updatePreview()">
+                            class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
+                            placeholder="e.g. - or \t" oninput="updatePreview()">
                     </div>
-                    <div class="col">
-                        <label for="card_separator">Separator (Cards)</label>
-                        <select id="card_separator" name="card_separator" class="form-control separator-select"
+                    <div style="flex: 1;">
+                        <label for="card_separator" class="card-input-label">Separator (Cards)</label>
+                        <select id="card_separator" name="card_separator" class="card-input"
                             onchange="toggleCustom('card'); updatePreview()">
                             <option value="\n">New Line (\n)</option>
                             <option value=";">Semicolon (;)</option>
@@ -65,195 +78,86 @@
                             <option value="custom">Custom</option>
                         </select>
                         <input type="text" id="custom_card_separator" name="custom_card_separator"
-                            class="form-control mt-2" style="display: none;" placeholder="e.g. \n\n or ;"
-                            oninput="updatePreview()">
+                            class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
+                            placeholder="e.g. \n\n or ;" oninput="updatePreview()">
                     </div>
                 </div>
             </div>
 
-            <div id="preview-section" class="preview-section" style="display: none;">
-                <h3>Preview (First Card)</h3>
-                <div class="preview-card">
-                    <div class="preview-side">
-                        <strong>Front:</strong>
-                        <div id="preview-front" class="preview-content"></div>
+            <div id="preview-section" class="preview-section"
+                style="display: none; background-color: var(--color-bg-body); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: var(--space-6);">
+                <h4 style="margin-bottom: var(--space-2);">Preview (First Card)</h4>
+                <div style="display: flex; gap: var(--space-4); align-items: center;">
+                    <div style="flex: 1;">
+                        <strong
+                            style="display: block; font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase;">Front</strong>
+                        <div id="preview-front"
+                            style="font-family: monospace; background: var(--color-bg-surface); padding: var(--space-2); border-radius: var(--radius-sm);">
+                        </div>
                     </div>
-                    <div class="preview-divider"></div>
-                    <div class="preview-side">
-                        <strong>Back:</strong>
-                        <div id="preview-back" class="preview-content"></div>
+                    <div style="width: 1px; height: 40px; background-color: var(--color-border);"></div>
+                    <div style="flex: 1;">
+                        <strong
+                            style="display: block; font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase;">Back</strong>
+                        <div id="preview-back"
+                            style="font-family: monospace; background: var(--color-bg-surface); padding: var(--space-2); border-radius: var(--radius-sm);">
+                        </div>
                     </div>
                 </div>
-                <p class="preview-note" id="preview-note"></p>
+                <p id="preview-note"
+                    style="margin-top: var(--space-2); font-style: italic; font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                </p>
             </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">
-                    <i data-feather="upload"></i> Import
+            <div style="display: flex; gap: var(--space-4);">
+                <button type="submit" class="btn-primary">
+                    <span class="material-symbols-outlined">upload</span> Import
                 </button>
-                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
+                <a href="{{ url_for('main.index') }}" class="btn-secondary">Cancel</a>
             </div>
         </form>
 
-        <div class="import-instructions">
-            <h3>Format Instructions</h3>
-            <p>By default, Front and Back are expected to be separated by a <strong>Tab</strong> and each card on a
-                <strong>new line</strong>.
-            </p>
-            <p>Example (Comma as separator):</p>
-            <pre>Hund, Dog
-Katze, Cat
-Haus, House</pre>
+        <div
+            style="margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid var(--color-border);">
+            <h3 class="card-normal-title" style="margin-bottom: var(--space-2);">Format Instructions</h3>
+            <p style="color: var(--color-text-muted); margin-bottom: var(--space-4);">By default, Front and Back are
+                expected to be separated by a <strong>Tab</strong> and each card on a <strong>new line</strong>.</p>
+            <div
+                style="background-color: var(--color-bg-surface-hover); padding: var(--space-4); border-radius: var(--radius-md); font-family: monospace;">
+                <p style="margin-bottom: var(--space-2); color: var(--color-text-muted);">Example (Comma as separator):
+                </p>
+                Hund, Dog<br>
+                Katze, Cat<br>
+                Haus, House
+            </div>
         </div>
     </div>
 </div>
 
-<style>
-    .import-tabs {
-        display: flex;
-        margin-bottom: 20px;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .tab {
-        padding: 10px 20px;
-        cursor: pointer;
-        border-bottom: 2px solid transparent;
-        font-weight: 500;
-    }
-
-    .tab.active {
-        border-bottom-color: var(--primary-color);
-        color: var(--primary-color);
-    }
-
-    .separator-settings {
-        margin-top: 15px;
-        padding: 15px;
-        background-color: var(--secondary-color);
-        border-radius: var(--radius-md);
-    }
-
-    .separator-settings h3 {
-        font-size: 16px;
-        margin-top: 0;
-        margin-bottom: 12px;
-    }
-
-    .row {
-        display: flex;
-        gap: 20px;
-    }
-
-    .col {
-        flex: 1;
-    }
-
-    .mt-2 {
-        margin-top: 10px;
-    }
-
-    .help-text {
-        font-size: 14px;
-        color: var(--text-muted);
-        margin-bottom: 15px;
-    }
-
-    .help-text code {
-        background: var(--secondary-color);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-family: monospace;
-    }
-
-    .separator-select {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        padding-right: 36px;
-    }
-
-    .preview-section {
-        margin-top: 15px;
-        padding: 15px;
-        background-color: #f0f9ff;
-        border: 1px solid #b3d9ff;
-        border-radius: var(--radius-md);
-    }
-
-    .preview-section h3 {
-        font-size: 16px;
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: var(--primary-color);
-    }
-
-    .preview-card {
-        background: white;
-        border-radius: var(--radius-md);
-        padding: 12px;
-        display: flex;
-        gap: 15px;
-        align-items: center;
-    }
-
-    .preview-side {
-        flex: 1;
-    }
-
-    .preview-side strong {
-        display: block;
-        margin-bottom: 6px;
-        color: var(--text-muted);
-        font-size: 13px;
-    }
-
-    .preview-content {
-        padding: 10px;
-        background: var(--secondary-color);
-        border-radius: var(--radius-sm);
-        min-height: 35px;
-        font-family: monospace;
-        font-size: 14px;
-        word-break: break-word;
-    }
-
-    .preview-divider {
-        width: 2px;
-        height: 50px;
-        background: var(--secondary-color);
-    }
-
-    .preview-note {
-        margin-top: 8px;
-        font-size: 12px;
-        color: var(--text-muted);
-        font-style: italic;
-    }
-
-    .import-instructions {
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .import-instructions h3 {
-        font-size: 16px;
-        margin-bottom: 10px;
-    }
-
-    .form-actions {
-        display: flex;
-        gap: 15px;
-        margin-top: 20px;
-    }
-</style>
-
 <script>
+    function updateFileName(input) {
+        const fileNameDisplay = document.getElementById('file-name');
+        if (input.files && input.files[0]) {
+            fileNameDisplay.textContent = input.files[0].name;
+            fileNameDisplay.style.color = "var(--color-primary)";
+        } else {
+            fileNameDisplay.textContent = '';
+        }
+    }
+
     function switchTab(type) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+        // Active/Inactive state logic
+        if (type === 'file') {
+            document.getElementById('tab-file').style.backgroundColor = 'var(--color-primary-muted)';
+            document.getElementById('tab-file').style.color = 'white';
+            document.getElementById('tab-text').style.backgroundColor = '';
+            document.getElementById('tab-text').style.color = '';
+        } else {
+            document.getElementById('tab-text').style.backgroundColor = 'var(--color-primary-muted)';
+            document.getElementById('tab-text').style.color = 'white';
+            document.getElementById('tab-file').style.backgroundColor = '';
+            document.getElementById('tab-file').style.color = '';
+        }
 
         document.getElementById('import_type').value = type;
 
@@ -262,7 +166,6 @@ Haus, House</pre>
             document.getElementById('text-section').style.display = 'none';
             document.getElementById('file').required = true;
             document.getElementById('text_content').required = false;
-            // Clear text input when switching to file
             document.getElementById('text_content').value = '';
             updatePreview();
         } else {
@@ -270,12 +173,15 @@ Haus, House</pre>
             document.getElementById('text-section').style.display = 'block';
             document.getElementById('file').required = false;
             document.getElementById('text_content').required = true;
-            // Clear file input when switching to text
             const fileInput = document.getElementById('file');
             fileInput.value = '';
+            document.getElementById('file-name').textContent = '';
             updatePreview();
         }
     }
+
+    // Init Visual State
+    switchTab('file');
 
     function toggleCustom(type) {
         const select = document.getElementById(type + '_separator');
@@ -291,13 +197,13 @@ Haus, House</pre>
     }
 
     function updatePreview() {
+        // Logic same as original
         const importType = document.getElementById('import_type').value;
         let content = '';
 
         if (importType === 'text') {
             content = document.getElementById('text_content').value;
         } else {
-            // For file input, we can't preview without reading the file
             document.getElementById('preview-section').style.display = 'none';
             return;
         }
@@ -307,7 +213,6 @@ Haus, House</pre>
             return;
         }
 
-        // Get separators
         let cardSep = document.getElementById('card_separator').value;
         let fieldSep = document.getElementById('field_separator').value;
 
@@ -318,11 +223,9 @@ Haus, House</pre>
             fieldSep = document.getElementById('custom_field_separator').value || '\t';
         }
 
-        // Handle escape sequences
         cardSep = cardSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
         fieldSep = fieldSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
 
-        // Parse first card
         let cards;
         if (cardSep === '\n') {
             cards = content.split(/\r?\n/);
@@ -330,7 +233,6 @@ Haus, House</pre>
             cards = content.split(cardSep);
         }
 
-        // Find first non-empty card
         let firstCard = null;
         for (let card of cards) {
             card = card.trim();
@@ -345,12 +247,10 @@ Haus, House</pre>
             return;
         }
 
-        // Split into front and back
         const parts = firstCard.split(fieldSep);
         const front = parts[0] ? parts[0].trim() : '';
         const back = parts[1] ? parts[1].trim() : '';
 
-        // Update preview
         document.getElementById('preview-front').textContent = front || '(empty)';
         document.getElementById('preview-back').textContent = back || '(empty)';
 
@@ -360,7 +260,6 @@ Haus, House</pre>
         document.getElementById('preview-section').style.display = 'block';
     }
 
-    // Update preview when text changes
     document.addEventListener('DOMContentLoaded', function () {
         const textArea = document.getElementById('text_content');
         if (textArea) {

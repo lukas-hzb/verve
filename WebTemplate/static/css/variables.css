@@ -1,0 +1,72 @@
+:root {
+  /* Colors - Light Mode (Default) */
+  --color-bg-body: hsl(0, 0%, 98%);
+  --color-bg-surface: hsl(0, 0%, 100%);
+  --color-bg-surface-hover: hsl(210, 25%, 96%);
+
+  --color-primary: #6c63ff;
+  --color-primary-muted: hsl(242, 100%, 76%);
+  --color-primary-muted-hover: hsl(242, 100%, 73%);
+
+  --color-text-main: rgb(20, 23, 31);
+  --color-text-muted: rgb(92, 97, 107);
+
+  --color-border: rgb(225, 230, 237);
+
+  /* Accent Palette - Vibrant colors for general use */
+  --color-accent-1: #ff6b6b;
+  --color-accent-2: #ff9f43;
+  --color-accent-3: #feca57;
+  --color-accent-4: #1dd1a1;
+  --color-accent-5: #54a0ff;
+  --color-accent-6: #7d5fff;
+
+  /* Typography */
+  --font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-display: 'Outfit', system-ui, -apple-system, sans-serif;
+
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --card-title-spacing: 0.7rem;
+
+  /* Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1.5rem;
+  /* 24px */
+  --radius-btn: 1rem;
+  /* 16px */
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 15px 40px rgba(154, 150, 255, 0.15);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+
+  /* Sidebar Dimensions */
+  --sidebar-width: 260px;
+  --sidebar-width-closed: 82px;
+  --sidebar-offset: 15px;
+  --sidebar-padding: 10px;
+  --sidebar-icon-width: 60px;
+}

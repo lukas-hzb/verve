@@ -17,11 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize sidebar on all pages
     new SidebarManager();
 
-    // Initialize Feather icons
-    if (typeof feather !== 'undefined') {
-        feather.replace();
-    }
-
     // Determine current page and initialize appropriate module
     const currentPath = window.location.pathname;
 
@@ -111,7 +106,7 @@ function setupGlobalFunctions() {
     window.openCreateSetModal = function () {
         const modal = document.getElementById('createSetModal');
         if (modal) {
-            modal.style.display = 'block';
+            modal.classList.add('active');
             document.getElementById('setName').focus();
         }
     };
@@ -119,7 +114,7 @@ function setupGlobalFunctions() {
     window.closeCreateSetModal = function () {
         const modal = document.getElementById('createSetModal');
         if (modal) {
-            modal.style.display = 'none';
+            modal.classList.remove('active');
             document.getElementById('createSetForm').reset();
         }
     };
@@ -127,8 +122,13 @@ function setupGlobalFunctions() {
     // Close modal when clicking outside
     window.onclick = function (event) {
         const modal = document.getElementById('createSetModal');
-        if (event.target == modal) {
+        if (modal && event.target == modal) {
             window.closeCreateSetModal();
+        }
+
+        const confirmModal = document.getElementById('confirmationModal');
+        if (confirmModal && event.target == confirmModal) {
+            window.closeConfirmationModal();
         }
     };
 
@@ -216,24 +216,15 @@ function setupGlobalFunctions() {
             window.closeConfirmationModal();
         };
 
-        modal.style.display = 'block';
+        modal.classList.add('active');
     };
 
     window.closeConfirmationModal = function () {
         const modal = document.getElementById('confirmationModal');
         if (modal) {
-            modal.style.display = 'none';
+            modal.classList.remove('active');
         }
     };
 
-    // Close confirmation modal when clicking outside
-    const existingOnClick = window.onclick;
-    window.onclick = function (event) {
-        if (existingOnClick) existingOnClick(event);
-
-        const modal = document.getElementById('confirmationModal');
-        if (event.target == modal) {
-            window.closeConfirmationModal();
-        }
-    };
+    // Note: window.onclick already handles clicking outside (merged above)
 }

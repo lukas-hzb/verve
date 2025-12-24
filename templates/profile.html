@@ -1,126 +1,217 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="card profile-card">
-        <div class="profile-header">
-            <div class="profile-avatar-large" onclick="document.getElementById('avatar').click()"
-                style="cursor: pointer; position: relative; overflow: hidden;">
+<div style="padding: 7px var(--space-6) var(--space-6) var(--space-6); max-width: 1000px; width: 100%; margin: 0 auto;">
+
+    <style>
+        /* Restored Original Profile Styles */
+        .profile-card {
+            text-align: center;
+            padding: var(--space-8);
+            margin-bottom: var(--space-8);
+        }
+
+        .profile-avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), #a19dff);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 700;
+            margin: 0 auto var(--space-6);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            color: white;
+            border-radius: 50%;
+        }
+
+        .profile-avatar-large:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .profile-info h1 {
+            margin: 0 0 var(--space-2);
+            font-size: 28px;
+        }
+
+        .profile-info p {
+            margin: var(--space-1) 0;
+            color: var(--color-text-muted);
+        }
+    </style>
+
+    <!-- Profile Header (Restored Original) -->
+    <div class="card-normal profile-card">
+        <div class="profile-avatar-large" onclick="document.getElementById('avatar').click()">
+            {% if current_user.avatar_file %}
+            <img id="avatar-preview-img" src="{{ current_user.avatar_file }}" alt="Avatar"
+                style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            {% else %}
+            <div id="avatar-initials"
+                style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                {{ current_user.username[0].upper() }}
+            </div>
+            <img id="avatar-preview-img" src="" alt="Avatar"
+                style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            {% endif %}
+
+            <div class="avatar-overlay">
+                <span class="material-symbols-outlined" style="color: white; font-size: 24px;">photo_camera</span>
                 {% if current_user.avatar_file %}
-                <img id="avatar-preview-img" src="{{ current_user.avatar_file }}"
-                    alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                {% else %}
-                <span id="avatar-initials">{{ current_user.username[0].upper() }}</span>
-                <img id="avatar-preview-img" src="" alt="Avatar"
-                    style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                <span class="material-symbols-outlined" onclick="event.stopPropagation(); resetAvatar();"
+                    style="color: white; margin-left: 10px; cursor: pointer;" title="Remove">close</span>
                 {% endif %}
-                <div class="avatar-overlay">
-                    <i data-feather="camera" style="cursor: pointer;" title="Upload new avatar"></i>
-                    {% if current_user.avatar_file %}
-                    <i data-feather="x" onclick="event.stopPropagation(); resetAvatar();"
-                        style="cursor: pointer; margin-left: 10px;" title="Remove avatar"></i>
-                    {% endif %}
+            </div>
+        </div>
+
+        <div class="profile-info">
+            <h1>{{ current_user.username }}</h1>
+            <p>{{ current_user.email }}</p>
+            <p style="font-size: var(--font-size-sm);">Member since {{ current_user.created_at.strftime('%d.%m.%Y') }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="card-grid-3" style="margin-bottom: var(--space-8);">
+        <div class="card-stat" style="--icon-color: var(--color-primary-muted);">
+            <div class="card-icon-wrapper" style="--icon-color: var(--color-primary-muted);">
+                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">folder</span>
+            </div>
+            <div class="card-stat-content">
+                <p class="card-stat-value">{{ sets|length }}</p>
+                <p class="card-stat-label">Sets</p>
+            </div>
+        </div>
+
+        <div class="card-stat" style="--icon-color: var(--color-accent-4);">
+            <div class="card-icon-wrapper" style="--icon-color: var(--color-accent-4);">
+                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">check_circle</span>
+            </div>
+            <div class="card-stat-content">
+                <p class="card-stat-value">{{ total_cards }}</p>
+                <p class="card-stat-label">Total Cards</p>
+            </div>
+        </div>
+
+        <div class="card-stat" style="--icon-color: var(--color-accent-2);">
+            <div class="card-icon-wrapper" style="--icon-color: var(--color-accent-2);">
+                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">schedule</span>
+            </div>
+            <div class="card-stat-content">
+                <p class="card-stat-value">{{ due_cards }}</p>
+                <p class="card-stat-label">Due Cards</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Settings -->
+    <div style="margin-bottom: var(--space-8);">
+        <!-- No header here as per strict template adherence, or keep section header? 
+             debug.html shows Input Cards section with a wrapper H2. 
+             If we strictly follow "Input Cards", it's a card-normal with titles and inputs. 
+             We can keep the outer section header "Account Settings" or remove it if user wants STRICT adherence.
+             But a page usually needs section headers. "Account Settings" h2 seems consistent with "Stats Cards" h2 in debug.
+        -->
+        <h2 style="margin-bottom: var(--space-4);">Account Settings</h2>
+
+        <div class="card-normal">
+            <form action="{{ url_for('auth.update_profile') }}" method="POST" enctype="multipart/form-data"
+                id="profile-form">
+
+                <h3 class="card-normal-title">Username</h3>
+                <div class="card-input-group" style="margin-bottom: var(--space-6);">
+                    <input type="text" id="username" name="username" value="{{ current_user.username }}" required
+                        class="card-input" placeholder="The username used to login...">
                 </div>
-            </div>
-            <div class="profile-info">
-                <h1>{{ current_user.username }}</h1>
-                <p class="text-muted">{{ current_user.email }}</p>
-                <p class="text-muted">Member since {{ current_user.created_at.strftime('%d.%m.%Y') }}</p>
-            </div>
+
+                <h3 class="card-normal-title">Email</h3>
+                <div class="card-input-group">
+                    <input type="email" id="email" name="email" value="{{ current_user.email }}" required
+                        class="card-input" placeholder="Your email address...">
+                </div>
+
+                <div style="display: none;">
+                    <input type="file" id="avatar" name="avatar" accept=".jpg,.jpeg,.png,.gif"
+                        onchange="previewAvatar(this)">
+                    <input type="hidden" id="remove-avatar" name="remove_avatar" value="false">
+                </div>
+
+                <div class="button-group" style="margin-top: var(--space-6);">
+                    <button type="submit" id="save-profile-btn" class="btn-primary" disabled>
+                        <span class="material-symbols-outlined">save</span>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div class="stats-overview">
-        <div class="card stat-card">
-            <div class="stat-icon icon-style-primary">
-                <i data-feather="package"></i>
-            </div>
-            <div class="stat-details">
-                <h3>{{ sets|length }}</h3>
-                <p>Sets</p>
-            </div>
+    <!-- Danger Zone -->
+    <div class="card-attention">
+        <div class="card-attention-header">
+            <span class="material-symbols-outlined card-attention-icon">warning</span>
+            <h3 class="card-attention-title">Danger Zone</h3>
         </div>
-
-        <div class="card stat-card">
-            <div class="stat-icon icon-style-success">
-                <i data-feather="check-circle"></i>
-            </div>
-            <div class="stat-details">
-                <h3>{{ total_cards }}</h3>
-                <p>Total Cards</p>
-            </div>
-        </div>
-
-        <div class="card stat-card">
-            <div class="stat-icon icon-style-warning">
-                <i data-feather="clock"></i>
-            </div>
-            <div class="stat-details">
-                <h3>{{ due_cards }}</h3>
-                <p>Due Cards</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="account-settings">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
-            <h2 style="margin: 0;">Account Settings</h2>
-            <button type="submit" form="profile-form" id="save-profile-btn" class="btn btn-primary" disabled>Save Changes</button>
-        </div>
-
-        <form action="{{ url_for('auth.update_profile') }}" method="POST" enctype="multipart/form-data"
-            class="profile-form" id="profile-form">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" value="{{ current_user.username }}" required
-                    class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" value="{{ current_user.email }}" required
-                    class="form-control">
-            </div>
-            <div class="form-group" style="display: none;">
-                <label for="avatar">Avatar (Optional)</label>
-                <input type="file" id="avatar" name="avatar" accept=".jpg,.jpeg,.png,.gif" class="form-control"
-                    onchange="previewAvatar(this)">
-                <input type="hidden" id="remove-avatar" name="remove_avatar" value="false">
-            </div>
-        </form>
-
-        <div class="card danger-zone">
-            <h2>Danger Zone</h2>
-            <p>Actions in this section can affect your account security.</p>
-            <div class="account-actions">
-                <a href="{{ url_for('auth.change_password') }}" class="btn btn-danger">Change Password</a>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
-                <button type="button" class="btn btn-danger" onclick="openDeleteModal()">Delete Account</button>
-            </div>
+        <p class="card-attention-text" style="color: var(--color-text-muted); margin-bottom: var(--space-4);">Actions in
+            this section can affect your account security.</p>
+        <div class="button-group">
+            <a href="{{ url_for('auth.change_password') }}" class="btn-danger-secondary"
+                style="justify-content: center; text-decoration: none;">Change Password</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn-danger-secondary"
+                style="justify-content: center; text-decoration: none;">Logout</a>
+            <button type="button" class="btn-danger" onclick="openDeleteModal()">Delete Account</button>
         </div>
     </div>
 </div>
 
 <!-- Delete Account Confirmation Modal -->
-<div id="delete-account-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Delete Account</h2>
-            <button class="close" onclick="closeDeleteModal()" aria-label="Close">
-                <i data-feather="x"></i>
+<div id="delete-account-modal" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h3 class="popup-title">Delete Account</h3>
+            <button class="popup-close-btn" onclick="closeDeleteModal()">
+                <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <div class="modal-body">
-            <div class="modal-warning">
-                <i data-feather="alert-triangle"></i>
+        <div class="popup-body">
+            <div class="popup-attention"
+                style="display: flex; align-items: flex-start; gap: var(--space-4); margin-bottom: var(--space-4);">
+                <div
+                    style="background-color: var(--color-accent-1-light); border-radius: 50%; padding: 8px; display: flex;">
+                    <span class="material-symbols-outlined" style="color: var(--color-accent-1);">warning</span>
+                </div>
                 <div>
-                    <h3>Are you sure?</h3>
-                    <p>This action cannot be undone. All your sets and progress will be permanently deleted.</p>
+                    <h4 style="margin: 0 0 var(--space-1) 0; color: var(--color-accent-1);">Are you sure?</h4>
+                    <p style="margin: 0; color: var(--color-text-muted);">This action cannot be undone. All your sets
+                        and progress will be permanently deleted.</p>
                 </div>
             </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+
+            <div class="popup-footer">
+                <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                 <form action="{{ url_for('auth.delete_account') }}" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">Delete Account</button>
+                    <button type="submit" class="btn-danger">Delete Account</button>
                 </form>
             </div>
         </div>
@@ -128,29 +219,17 @@
 </div>
 
 <script>
-    function openDeleteModal() {
-        const modal = document.getElementById('delete-account-modal');
-        modal.style.display = 'flex';
-    }
+    // ... (Keeping script logic identical)
+    function openDeleteModal() { document.getElementById('delete-account-modal').classList.add('active'); }
+    function closeDeleteModal() { document.getElementById('delete-account-modal').classList.remove('active'); }
 
-    function closeDeleteModal() {
-        const modal = document.getElementById('delete-account-modal');
-        modal.style.display = 'none';
-    }
-
-    // Close modal when clicking outside of it
-    window.onclick = function (event) {
+    window.addEventListener('click', function (event) {
         const modal = document.getElementById('delete-account-modal');
         if (event.target == modal) {
-            modal.style.display = 'none';
+            modal.classList.remove('active');
         }
-    }
-</script>
+    });
 
-
-
-<script>
-    // Make everything explicitly global by attaching to window
     window.originalValues = {
         username: '',
         email: '',
@@ -160,13 +239,11 @@
     window.avatarChanged = false;
     window.avatarRemoved = false;
 
-    // Initialize after DOM is ready
     document.addEventListener('DOMContentLoaded', function () {
         const usernameInput = document.getElementById('username');
         const emailInput = document.getElementById('email');
         const avatarImg = document.getElementById('avatar-preview-img');
 
-        // Set initial values
         if (usernameInput) {
             window.originalValues.username = usernameInput.value;
             usernameInput.addEventListener('input', window.checkFormChanges);
@@ -179,7 +256,6 @@
             window.originalValues.hasAvatar = true;
         }
 
-        // Run initial check
         window.checkFormChanges();
     });
 
@@ -215,13 +291,9 @@
                 }
 
                 overlay.innerHTML = `
-                        <i data-feather="camera" style="cursor: pointer;" title="Upload new avatar"></i>
-                        <i data-feather="x" onclick="event.stopPropagation(); resetAvatar();" style="cursor: pointer; margin-left: 10px;" title="Remove avatar"></i>
-                    `;
-
-                if (typeof feather !== 'undefined') {
-                    feather.replace();
-                }
+                    <span class="material-symbols-outlined" style="color: white;">photo_camera</span>
+                    <span class="material-symbols-outlined" onclick="event.stopPropagation(); resetAvatar();" style="color: white; margin-left: 8px; cursor: pointer;" title="Remove">close</span>
+                `;
 
                 window.avatarChanged = true;
                 window.avatarRemoved = false;
@@ -244,19 +316,17 @@
         img.src = '';
 
         if (!initials) {
-            initials = document.createElement('span');
+            initials = document.createElement('div');
             initials.id = 'avatar-initials';
+            initials.style.cssText = "width: 100%; height: 100%; border-radius: 50%; background-color: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700;";
             initials.textContent = '{{ current_user.username[0].upper() }}';
-            img.parentElement.insertBefore(initials, img);
+            // Insert before img
+            if (img.parentElement) img.parentElement.insertBefore(initials, img);
         } else {
-            initials.style.display = 'block';
+            initials.style.display = 'flex';
         }
 
-        overlay.innerHTML = '<i data-feather="camera" style="cursor: pointer;" title="Upload new avatar"></i>';
-
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
+        overlay.innerHTML = '<span class="material-symbols-outlined" style="color: white;">photo_camera</span>';
 
         window.avatarRemoved = true;
         window.avatarChanged = false;

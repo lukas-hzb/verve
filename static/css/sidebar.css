@@ -1,0 +1,226 @@
+/* Sidebar CSS (Floating & Rounded) */
+.sidebar {
+    position: fixed;
+    top: var(--sidebar-offset);
+    left: var(--sidebar-offset);
+    height: calc(100vh - (var(--sidebar-offset) * 2));
+    width: var(--sidebar-width);
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-xl);
+    z-index: 1000;
+    transition: all 0.5s ease;
+    font-family: var(--font-family-base);
+    overflow: hidden;
+}
+
+/* Base Text Colors */
+.sidebar .logo-details .material-symbols-outlined,
+.sidebar .logo-details .logo_name,
+.sidebar .nav-links li .material-symbols-outlined,
+.sidebar .nav-links li a .link_name {
+    color: var(--color-text-main);
+}
+
+.sidebar.close {
+    width: var(--sidebar-width-closed);
+}
+
+/* Header / Logo Section */
+.sidebar .logo-details {
+    height: 60px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 11px var(--sidebar-padding) 9px var(--sidebar-padding);
+}
+
+/* Toggle Icon */
+.sidebar .logo-details #sidebar-toggle {
+    font-size: 26px;
+    height: 50px;
+    min-width: var(--sidebar-icon-width);
+    width: var(--sidebar-icon-width);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    border-radius: var(--radius-btn);
+    margin-right: var(--sidebar-padding);
+    margin-top: 8px;
+}
+
+.sidebar.close .logo-details #sidebar-toggle {
+    text-align: center;
+    margin-right: 0;
+    margin-top: 8px;
+}
+
+.sidebar .logo-details #sidebar-toggle:hover {
+    background-color: var(--color-bg-surface-hover);
+}
+
+.sidebar .logo-details .logo_name {
+    font-size: 20px;
+    font-weight: 600;
+    transition: 0.3s ease;
+    transition-delay: 0.1s;
+    white-space: nowrap;
+    opacity: 1;
+    margin-top: 8px;
+}
+
+.sidebar.close .logo-details .logo_name {
+    transition-delay: 0s;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+}
+
+/* Navigation Links */
+.sidebar .nav-links {
+    height: calc(100% - 60px);
+    padding: 10px 0;
+    overflow: auto;
+}
+
+.sidebar .nav-links li {
+    position: relative;
+    list-style: none;
+    transition: all 0.4s ease;
+    margin: 8px var(--sidebar-padding);
+    border-radius: var(--radius-btn);
+    white-space: nowrap;
+}
+
+/* Hover Effects */
+.sidebar .nav-links li:hover {
+    background: var(--color-primary-muted-hover);
+}
+
+.sidebar .nav-links li:hover .link_name,
+.sidebar .nav-links li:hover .material-symbols-outlined {
+    color: white;
+}
+
+.sidebar .nav-links li a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    padding: 10px 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Icon Styling */
+.sidebar .nav-links li .material-symbols-outlined {
+    height: 30px;
+    min-width: var(--sidebar-icon-width);
+    width: var(--sidebar-icon-width);
+    text-align: center;
+    line-height: 30px;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Closed State Adjustments */
+.sidebar.close .nav-links li {
+    margin: 8px var(--sidebar-padding);
+}
+
+.sidebar.close .nav-links li .material-symbols-outlined {
+    min-width: var(--sidebar-icon-width);
+}
+
+.sidebar .nav-links li a .link_name {
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.4s ease;
+    opacity: 1;
+}
+
+.sidebar.close .nav-links li a .link_name {
+    opacity: 0;
+    pointer-events: none;
+}
+
+
+
+/* Layout Content Area */
+.home-section {
+    position: relative;
+    background: var(--color-bg-body);
+    min-height: 100vh;
+    padding: 0 20px 20px 20px;
+    margin-left: calc(var(--sidebar-width) + var(--sidebar-offset));
+    /* Gap stays consistent with left offset */
+    width: auto;
+    transition: margin-left 0.5s ease;
+}
+
+.sidebar.close~.home-section {
+    margin-left: calc(var(--sidebar-width-closed) + var(--sidebar-offset));
+}
+
+.home-section .home-content {
+    height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+.home-section .home-content .text {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--color-text-main);
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        left: -100%;
+        /* Hide off screen on mobile init? or keep? */
+    }
+
+    .sidebar.close {
+        left: 20px;
+        width: 88px;
+    }
+
+    .home-section {
+        margin-left: 20px;
+        /* Overlap or push? */
+    }
+}
+/* Sidebar Profile Avatar - Added for Verve */
+.sidebar .nav-links li .sidebar-icon-placeholder {
+    height: 30px;
+    min-width: var(--sidebar-icon-width);
+    width: var(--sidebar-icon-width);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.sidebar .nav-links li .sidebar-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.sidebar .nav-links li .sidebar-avatar-text {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--color-primary-muted);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}

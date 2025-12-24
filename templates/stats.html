@@ -1,27 +1,71 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="stats-header">
-        <h1>{{ set_name.replace('_', ' ') | title }} Stats</h1>
+<div style="padding: 7px var(--space-6) var(--space-6) var(--space-6); max-width: 1000px; width: 100%; margin: 0 auto;">
+
+    <!-- Secondary Header for Stats -->
+    <div style="margin-bottom: var(--space-8);">
+        <div class="card-header-secondary">
+            <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') | title }} Stats</h1>
+            <div class="button-group">
+                <a href="{{ url_for('main.set_overview', set_id=set_id) }}" class="btn-secondary"
+                    style="text-decoration: none;">
+                    <span class="material-symbols-outlined">arrow_back</span> Back to Overview
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>Overview</h2>
-        <p>Total Cards: <span id="total-cards"></span></p>
+    <!-- Stats Grid -->
+    <div class="card-grid-3" style="margin-bottom: var(--space-8);">
+        <div class="card-stat" style="--icon-color: var(--color-primary-muted);">
+            <div class="card-icon-wrapper" style="--icon-color: var(--color-primary-muted);">
+                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">style</span>
+            </div>
+            <div class="card-stat-content">
+                <p class="card-stat-value" id="total-cards">-</p>
+                <p class="card-stat-label">Total Cards</p>
+            </div>
+        </div>
+        <!-- Placeholders for potential future stats to maintain grid look, or just one? User said "Overview ist kein bisheriger Stil (nutze stats card)". -->
+        <!-- I'll add placeholders like in index.html to make it look good -->
+        <div class="card-stat" style="--icon-color: var(--color-accent-4);">
+            <div class="card-icon-wrapper" style="--icon-color: var(--color-accent-4);">
+                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">check_circle</span>
+            </div>
+            <div class="card-stat-content">
+                <p class="card-stat-value">0%</p>
+                <p class="card-stat-label">Mastery</p>
+            </div>
+        </div>
+        <div class="card-stat" style="--icon-color: var(--color-accent-2);">
+            <div class="card-icon-wrapper" style="--icon-color: var(--color-accent-2);">
+                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">schedule</span>
+            </div>
+            <div class="card-stat-content">
+                <p class="card-stat-value">0</p>
+                <p class="card-stat-label">Due</p>
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>Progress by Level</h2>
-        <div id="level-progress"></div>
+    <!-- Progress by Level -->
+    <div style="margin-bottom: var(--space-8);">
+        <h2 style="margin-bottom: var(--space-4);">Progress by Level</h2>
+        <div id="level-progress" class="card-progress">
+            <span class="text-muted">Loading chart...</span>
+        </div>
     </div>
 
-    <div class="card danger-zone">
-        <h2>Danger Zone</h2>
-        <p>Resetting the set will move all cards back to Level 1. This action cannot be undone.</p>
-        <button class="btn btn-danger" id="reset-set-btn">Reset Set</button>
+    <div class="card-normal card-attention">
+        <h3 class="card-normal-title" style="color: var(--color-accent-1); margin-bottom: var(--space-2);">Danger Zone
+        </h3>
+        <p style="margin-bottom: var(--space-4);">Resetting the set will move all cards back to Level 1. This action
+            cannot be undone.</p>
+        <button class="btn-danger" id="reset-set-btn">Reset Set</button>
     </div>
 </div>
+
 <script>
     // Set the setId for the StatsManager module
     window.statsSetId = "{{ set_id }}";

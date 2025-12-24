@@ -1,140 +1,255 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="learn-header">
-        <h1>{{ set_name.replace('_', ' ') | title }}</h1>
-        <div class="learn-controls">
-            <div class="practice-mode-toggle">
-                <label class="switch">
-                    <input type="checkbox" id="practice-mode-checkbox">
-                    <span class="slider round"></span>
-                </label>
-                <span>Practice Mode</span>
+<style>
+    /* Flashcard Specific Styles - With Animations */
+    .card-container {
+        perspective: 1000px;
+        width: 100%;
+        max-width: 700px;
+        height: 480px;
+        /* Increased height for better proportions */
+        margin: 0 auto var(--space-8) auto;
+        position: relative;
+    }
+
+    .flashcard {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+        cursor: pointer;
+    }
+
+    .flashcard.flipped {
+        transform: rotateY(180deg);
+    }
+
+    .flashcard-front,
+    .flashcard-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: var(--radius-xl);
+        background-color: var(--color-bg-surface);
+        box-shadow: var(--shadow-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-8);
+        text-align: center;
+        font-size: var(--font-size-2xl);
+        font-weight: 500;
+        color: var(--color-text-main);
+        border: 1px solid var(--color-border);
+    }
+
+    .flashcard-back {
+        transform: rotateY(180deg);
+        background-color: var(--color-bg-surface-hover);
+        color: var(--color-text-main);
+    }
+
+    .flashcard-content {
+        overflow-y: auto;
+        max-height: 100%;
+        width: 100%;
+    }
+
+    /* Swipe Animations from Original */
+    @keyframes swipe-out-right {
+        100% {
+            transform: translateX(100px) rotate(10deg);
+            opacity: 0;
+        }
+    }
+
+    @keyframes swipe-out-left {
+        100% {
+            transform: translateX(-100px) rotate(-10deg);
+            opacity: 0;
+        }
+    }
+
+    .swipe-out-right {
+        animation: swipe-out-right 0.4s ease-out forwards;
+    }
+
+    .swipe-out-left {
+        animation: swipe-out-left 0.4s ease-out forwards;
+    }
+
+    /* Load In Animation */
+    @keyframes load-in {
+        0% {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .load-in {
+        animation: load-in 0.4s ease-out forwards;
+    }
+
+    /* Level Indicator */
+    .card-level {
+        position: absolute;
+        top: var(--space-4);
+        right: var(--space-4);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        color: white;
+        z-index: 10;
+        font-weight: 600;
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Original Level Colors (Variables for JS compatibility) */
+    .card-container {
+        --level-1: #ff6b6b;
+        --level-2: #ffa07a;
+        --level-3: #ffd700;
+        --level-4: #98fb98;
+        --level-5: #87cefa;
+    }
+
+    /* Custom Toggle Switch (Keep as is, but cleaner) */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        margin-right: var(--space-2);
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--color-border);
+        transition: .3s;
+        border-radius: 24px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+
+    input:checked+.slider {
+        background-color: var(--color-primary);
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(20px);
+    }
+</style>
+
+<div style="padding: 7px var(--space-6) var(--space-6) var(--space-6); max-width: 1000px; width: 100%; margin: 0 auto;">
+
+    <!-- Secondary Header for Learning -->
+    <div style="margin-bottom: var(--space-8);">
+        <div class="card-header-secondary">
+            <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') | title }}</h1>
+            <div class="button-group">
+                <a href="{{ url_for('main.set_overview', set_id=set_id) }}" class="btn-secondary"
+                    style="text-decoration: none;">
+                    <span class="material-symbols-outlined">arrow_back</span> Back to Overview
+                </a>
             </div>
-            <button class="btn btn-secondary control-btn" id="shuffle-btn"><i data-feather="shuffle"></i>
-                Shuffle</button>
-            <button class="btn btn-secondary control-btn" id="back-btn" disabled><i data-feather="rotate-ccw"></i>
-                Back</button>
         </div>
     </div>
 
+    <!-- Controls Bar -->
+    <div class="card-normal"
+        style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-4); margin-bottom: var(--space-6);">
+        <div style="display: flex; align-items: center;">
+            <label class="switch">
+                <input type="checkbox" id="practice-mode-checkbox">
+                <span class="slider round"></span>
+            </label>
+            <span style="font-weight: 500; font-size: var(--font-size-base);">Practice Mode</span>
+        </div>
+        <div class="button-group" style="gap: var(--space-2);">
+            <button class="btn-secondary" id="shuffle-btn">
+                <span class="material-symbols-outlined">shuffle</span> Shuffle
+            </button>
+            <button class="btn-secondary" id="back-btn" disabled>
+                <span class="material-symbols-outlined">undo</span> Undo
+            </button>
+        </div>
+    </div>
+
+    <!-- Flashcard Area -->
     <div class="card-container">
+        <!-- Level Indicator (ID matches what flashcard.js expects) -->
+        <div id="card-level" class="card-level" style="display: none;">Level 1</div>
+
         <div class="flashcard" id="flashcard">
-            <div class="flashcard-inner">
-                <div class="flashcard-front">
+            <div class="flashcard-front" id="card-front-container">
+                <div class="flashcard-content">
                     <p id="card-front">Loading...</p>
                 </div>
-                <div class="flashcard-back">
+            </div>
+            <div class="flashcard-back" id="card-back-container">
+                <div class="flashcard-content">
                     <p id="card-back"></p>
                 </div>
             </div>
         </div>
-        <div class="card-level" id="card-level"></div>
     </div>
 
-    <div class="card-actions">
-        <button class="btn btn-primary" id="flip-btn">Flip Card (Space)</button>
-        <div id="feedback-btns" style="display: none;">
-            <button class="btn btn-danger" id="not-known-btn">Didn't know (A)</button>
-            <button class="btn btn-success" id="known-btn">Knew it (D)</button>
-        </div>
-    </div>
-</div>
+    <!-- Action Buttons -->
+    <div
+        style="display: flex; justify-content: center; gap: var(--space-4); margin-top: var(--space-4); min-height: 80px;">
+        <button class="btn-primary" id="flip-btn" style="min-width: 200px;">
+            Flip Card <span style="opacity: 0.7; font-weight: normal; margin-left: 5px;">(Space)</span>
+        </button>
 
-<!-- Add Card Modal -->
-<div id="add-card-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Add New Card</h2>
-            <button class="close" aria-label="Close">
-                <i data-feather="x"></i>
+        <div id="feedback-btns" style="display: none; gap: var(--space-4);">
+            <button class="btn-danger" id="not-known-btn" style="min-width: 150px;">
+                <span class="material-symbols-outlined">close</span> Didn't know <span
+                    style="opacity: 0.7; font-weight: normal; margin-left: 5px;">(A)</span>
+            </button>
+            <button class="btn-success" id="known-btn" style="min-width: 150px;">
+                <span class="material-symbols-outlined">check</span> Knew it <span
+                    style="opacity: 0.7; font-weight: normal; margin-left: 5px;">(D)</span>
             </button>
         </div>
-        <form id="add-card-form">
-            <div class="form-group">
-                <label for="new-card-front">Front</label>
-                <textarea id="new-card-front" name="front" class="form-control" required rows="3"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="new-card-back">Back</label>
-                <textarea id="new-card-back" name="back" class="form-control" required rows="3"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Add Card</button>
-            </div>
-        </form>
     </div>
+
 </div>
 
-<script>
-    const setId = "{{ set_id }}";
+<!-- Logic Link -->
+<script type="module">
+    import { FlashcardManager } from "{{ url_for('static', filename='js/modules/flashcard.js') }}";
 
-    // Modal Logic
-    const modal = document.getElementById("add-card-modal");
-    const btn = document.getElementById("add-card-btn");
-    const span = document.getElementsByClassName("close")[0];
-    const addCardForm = document.getElementById("add-card-form");
-
-    // We need to handle the button click if it exists (it might be in a different part of the UI)
-    // But wait, where is add-card-btn? It's not in the viewed file content!
-    // It might be in layout.html or dynamically added?
-    // Actually, looking at the file content again, I don't see add-card-btn in the HTML structure I viewed.
-    // But the script references it. 
-    // I will keep the modal logic as is, assuming the button exists somewhere.
-
-    if (btn) {
-        btn.onclick = function () {
-            modal.style.display = "block";
-            document.getElementById("new-card-front").focus();
-        }
-    }
-
-    if (span) {
-        span.onclick = function () {
-            modal.style.display = "none";
-        }
-    }
-
-    window.onclick = function (event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    if (addCardForm) {
-        addCardForm.onsubmit = async function (e) {
-            e.preventDefault();
-            const front = document.getElementById("new-card-front").value;
-            const back = document.getElementById("new-card-back").value;
-
-            try {
-                const response = await fetch(`/set/${setId}/add_card`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ front, back }),
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    document.getElementById("new-card-front").value = "";
-                    document.getElementById("new-card-back").value = "";
-                    document.getElementById("new-card-front").focus();
-
-                    // Reload the page to show the new card if it's the only one, 
-                    // or let FlashcardManager handle it (it might need a reload or re-fetch)
-                    // For now, simple reload is safest to ensure FlashcardManager sees the new card
-                    window.location.reload();
-                } else {
-                    alert("Error: " + data.error);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert("An error occurred while adding the card.");
-            }
-        }
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+        new FlashcardManager("{{ set_id }}");
+    });
 </script>
 {% endblock %}

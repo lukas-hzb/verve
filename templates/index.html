@@ -1,141 +1,186 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <!-- Dashboard Header (Purple Banner) -->
-    <div class="welcome-card">
-        <h1>Welcome back, {{ current_user.username }}!</h1>
-        <p>Ready to expand your vocabulary today?</p>
+<div style="padding: 7px var(--space-6) var(--space-6) var(--space-6); max-width: 1400px; width: 100%; margin: 0 auto;">
+
+    <!-- Welcome Header -->
+    <div style="margin-bottom: var(--space-8);">
+        <div class="card-header">
+            <h1 class="card-header-title">Welcome back, {{ current_user.username }}!</h1>
+            <p class="card-header-subtitle">Here's what's happening with your sets.</p>
+        </div>
     </div>
 
     <!-- Stats Overview -->
-    {% if sets %}
-    <div class="stats-overview">
-        <div class="stat-summary-card">
-            <div class="stat-summary-icon icon-style-success">
-                <i data-feather="check-circle"></i>
+    <div class="card-grid-3" style="margin-bottom: var(--space-8);">
+        <!-- ... (Stats cards remain as is for now, will be updated in next step if needed or if already correct) ... -->
+        <!-- No, user said Stats SCREEN is weird. Dashboard stats were updated in Round 1. Assuming they are okay or will be fine-tuned. -->
+        <!-- Just ensuring I don't break the file structure. -->
+        <div class="card-stat" style="--icon-color: var(--color-primary-muted);">
+            <div class="card-icon-wrapper" style="--icon-color: var(--color-primary-muted);">
+                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">folder</span>
             </div>
-            <div class="stat-summary-info">
+            <div class="card-stat-content">
+                <p class="card-stat-value">{{ sets|length }}</p>
+                <p class="card-stat-label">Total Sets</p>
+            </div>
+        </div>
+
+        <div class="card-stat" style="--icon-color: var(--color-accent-4);">
+            <div class="card-icon-wrapper" style="--icon-color: var(--color-accent-4);">
+                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">check_circle</span>
+            </div>
+            <div class="card-stat-content">
                 {% set total_cards = namespace(value=0) %}
                 {% for set in sets %}
                 {% set total_cards.value = total_cards.value + set.card_count %}
                 {% endfor %}
-                <span class="stat-summary-value">{{ total_cards.value }}</span>
-                <span class="stat-summary-label">Total Cards</span>
+                <p class="card-stat-value">{{ total_cards.value }}</p>
+                <p class="card-stat-label">Cards Learned</p>
             </div>
         </div>
-        <div class="stat-summary-card">
-            <div class="stat-summary-icon icon-style-warning">
-                <i data-feather="clock"></i>
+
+        <div class="card-stat" style="--icon-color: var(--color-accent-2);">
+            <div class="card-icon-wrapper" style="--icon-color: var(--color-accent-2);">
+                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">schedule</span>
             </div>
-            <div class="stat-summary-info">
+            <div class="card-stat-content">
                 {% set total_due = namespace(value=0) %}
                 {% for set in sets %}
                 {% set total_due.value = total_due.value + set.due_count %}
                 {% endfor %}
-                <span class="stat-summary-value">{{ total_due.value }}</span>
-                <span class="stat-summary-label">Due Today</span>
+                <p class="card-stat-value">{{ total_due.value }}</p>
+                <p class="card-stat-label">Due Review</p>
             </div>
         </div>
     </div>
-    {% endif %}
 
-    <!-- Sets Grid -->
-    <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
-        {% if not sets %}
-        <div style="margin-bottom: var(--spacing-lg);">
-            <h2 style="margin: 0;">Your Sets</h2>
-        </div>
-        <div class="card empty-state">
-            <i data-feather="layers" class="empty-state-icon"></i>
-            <h3>No Sets Yet</h3>
-            <p>Create your first vocabulary set to start learning.</p>
-            <button class="btn btn-primary" onclick="openCreateSetModal()">
-                <i data-feather="plus"></i> Create Set
-            </button>
-        </div>
-        {% else %}
-        <!-- Sets Header with Search Bar -->
-        <div class="sets-header">
-            <h2>Your Sets</h2>
-            <div class="search-bar-container">
-                <div class="search-bar">
-                    <input type="text" id="setSearchInput" class="form-control" placeholder="Search sets..."
-                        autocomplete="off">
-                    <i data-feather="search" class="search-icon"></i>
-                </div>
+    <!-- Your Sets -->
+    <div style="margin-bottom: var(--space-8);">
+        <h2 style="margin-bottom: var(--space-4);">Your Sets</h2>
+
+        <!-- Search Bar -->
+        <div class="card-normal" style="margin-bottom: var(--space-6);">
+            <div class="card-input-group">
+                <span class="material-symbols-outlined card-input-icon">search</span>
+                <input type="text" id="setSearchInput" class="card-input card-input-with-icon"
+                    placeholder="Search your sets..." autocomplete="off" onkeyup="filterSets()">
             </div>
         </div>
 
-        <div class="sets-grid">
+        {% if not sets %}
+        <div class="card-normal" style="text-align: center; padding: 60px 20px;">
+            <span class="material-symbols-outlined"
+                style="font-size: 64px; color: var(--color-primary-muted); margin-bottom: var(--space-4);">layers</span>
+            <h3 class="card-normal-title" style="margin-bottom: var(--space-2);">No Sets Yet</h3>
+            <p style="color: var(--color-text-muted); margin-bottom: var(--space-6);">Create your first vocabulary set
+                to start learning.</p>
+            <button class="btn-primary" onclick="openCreateSetModal()">
+                <span class="material-symbols-outlined">add</span> Create Set
+            </button>
+        </div>
+        {% else %}
+
+        <!-- Create New Set Card (First in Grid) -->
+        <div class="card-grid-3" id="setsGrid">
+            <div class="card-normal set-card-create create-new-card" onclick="openCreateSetModal()"
+                style="border: 2px dashed var(--color-border); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; transition: all 0.2s ease;">
+                <div
+                    style="background-color: var(--color-primary-muted); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
+                    <span class="material-symbols-outlined" style="color: white; font-size: 24px;">add</span>
+                </div>
+                <h3 class="card-normal-title" style="color: var(--color-primary); margin: 0;">Create New Set</h3>
+            </div>
+
             {% for set in sets %}
-            <div class="set-card" onclick="window.location.href='{{ url_for('main.set_overview', set_id=set.id) }}'">
-                <div class="set-card-header">
-                    <h3>{{ set.name.replace('_', ' ') | title }}</h3>
-                </div>
-                <div class="set-card-stats">
-                    <div class="stat">
-                        <span class="stat-value">{{ set.card_count }}</span>
-                        <span class="stat-label">Cards</span>
+            <div class="card-normal set-card link-card"
+                onclick="window.location.href='{{ url_for('main.set_overview', set_id=set.id) }}'"
+                style="cursor: pointer; display: flex; flex-direction: column; height: 100%;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                    <div
+                        style="background-color: var(--color-bg-surface-hover); padding: 8px; border-radius: var(--radius-md);">
+                        <span class="material-symbols-outlined" style="color: var(--color-primary);">inventory_2</span>
                     </div>
-                    <div class="stat">
-                        <span class="stat-value">{{ set.due_count }}</span>
-                        <span class="stat-label">Due</span>
-                    </div>
+                    <span class="material-symbols-outlined" style="color: var(--color-text-muted);"
+                        onclick="event.stopPropagation(); deleteVocabSet({{ set.id }}, '{{ set.name }}')">delete</span>
                 </div>
-                <div class="set-card-actions">
-                    <a href="{{ url_for('main.learn_set', set_id=set.id) }}" class="btn btn-sm btn-primary"
-                        onclick="event.stopPropagation();">Learn</a>
-                    <a href="{{ url_for('main.stats', set_id=set.id) }}" class="btn btn-info btn-sm"
-                        style="background-color: var(--level-{{ set.max_level }}); color: white;"
-                        onclick="event.stopPropagation();">Stats</a>
-                    <button class="btn btn-sm btn-danger btn-icon" style="margin-left: auto;"
-                        onclick="event.stopPropagation(); deleteVocabSet({{ set.id }}, '{{ set.name }}')">
-                        <i data-feather="trash-2"></i>
+
+                <h3 class="card-normal-title" style="margin-bottom: var(--space-2); flex-grow: 1;">{{
+                    set.name.replace('_', ' ') | title }}</h3>
+
+                <div style="margin-top: auto;">
+                    <div
+                        style="display: flex; justify-content: space-between; margin-bottom: var(--space-4); color: var(--color-text-muted); font-size: var(--font-size-sm);">
+                        <span>{{ set.card_count }} Cards</span>
+                        <span
+                            style="{{ 'color: var(--color-accent-2); font-weight: 600;' if set.due_count > 0 else '' }}">{{
+                            set.due_count }} Due</span>
+                    </div>
+
+                    <button class="btn-primary" style="width: 100%; justify-content: center;"
+                        onclick="event.stopPropagation(); window.location.href='{{ url_for('main.learn_set', set_id=set.id) }}'">
+                        Learn
                     </button>
                 </div>
             </div>
             {% endfor %}
-
-            <!-- Create New Set Card -->
-            <div class="create-new-card" onclick="openCreateSetModal()">
-                <div class="set-card-header">
-                    <h3>Create New Set</h3>
-                </div>
-                <div class="create-new-content">
-                    <div class="create-icon">
-                        <i data-feather="plus"></i>
-                    </div>
-                </div>
-            </div>
         </div>
         {% endif %}
     </div>
 </div>
 
 <!-- Create Set Modal -->
-<div id="createSetModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Create New Vocabulary Set</h2>
-            <span class="close" onclick="closeCreateSetModal()">&times;</span>
+<div id="createSetModal" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h3 class="popup-title">Create New Vocabulary Set</h3>
+            <button class="popup-close-btn" onclick="closeCreateSetModal()">
+                <span class="material-symbols-outlined">close</span>
+            </button>
         </div>
-        <div class="modal-body">
+        <div class="popup-body">
             <form id="createSetForm" onsubmit="handleCreateSet(event)">
-                <div class="form-group">
-                    <label for="setName">Set Name</label>
+                <div class="card-input-group">
+                    <label for="setName" class="card-input-label">Set Name</label>
                     <input type="text" id="setName" name="setName" required pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+"
                         title="Only letters, numbers, hyphens, underscores and umlauts allowed"
-                        placeholder="e.g. Spanish_Basics" class="form-control">
-                    <small class="text-muted" style="display: block; margin-top: 5px;">Allowed characters: Letters,
-                        numbers, -, _ and umlauts</small>
+                        placeholder="e.g. Spanish_Basics" class="card-input">
+                    <div class="card-input-description">Allowed characters: Letters, numbers, -, _ and umlauts</div>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateSetModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
+                <div class="popup-footer">
+                    <button type="button" class="btn-secondary" onclick="closeCreateSetModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    function filterSets() {
+        const input = document.getElementById('setSearchInput');
+        const filter = input.value.toLowerCase();
+        const grid = document.getElementById('setsGrid');
+        const cards = grid.getElementsByClassName('set-card');
+        const createCard = grid.querySelector('.create-new-card');
+
+        // Hide create card if searching
+        if (createCard) {
+            createCard.style.display = filter ? 'none' : 'flex';
+        }
+
+        for (let i = 0; i < cards.length; i++) {
+            const titleElement = cards[i].querySelector('.card-normal-title');
+            if (titleElement) {
+                const titleValue = titleElement.textContent || titleElement.innerText;
+                if (titleValue.toLowerCase().indexOf(filter) > -1) {
+                    cards[i].style.display = "flex"; // Restore flex display
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
 {% endblock %}

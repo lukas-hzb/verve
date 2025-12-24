@@ -1,0 +1,78 @@
+<div class="sidebar">
+    <div class="logo-details">
+        <span class="material-symbols-outlined" id="sidebar-toggle" style="cursor: pointer;">menu_open</span>
+        <span class="logo_name">AppName</span>
+    </div>
+    <ul class="nav-links">
+        <li>
+            <a href="#">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="link_name">Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <span class="material-symbols-outlined">category</span>
+                <span class="link_name">Category</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <span class="material-symbols-outlined">article</span>
+                <span class="link_name">Posts</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <span class="material-symbols-outlined">analytics</span>
+                <span class="link_name">Analytics</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <span class="material-symbols-outlined">show_chart</span>
+                <span class="link_name">Chart</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <span class="material-symbols-outlined">extension</span>
+                <span class="link_name">Plugins</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <span class="material-symbols-outlined">explore</span>
+                <span class="link_name">Explore</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <span class="material-symbols-outlined">history</span>
+                <span class="link_name">History</span>
+            </a>
+        </li>
+        <li>
+            <a href="#">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="link_name">Settings</span>
+            </a>
+        </li>
+    </ul>
+</div>
+<script>
+    let sidebar = document.querySelector(".sidebar");
+    let sidebarBtn = document.querySelector("#sidebar-toggle");
+
+    if (sidebarBtn) {
+        sidebarBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("close");
+            // Optional: Change icon on toggle
+            if (sidebar.classList.contains("close")) {
+                sidebarBtn.textContent = 'menu';
+            } else {
+                sidebarBtn.textContent = 'menu_open';
+            }
+        });
+    }
+</script>

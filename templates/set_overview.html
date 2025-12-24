@@ -1,82 +1,96 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="set-header flex-between" style="margin-bottom: var(--spacing-lg);">
-        <h2>{{ set_name.replace('_', ' ') | title }} Overview</h2>
-        <div class="actions">
-            <button class="btn btn-secondary" onclick="openRenameModal()">
-                <i data-feather="edit-2"></i> Rename
-            </button>
-            <button class="btn btn-secondary" onclick="openAddCardModal()">
-                <i data-feather="plus"></i> Add Card
-            </button>
-            <button class="btn btn-secondary" onclick="openImportModal()">
-                <i data-feather="upload"></i> Import
-            </button>
+<div style="padding: 7px var(--space-6) var(--space-6) var(--space-6); max-width: 1400px; width: 100%; margin: 0 auto;">
+
+    <!-- Secondary Header -->
+    <div style="margin-bottom: var(--space-8);">
+        <div class="card-header-secondary">
+            <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') | title }} Overview</h1>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="openRenameModal()" style="white-space: nowrap;">
+                    <span class="material-symbols-outlined">edit</span> Rename
+                </button>
+                <button class="btn-secondary" onclick="openAddCardModal()" style="white-space: nowrap;">
+                    <span class="material-symbols-outlined">add</span> Add Card
+                </button>
+                <button class="btn-secondary" onclick="openImportModal()" style="white-space: nowrap;">
+                    <span class="material-symbols-outlined">upload_file</span> Import
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Quick Actions Cards -->
-    <div class="quick-actions-grid">
-        <a href="{{ url_for('main.learn_set', set_id=set_id) }}" class="card action-card">
-            <div class="stat-icon icon-style-primary">
-                <i data-feather="book-open"></i>
-            </div>
-            <div class="stat-details">
-                <h3>Learn</h3>
-                <p>Start learning session</p>
-            </div>
-        </a>
+    <div style="margin-bottom: var(--space-8);">
+        <div class="card-grid-2">
+            <a href="{{ url_for('main.learn_set', set_id=set_id) }}" class="card-clickable">
+                <div class="card-clickable-title">
+                    <span class="material-symbols-outlined card-clickable-icon">menu_book</span>
+                    Learn
+                </div>
+                <p class="card-clickable-text">Start learning session</p>
+                <span class="material-symbols-outlined card-clickable-arrow">arrow_forward</span>
+            </a>
 
-        <a href="{{ url_for('main.stats', set_id=set_id) }}" class="card action-card">
-            <div class="stat-icon icon-style-info">
-                <i data-feather="bar-chart-2"></i>
-            </div>
-            <div class="stat-details">
-                <h3>Statistics</h3>
-                <p>View progress and stats</p>
-            </div>
-        </a>
-    </div>
-
-    <div class="card">
-        <h3>Cards</h3>
-        <div id="cards-list">
-            <!-- Cards will be loaded via JS -->
+            <a href="{{ url_for('main.stats', set_id=set_id) }}" class="card-clickable">
+                <div class="card-clickable-title">
+                    <span class="material-symbols-outlined card-clickable-icon">bar_chart</span>
+                    Statistics
+                </div>
+                <p class="card-clickable-text">View progress and stats</p>
+                <span class="material-symbols-outlined card-clickable-arrow">arrow_forward</span>
+            </a>
         </div>
     </div>
 
-    <div class="card danger-zone">
-        <h2>Danger Zone</h2>
-        <p>Deleting a set is permanent and cannot be undone.</p>
-        <button class="btn btn-danger" onclick="confirmDeleteSet()">Delete Set</button>
+    <!-- Cards List -->
+    <div style="margin-bottom: var(--space-8);">
+        <h2 style="margin-bottom: var(--space-4);">Cards</h2>
+        <div id="cards-list" class="card-list">
+            <!-- Cards will be loaded via JS and appended as card-list-item -->
+            <div style="text-align: center; padding: var(--space-6); color: var(--color-text-muted);"
+                id="loading-indicator">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card-attention">
+        <div class="card-attention-header">
+            <span class="material-symbols-outlined card-attention-icon">warning</span>
+            <h3 class="card-attention-title">Danger Zone</h3>
+        </div>
+        <p class="card-attention-text" style="margin-bottom: var(--space-4);">Deleting a set is permanent and cannot be
+            undone.</p>
+        <button class="btn-danger" onclick="confirmDeleteSet()">
+            <span class="material-symbols-outlined">delete_forever</span>
+            Delete Set
+        </button>
         <form id="deleteSetForm" action="/set/{{ set_id }}/delete" method="POST" style="display: none;"></form>
     </div>
 </div>
 
 <!-- Rename Set Modal -->
-<div id="renameModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Rename Set</h2>
-            <button class="close" onclick="closeRenameModal()" aria-label="Close">
-                <i data-feather="x"></i>
+<div id="renameModal" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h3 class="popup-title">Rename Set</h3>
+            <button class="popup-close-btn" onclick="closeRenameModal()">
+                <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <div class="modal-body">
+        <div class="popup-body">
             <form action="/set/{{ set_id }}/rename" method="POST">
-                <div class="form-group">
-                    <label for="new_name">New Name</label>
+                <div class="card-input-group">
+                    <label for="new_name" class="card-input-label">New Name</label>
                     <input type="text" id="new_name" name="new_name" value="{{ set_name }}" required
                         pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+" title="Allowed characters: Letters, numbers, -, _ and umlauts"
-                        class="form-control">
-                    <small class="text-muted" style="display: block; margin-top: 5px;">Allowed characters: Letters,
-                        numbers, -, _ and umlauts</small>
+                        class="card-input">
+                    <div class="card-input-description">Allowed characters: Letters, numbers, -, _ and umlauts</div>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeRenameModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                <div class="popup-footer">
+                    <button type="button" class="btn-secondary" onclick="closeRenameModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save</button>
                 </div>
             </form>
         </div>
@@ -84,27 +98,27 @@
 </div>
 
 <!-- Add Card Modal -->
-<div id="addCardModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Add New Card</h2>
-            <button class="close" onclick="closeAddCardModal()" aria-label="Close">
-                <i data-feather="x"></i>
+<div id="addCardModal" class="popup-overlay">
+    <div class="popup-content">
+        <div class="popup-header">
+            <h3 class="popup-title">Add New Card</h3>
+            <button class="popup-close-btn" onclick="closeAddCardModal()">
+                <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <div class="modal-body">
+        <div class="popup-body">
             <form id="addCardForm" onsubmit="handleAddCard(event)">
-                <div class="form-group">
-                    <label for="front">Front</label>
-                    <input type="text" id="front" name="front" required class="form-control" />
+                <div class="card-input-group">
+                    <label for="front" class="card-input-label">Front</label>
+                    <input type="text" id="front" name="front" required class="card-input" />
                 </div>
-                <div class="form-group">
-                    <label for="back">Back</label>
-                    <input type="text" id="back" name="back" required class="form-control" />
+                <div class="card-input-group">
+                    <label for="back" class="card-input-label">Back</label>
+                    <input type="text" id="back" name="back" required class="card-input" />
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeAddCardModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add</button>
+                <div class="popup-footer">
+                    <button type="button" class="btn-secondary" onclick="closeAddCardModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Add</button>
                 </div>
             </form>
         </div>
@@ -112,53 +126,59 @@
 </div>
 
 <!-- Import Modal -->
-<div id="importModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Import Cards</h2>
-            <button class="close" onclick="closeImportModal()" aria-label="Close">
-                <i data-feather="x"></i>
+<div id="importModal" class="popup-overlay">
+    <div class="popup-content" style="max-width: 600px;">
+        <div class="popup-header">
+            <h3 class="popup-title">Import Cards</h3>
+            <button class="popup-close-btn" onclick="closeImportModal()">
+                <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <div class="modal-body">
+        <div class="popup-body">
             <form action="{{ url_for('main.import_into_set', set_id=set_id) }}" method="POST"
                 enctype="multipart/form-data" id="importForm">
-                <div class="import-tabs">
-                    <div class="tab active" onclick="switchTab('file')">File Upload</div>
-                    <div class="tab" onclick="switchTab('text')">Text Input</div>
+
+                <div class="button-group" style="margin-bottom: var(--space-4);">
+                    <div class="btn-secondary active" id="tab-file" onclick="switchTab('file')"
+                        style="cursor: pointer; text-align: center; flex: 1;">File Upload</div>
+                    <div class="btn-secondary" id="tab-text" onclick="switchTab('text')"
+                        style="cursor: pointer; text-align: center; flex: 1;">Text Input</div>
                 </div>
+
                 <input type="hidden" name="import_type" id="import_type" value="file">
 
                 <div id="file-section" class="import-section">
-                    <div class="form-group">
-                        <label>Select File (CSV, TSV, TXT)</label>
-                        <div class="file-input-wrapper">
-                            <button type="button" class="btn btn-secondary file-input-btn"
-                                onclick="document.getElementById('import-file').click()">
-                                <i data-feather="upload"></i>
-                                <span>Choose File</span>
-                            </button>
-                            <span id="file-name" class="file-name-display">No file selected</span>
+                    <div class="card-input-group">
+                        <label class="card-input-label">Select File (CSV, TSV, TXT)</label>
+                        <div style="height: 100px; border: 2px dashed var(--color-border); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;"
+                            onclick="document.getElementById('import-file').click()">
+                            <span class="material-symbols-outlined"
+                                style="font-size: 32px; color: var(--color-text-muted);">upload_file</span>
+                            <span style="color: var(--color-text-muted); margin-top: var(--space-2);">Click to upload
+                                file</span>
                             <input type="file" id="import-file" name="file" accept=".csv,.tsv,.txt"
                                 style="display: none;" onchange="updateFileName(this)">
+                            <span id="file-name" style="margin-top: var(--space-2); font-weight: 500;"></span>
                         </div>
                     </div>
                 </div>
 
                 <div id="text-section" class="import-section" style="display: none;">
-                    <div class="form-group">
-                        <label for="text_content">Enter Vocabulary</label>
-                        <textarea id="text_content" name="text_content" class="form-control" rows="3"
+                    <div class="card-input-group">
+                        <label for="text_content" class="card-input-label">Enter Vocabulary</label>
+                        <textarea id="text_content" name="text_content" class="card-input" rows="5"
                             placeholder="Dog, Hund&#10;Cat, Katze"></textarea>
                     </div>
                 </div>
 
-                <div class="separator-settings">
-                    <h3>Settings</h3>
-                    <div class="row">
-                        <div class="col">
-                            <label for="field_separator">Field Separator</label>
-                            <select id="field_separator" name="field_separator" class="form-control separator-select"
+                <div
+                    style="background-color: var(--color-bg-surface-hover); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
+                    <h3 class="card-normal-title"
+                        style="margin-bottom: var(--space-3); font-size: var(--font-size-lg);">Settings</h3>
+                    <div style="display: flex; gap: var(--space-4);">
+                        <div style="flex: 1;">
+                            <label for="field_separator" class="card-input-label">Field Separator</label>
+                            <select id="field_separator" name="field_separator" class="card-input"
                                 onchange="toggleCustom('field'); updatePreview()">
                                 <option value="\t">Tab (\t)</option>
                                 <option value=",">Comma (,)</option>
@@ -167,12 +187,12 @@
                                 <option value="custom">Custom</option>
                             </select>
                             <input type="text" id="custom_field_separator" name="custom_field_separator"
-                                class="form-control mt-2" style="display: none;" placeholder="e.g. - or \t"
-                                oninput="updatePreview()">
+                                class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
+                                placeholder="e.g. - or \t" oninput="updatePreview()">
                         </div>
-                        <div class="col">
-                            <label for="card_separator">Card Separator</label>
-                            <select id="card_separator" name="card_separator" class="form-control separator-select"
+                        <div style="flex: 1;">
+                            <label for="card_separator" class="card-input-label">Card Separator</label>
+                            <select id="card_separator" name="card_separator" class="card-input"
                                 onchange="toggleCustom('card'); updatePreview()">
                                 <option value="\n">Newline (\n)</option>
                                 <option value=";">Semicolon (;)</option>
@@ -180,85 +200,95 @@
                                 <option value="custom">Custom</option>
                             </select>
                             <input type="text" id="custom_card_separator" name="custom_card_separator"
-                                class="form-control mt-2" style="display: none;" placeholder="e.g. \n\n or ;"
-                                oninput="updatePreview()">
+                                class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
+                                placeholder="e.g. \n\n or ;" oninput="updatePreview()">
                         </div>
                     </div>
                 </div>
 
-                <div id="preview-section" class="preview-section" style="display: none;">
-                    <h3>Preview (First Card)</h3>
-                    <div class="preview-card">
-                        <div class="preview-side">
-                            <strong>Front:</strong>
-                            <div id="preview-front" class="preview-content"></div>
+                <div id="preview-section" class="preview-section"
+                    style="display: none; background-color: var(--color-bg-body); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: var(--space-6);">
+                    <h4 style="margin-bottom: var(--space-2);">Preview (First Card)</h4>
+                    <div style="display: flex; gap: var(--space-4); align-items: center;">
+                        <div style="flex: 1;">
+                            <strong
+                                style="display: block; font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase;">Front</strong>
+                            <div id="preview-front"
+                                style="font-family: monospace; background: var(--color-bg-surface); padding: var(--space-2); border-radius: var(--radius-sm);">
+                            </div>
                         </div>
-                        <div class="preview-divider"></div>
-                        <div class="preview-side">
-                            <strong>Back:</strong>
-                            <div id="preview-back" class="preview-content"></div>
+                        <div style="width: 1px; height: 40px; background-color: var(--color-border);"></div>
+                        <div style="flex: 1;">
+                            <strong
+                                style="display: block; font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase;">Back</strong>
+                            <div id="preview-back"
+                                style="font-family: monospace; background: var(--color-bg-surface); padding: var(--space-2); border-radius: var(--radius-sm);">
+                            </div>
                         </div>
                     </div>
-                    <p class="preview-note" id="preview-note"></p>
+                    <p id="preview-note"
+                        style="margin-top: var(--space-2); font-style: italic; font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                    </p>
                 </div>
 
-                <div class="modal-actions">
-                    <button type="submit" class="btn btn-primary">Import</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+                <div class="popup-footer">
+                    <button type="submit" class="btn-primary">Import</button>
+                    <button type="button" class="btn-secondary" onclick="closeImportModal()">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-
-
 <script>
     async function fetchCards() {
         const response = await fetch(`/api/set/${window.setId}/cards`);
         const data = await response.json();
         const container = document.getElementById('cards-list');
+        const loading = document.getElementById('loading-indicator');
+        if (loading) loading.style.display = 'none';
+
+        // Clear except if there are existing items we want to keep? No, clear all to reload.
+        // But need to be careful if we want to keep headers. The container IS the list.
         container.innerHTML = '';
 
         if (data.cards.length === 0) {
-            container.innerHTML = '<p class="text-muted">No cards in this set yet.</p>';
+            container.innerHTML = '<p style="text-align: center; color: var(--color-text-muted); padding: var(--space-4);">No cards in this set yet.</p>';
             return;
         }
 
         data.cards.forEach(card => {
             const div = document.createElement('div');
-            div.className = 'card-item';
-            div.style.display = 'flex';
-            div.style.justifyContent = 'space-between';
-            div.style.alignItems = 'center';
-            div.style.padding = 'var(--spacing-sm) 0';
-            div.style.borderBottom = '1px solid var(--secondary-color)';
-
+            div.className = 'card-list-item';
             div.innerHTML = `
-                <div>
-                    <strong>${card.front}</strong> – ${card.back}
+                <div class="card-list-item-info">
+                    <span class="card-list-item-title">${card.front}</span>
+                    <span class="card-list-item-subtitle">${card.back}</span>
                 </div>
-                <button class="btn btn-sm btn-danger btn-icon" onclick="deleteCard(${card.id})" title="Delete Card">
-                    <i data-feather="trash-2"></i>
+                <button class="card-list-delete-btn" onclick="deleteCard(${card.id})" title="Delete Card">
+                    <span class="material-symbols-outlined">delete</span>
                 </button>
             `;
             container.appendChild(div);
         });
-        feather.replace();
     }
 
-    function openAddCardModal() { document.getElementById('addCardModal').style.display = 'block'; }
-    function closeAddCardModal() { document.getElementById('addCardModal').style.display = 'none'; }
+    // ... (Remainder of functions: openAddCardModal, closeAddCardModal, openImportModal, etc.)
+    // Keeping logic consistent with previous version but ensuring new HTML elements are targeted correctly.
 
-    function openImportModal() { document.getElementById('importModal').style.display = 'block'; }
-    function closeImportModal() { document.getElementById('importModal').style.display = 'none'; }
+    function openAddCardModal() { document.getElementById('addCardModal').classList.add('active'); }
+    function closeAddCardModal() { document.getElementById('addCardModal').classList.remove('active'); }
+
+    function openImportModal() { document.getElementById('importModal').classList.add('active'); }
+    function closeImportModal() { document.getElementById('importModal').classList.remove('active'); }
 
     function updateFileName(input) {
         const fileNameDisplay = document.getElementById('file-name');
         if (input.files && input.files[0]) {
             fileNameDisplay.textContent = input.files[0].name;
+            fileNameDisplay.style.color = "var(--color-primary)";
         } else {
-            fileNameDisplay.textContent = 'No file selected';
+            fileNameDisplay.textContent = '';
         }
     }
 
@@ -292,7 +322,6 @@
                 const response = await fetch(`/api/set/${window.setId}/card/${cardId}`, {
                     method: 'DELETE'
                 });
-
                 if (response.ok) {
                     fetchCards();
                 } else {
@@ -315,32 +344,43 @@
         });
     }
 
-    // Set global setId for JS
     window.setId = "{{ set_id }}";
     fetchCards();
 
-    function openRenameModal() { document.getElementById('renameModal').style.display = 'block'; }
-    function closeRenameModal() { document.getElementById('renameModal').style.display = 'none'; }
+    function openRenameModal() { document.getElementById('renameModal').classList.add('active'); }
+    function closeRenameModal() { document.getElementById('renameModal').classList.remove('active'); }
 
-    // Close modals when clicking outside
     window.onclick = function (event) {
-        if (event.target.className === 'modal') {
-            event.target.style.display = "none";
+        if (event.target.classList.contains('popup-overlay')) {
+            event.target.classList.remove('active');
         }
     }
 
     function switchTab(type) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+        if (type === 'file') {
+            document.getElementById('tab-file').classList.add('active');
+            document.getElementById('tab-file').style.backgroundColor = 'var(--color-primary-muted)';
+            document.getElementById('tab-file').style.color = 'white';
+
+            document.getElementById('tab-text').classList.remove('active');
+            document.getElementById('tab-text').style.backgroundColor = '';
+            document.getElementById('tab-text').style.color = '';
+        } else {
+            document.getElementById('tab-text').classList.add('active');
+            document.getElementById('tab-text').style.backgroundColor = 'var(--color-primary-muted)';
+            document.getElementById('tab-text').style.color = 'white';
+
+            document.getElementById('tab-file').classList.remove('active');
+            document.getElementById('tab-file').style.backgroundColor = '';
+            document.getElementById('tab-file').style.color = '';
+        }
 
         document.getElementById('import_type').value = type;
 
         if (type === 'file') {
             document.getElementById('file-section').style.display = 'block';
             document.getElementById('text-section').style.display = 'none';
-            // document.getElementById('import-file').required = true; // Hidden input validation is tricky
             document.getElementById('text_content').required = false;
-            // Clear text input when switching to file
             document.getElementById('text_content').value = '';
             updatePreview();
         } else {
@@ -348,7 +388,6 @@
             document.getElementById('text-section').style.display = 'block';
             document.getElementById('import-file').required = false;
             document.getElementById('text_content').required = true;
-            // Clear file input when switching to text
             const fileInput = document.getElementById('import-file');
             fileInput.value = '';
             const fileNameDisplay = document.getElementById('file-name');
@@ -359,10 +398,11 @@
         }
     }
 
+    switchTab('file');
+
     function toggleCustom(type) {
         const select = document.getElementById(type + '_separator');
         const customInput = document.getElementById('custom_' + type + '_separator');
-
         if (select.value === 'custom') {
             customInput.style.display = 'block';
             customInput.required = true;
@@ -373,41 +413,35 @@
     }
 
     function updatePreview() {
+        // ... (Original Code)
         const importType = document.getElementById('import_type').value;
         let content = '';
-
         if (importType === 'text') {
             content = document.getElementById('text_content').value;
         } else {
             document.getElementById('preview-section').style.display = 'none';
             return;
         }
-
         if (!content.trim()) {
             document.getElementById('preview-section').style.display = 'none';
             return;
         }
-
         let cardSep = document.getElementById('card_separator').value;
         let fieldSep = document.getElementById('field_separator').value;
-
         if (cardSep === 'custom') {
             cardSep = document.getElementById('custom_card_separator').value || '\n';
         }
         if (fieldSep === 'custom') {
             fieldSep = document.getElementById('custom_field_separator').value || '\t';
         }
-
         cardSep = cardSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
         fieldSep = fieldSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
-
         let cards;
         if (cardSep === '\n') {
             cards = content.split(/\r?\n/);
         } else {
             cards = content.split(cardSep);
         }
-
         let firstCard = null;
         for (let card of cards) {
             card = card.trim();
@@ -416,22 +450,17 @@
                 break;
             }
         }
-
         if (!firstCard) {
             document.getElementById('preview-section').style.display = 'none';
             return;
         }
-
         const parts = firstCard.split(fieldSep);
         const front = parts[0] ? parts[0].trim() : '';
         const back = parts[1] ? parts[1].trim() : '';
-
         document.getElementById('preview-front').textContent = front || '(empty)';
         document.getElementById('preview-back').textContent = back || '(empty)';
-
         const totalCards = cards.filter(c => c.trim()).length;
         document.getElementById('preview-note').textContent = `Total ${totalCards} card(s) recognized`;
-
         document.getElementById('preview-section').style.display = 'block';
     }
 
@@ -442,6 +471,4 @@
         }
     });
 </script>
-
-
 {% endblock %}

@@ -6,8 +6,7 @@
 export class SidebarManager {
     constructor() {
         this.sidebar = document.querySelector(".sidebar");
-        this.mainContent = document.querySelector(".main-content");
-        this.toggleButton = document.querySelector(".sidebar-toggle");
+        this.toggleButton = document.querySelector("#sidebar-toggle");
 
         this.init();
     }
@@ -21,10 +20,16 @@ export class SidebarManager {
     }
 
     toggle() {
-        this.sidebar.classList.toggle("collapsed");
-        this.mainContent.classList.toggle("collapsed");
+        this.sidebar.classList.toggle("close");
 
-        const isCollapsed = this.sidebar.classList.contains("collapsed");
+        // Toggle icon text
+        if (this.sidebar.classList.contains("close")) {
+            this.toggleButton.textContent = 'menu';
+        } else {
+            this.toggleButton.textContent = 'menu_open';
+        }
+
+        const isCollapsed = this.sidebar.classList.contains("close");
         this.saveSidebarState(isCollapsed);
     }
 

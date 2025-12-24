@@ -53,6 +53,7 @@ export class StatsManager {
 
         // Clear previous progress bars
         this.levelProgressEl.innerHTML = "";
+        this.levelProgressEl.className = "card-progress"; // Add container class
 
         // Create progress bars for each level
         for (let level = 1; level <= this.MAX_LEVEL_DISPLAY; level++) {
@@ -66,16 +67,21 @@ export class StatsManager {
     }
 
     createProgressBar(level, count, percentage) {
-        const progressContainer = document.createElement("div");
-        progressContainer.innerHTML = `
-            <p>Level ${level} (${count} cards)</p>
-            <div class="progress-bar">
-                <div class="progress-bar-inner" style="width: ${percentage}%; background-color: ${this.LEVEL_COLORS[level] || '#ccc'};">
-                    ${Math.round(percentage)}%
+        const progressItem = document.createElement("div");
+        progressItem.className = "card-progress-item";
+
+        // Map level to accent class (assuming 1-5 maps to accent-1 to accent-5)
+        const accentClass = `bg-accent-${level}`;
+
+        progressItem.innerHTML = `
+            <span class="card-progress-label">Level ${level} (${count} cards)</span>
+            <div class="card-progress-bar-container">
+                <div class="card-progress-bar ${accentClass}" style="width: ${percentage}%;">
+                    <span class="card-progress-value">${Math.round(percentage)}%</span>
                 </div>
             </div>
         `;
-        this.levelProgressEl.appendChild(progressContainer);
+        this.levelProgressEl.appendChild(progressItem);
     }
 
     confirmAndResetSet() {

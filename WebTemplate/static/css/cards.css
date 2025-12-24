@@ -1,0 +1,415 @@
+/* ========================================
+   CARD COMPONENT SYSTEM
+   ======================================== */
+
+/* BASE CARDS & CONTAINERS */
+.card-normal,
+.card-clickable,
+.card-stat,
+.card-list,
+.card-progress,
+.card-attention,
+.card-header-secondary {
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-card);
+    transition: all var(--transition-normal);
+}
+
+.card-list {
+    padding: var(--space-2) 0;
+    overflow: hidden;
+}
+
+/* HEADER CARD */
+.card-header {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-muted) 100%);
+    border: none;
+    border-radius: var(--radius-xl);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 27.5px var(--space-8) var(--space-8) var(--space-8);
+    gap: var(--card-title-spacing);
+    box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+}
+
+.card-header-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* TYPOGRAPHY */
+.card-header-title,
+.card-header-secondary-title,
+.card-normal-title,
+.card-clickable-title,
+.card-stat-value,
+.card-attention-title,
+.card-list-item-title {
+    font-family: var(--font-family-display);
+    font-weight: 700;
+    color: var(--color-text-main);
+    margin: 0;
+}
+
+.card-header-title {
+    font-size: var(--font-size-3xl);
+    color: white;
+    position: relative;
+    z-index: 1;
+}
+
+.card-header-secondary-title {
+    font-size: var(--font-size-2xl);
+    color: var(--color-text-main);
+}
+
+.card-normal-title,
+.card-clickable-title,
+.card-attention-title {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--card-title-spacing);
+}
+
+.card-header-subtitle,
+.card-normal-text,
+.card-clickable-text,
+.card-stat-label,
+.card-attention-text,
+.card-list-item-subtitle,
+.card-progress-label {
+    font-family: var(--font-family-base);
+    margin: 0;
+}
+
+.card-header-subtitle {
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    position: relative;
+    z-index: 1;
+}
+
+.card-normal-text,
+.card-clickable-text,
+.card-attention-text {
+    font-size: var(--font-size-base);
+    color: var(--color-text-muted);
+    line-height: 1.6;
+}
+
+.card-clickable-text {
+    padding-right: 35px;
+}
+
+/* CLICKABLE LOGIC */
+.card-clickable,
+.card-stat-clickable {
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+}
+
+.card-clickable:hover,
+.card-stat-clickable:hover {
+    background-color: var(--color-bg-surface-hover);
+    transform: translateY(-2px);
+}
+
+.card-clickable:active,
+.card-stat-clickable:active {
+    transform: translateY(0);
+}
+
+.card-clickable:hover {
+    border-color: var(--color-primary-muted-hover);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.card-stat-clickable:hover {
+    border-color: var(--icon-color, var(--color-primary-muted));
+}
+
+.card-clickable-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.card-clickable-icon {
+    font-size: 28px;
+    color: var(--color-primary-muted);
+    transition: color var(--transition-normal);
+}
+
+.card-clickable:hover .card-clickable-icon {
+    color: var(--color-primary-muted-hover);
+}
+
+.card-clickable-arrow {
+    position: absolute;
+    top: 50%;
+    right: var(--space-6);
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: var(--color-primary-muted);
+    transition: all var(--transition-normal);
+}
+
+.card-clickable:hover .card-clickable-arrow {
+    color: var(--color-primary-muted-hover);
+    transform: translateY(-50%) translateX(4px);
+}
+
+/* STAT CARD */
+.card-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.card-stat-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.45rem;
+}
+
+.card-stat-value {
+    font-size: var(--font-size-3xl);
+    line-height: 1;
+}
+
+.card-stat-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+/* ATTENTION CARD */
+.card-attention {
+    background-color: color-mix(in srgb, var(--color-accent-1) 5%, transparent);
+    border: 2px solid var(--color-accent-1);
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--color-accent-1) 10%, transparent);
+    overflow: hidden;
+    position: relative;
+}
+
+.card-attention-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--card-title-spacing);
+}
+
+.card-attention-icon {
+    font-size: 28px;
+    color: var(--color-accent-1);
+}
+
+.card-attention-title {
+    color: var(--color-accent-1);
+    margin: 0;
+}
+
+/* ICON WRAPPER PATTERN */
+.card-with-icon {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+}
+
+.card-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--icon-color, var(--color-primary-muted));
+    box-shadow: 0 0 25px var(--icon-color, rgba(154, 150, 255, 0.4));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-icon-wrapper .material-symbols-outlined {
+    font-size: 32px;
+    color: white;
+}
+
+.card-content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 60px;
+}
+
+/* LIST CARD ITEMS */
+.card-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color var(--transition-fast);
+}
+
+.card-list-item:last-child {
+    border-bottom: none;
+}
+
+.card-list-item:hover {
+    background-color: var(--color-bg-surface-hover);
+}
+
+.card-list-item-info {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+}
+
+.card-list-delete-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: color-mix(in srgb, var(--color-accent-1) 10%, transparent);
+    color: var(--color-accent-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.card-list-delete-btn:hover {
+    background: var(--color-accent-1);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* PROGRESS CARD */
+.card-progress-item {
+    margin-bottom: var(--space-4);
+}
+
+.card-progress-item:last-child {
+    margin-bottom: 0;
+}
+
+.card-progress-label {
+    font-weight: 500;
+    color: var(--color-text-main);
+    margin-bottom: var(--space-2);
+    display: block;
+}
+
+.card-progress-bar-container {
+    height: 32px;
+    background: #f1f3f5;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+.card-progress-bar {
+    height: 100%;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width var(--transition-normal);
+    min-width: 40px;
+}
+
+.card-progress-value {
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: white;
+    z-index: 1;
+}
+
+/* GRIDS */
+.card-grid,
+.card-grid-2,
+.card-grid-3 {
+    display: grid;
+    gap: var(--space-6);
+}
+
+.card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.card-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.card-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 1024px) {
+    .card-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+
+    .card-grid-2,
+    .card-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ACCENT BACKGROUNDS */
+.bg-accent-1 {
+    background-color: var(--color-accent-1);
+}
+
+.bg-accent-2 {
+    background-color: var(--color-accent-2);
+}
+
+.bg-accent-3 {
+    background-color: var(--color-accent-3);
+}
+
+.bg-accent-4 {
+    background-color: var(--color-accent-4);
+}
+
+.bg-accent-5 {
+    background-color: var(--color-accent-5);
+}
+
+.bg-accent-6 {
+    background-color: var(--color-accent-6);
+}
+
+/* INPUT CARDS */
+/* Styles moved to style.css for unification */
