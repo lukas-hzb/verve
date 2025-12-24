@@ -227,6 +227,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 .btn-danger-secondary:active {
     transform: translateY(0);
 }
+
 /* Success Button (Added for Verve) */
 .btn-success {
     display: inline-flex;
@@ -254,4 +255,67 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 
 .btn-success:active {
     transform: translateY(0);
+}
+
+/* LEVEL VARIANTS (for Learn Buttons) */
+.btn-level-1 {
+    background-color: var(--color-accent-1);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-1) 25%, transparent);
+}
+
+.btn-level-1:hover {
+    background-color: color-mix(in srgb, var(--color-accent-1) 90%, black);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-1) 35%, transparent);
+}
+
+.btn-level-2 {
+    background-color: var(--color-accent-2);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-2) 25%, transparent);
+}
+
+.btn-level-2:hover {
+    background-color: color-mix(in srgb, var(--color-accent-2) 90%, black);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-2) 35%, transparent);
+}
+
+.btn-level-3 {
+    background-color: var(--color-accent-3);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-3) 25%, transparent);
+    color: var(--color-text-main);
+    /* Yellow needs dark text */
+}
+
+.btn-level-3:hover {
+    background-color: color-mix(in srgb, var(--color-accent-3) 90%, black);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-3) 35%, transparent);
+}
+
+.btn-level-4 {
+    background-color: var(--color-accent-4);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-4) 25%, transparent);
+}
+
+.btn-level-4:hover {
+    background-color: color-mix(in srgb, var(--color-accent-4) 90%, black);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-4) 35%, transparent);
+}
+
+.btn-level-5 {
+    background-color: var(--color-accent-5);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-5) 25%, transparent);
+}
+
+.btn-level-5:hover {
+    background-color: color-mix(in srgb, var(--color-accent-5) 90%, black);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-5) 35%, transparent);
+}
+
+.btn-level-6 {
+    background-color: var(--color-accent-6);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-6) 25%, transparent);
+}
+
+.btn-level-6:hover {
+    background-color: color-mix(in srgb, var(--color-accent-6) 90%, black);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-6) 35%, transparent);
 }

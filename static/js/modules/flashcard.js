@@ -18,7 +18,7 @@ export class FlashcardManager {
         this.cardFront = document.getElementById("card-front");
         this.cardBack = document.getElementById("card-back");
         this.flashcard = document.getElementById("flashcard");
-        this.cardContainer = document.querySelector('.card-container');
+        this.cardContainer = document.getElementById('flashcard-wrapper') || document.querySelector('.card-container');
         this.cardLevel = document.getElementById("card-level");
         this.flipBtn = document.getElementById("flip-btn");
         this.feedbackBtns = document.getElementById("feedback-btns");
@@ -37,7 +37,7 @@ export class FlashcardManager {
             5: 'var(--level-5)'
         };
 
-        this.ANIMATION_DURATION = 500; // milliseconds
+        this.ANIMATION_DURATION = 350; // milliseconds
 
         this.init();
     }
@@ -160,15 +160,16 @@ export class FlashcardManager {
         const card = this.cards[this.currentCardIndex];
 
         // Remove all animation classes
-        this.cardContainer.classList.remove('swipe-out-right', 'swipe-out-left', 'load-in');
+        this.cardContainer.classList.remove('animate-swipe-right', 'animate-swipe-left', 'load-in');
 
         if (isFirstLoad) {
             this.updateCardContent(card);
+            // No animation on first load - card appears instantly
+        } else {
+            // Trigger reflow to restart animation only for subsequent cards
+            void this.cardContainer.offsetHeight;
+            this.cardContainer.classList.add('load-in');
         }
-
-        // Trigger reflow to restart animation
-        void this.cardContainer.offsetHeight;
-        this.cardContainer.classList.add('load-in');
 
         this.feedbackBtns.style.display = "none";
         this.flipBtn.style.display = "inline-flex";
@@ -185,7 +186,9 @@ export class FlashcardManager {
     async handleFeedback(quality) {
         if (this.areControlsDisabled) return;
 
-        const animationClass = quality === 5 ? 'swipe-out-right' : 'swipe-out-left';
+        const animationClass = quality === 5 ? 'animate-swipe-right' : 'animate-swipe-left';
+        // Remove load-in class to prevent CSS conflicts with swipe animation
+        this.cardContainer.classList.remove('load-in');
         this.cardContainer.classList.add(animationClass);
         this.disableControls();
 
@@ -231,7 +234,7 @@ export class FlashcardManager {
     }
 
     showCompletionMessage() {
-        this.cardContainer.classList.remove('swipe-out-right', 'swipe-out-left');
+        this.cardContainer.classList.remove('animate-swipe-right', 'animate-swipe-left');
         this.flashcard.classList.remove("flipped");
         this.cardFront.textContent = "All cards reviewed!";
         this.cardBack.textContent = "";

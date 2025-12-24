@@ -53,9 +53,8 @@
             </li>
             {% endfor %}
 
-            <div style="height: 1px; background-color: var(--color-border); margin: 8px 20px;"></div>
-
             {% if set_id %}
+            <div style="height: 1px; background-color: var(--color-border); margin: 8px 20px;"></div>
             <li>
                 <a href="{{ url_for('main.learn_set', set_id=set_id) }}">
                     <span class="material-symbols-outlined">menu_book</span>
@@ -71,19 +70,16 @@
             {% endif %}
 
             {% if current_user.is_authenticated %}
-            <li style="margin-top: auto;">
+            <li class="sidebar-profile-item">
                 <a href="{{ url_for('auth.profile') }}">
-                    <div class="sidebar-avatar"
-                        style="width: 30px; height: 30px; margin-right: 0; display: flex; justify-content: center; align-items: center; border-radius: 50%; overflow: hidden; background: var(--color-primary-muted);">
+                    <div class="sidebar-icon-placeholder">
                         {% if current_user.avatar_file %}
-                        <img src="{{ current_user.avatar_file }}" alt="Avatar"
-                            style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="{{ current_user.avatar_file }}" alt="Avatar" class="sidebar-avatar">
                         {% else %}
-                        <span style="color: white; font-weight: 600; font-size: 14px;">{{
-                            current_user.username[0].upper() }}</span>
+                        <div class="sidebar-avatar-text">{{ current_user.username[0].upper() }}</div>
                         {% endif %}
                     </div>
-                    <span class="link_name" style="margin-left: 10px;">Profile</span>
+                    <span class="link_name">Profile</span>
                 </a>
             </li>
             {% endif %}

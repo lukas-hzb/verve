@@ -64,8 +64,10 @@
 }
 
 .sidebar .logo-details .logo_name {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 24px;
+    font-weight: 700;
+    font-family: var(--font-family-display);
+    color: var(--color-primary);
     transition: 0.3s ease;
     transition-delay: 0.1s;
     white-space: nowrap;
@@ -83,8 +85,10 @@
 /* Navigation Links */
 .sidebar .nav-links {
     height: calc(100% - 60px);
-    padding: 10px 0;
+    padding: 10px 0 2px 0;
     overflow: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar .nav-links li {
@@ -195,6 +199,7 @@
         /* Overlap or push? */
     }
 }
+
 /* Sidebar Profile Avatar - Added for Verve */
 .sidebar .nav-links li .sidebar-icon-placeholder {
     height: 30px;
@@ -223,4 +228,19 @@
     justify-content: center;
     font-size: 12px;
     font-weight: 700;
+}
+
+/* Profile item positioning and hover */
+.sidebar .nav-links li.sidebar-profile-item {
+    margin-top: auto;
+}
+
+/* Override hover for profile to match collapse/expand button */
+.sidebar .nav-links li.sidebar-profile-item:hover {
+    background: var(--color-bg-surface-hover);
+}
+
+.sidebar .nav-links li.sidebar-profile-item:hover .link_name,
+.sidebar .nav-links li.sidebar-profile-item:hover .material-symbols-outlined {
+    color: var(--color-text-main);
 }

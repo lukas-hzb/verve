@@ -3,14 +3,23 @@
 {% block content %}
 <style>
     /* Flashcard Specific Styles - With Animations */
+    /* Flashcard Specific Styles - With Animations */
     .card-container {
         perspective: 1000px;
         width: 100%;
         max-width: 700px;
         height: 480px;
-        /* Increased height for better proportions */
         margin: 0 auto var(--space-8) auto;
         position: relative;
+    }
+
+    /* Wrapper for swipe animations (separate from perspective) */
+    .flashcard-wrapper {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-origin: bottom center;
+        /* Pivot from bottom for better tilt */
     }
 
     .flashcard {
@@ -18,7 +27,8 @@
         height: 100%;
         position: relative;
         transform-style: preserve-3d;
-        transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+        /* Bouncy flip animation */
+        transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         cursor: pointer;
     }
 
@@ -58,44 +68,52 @@
         width: 100%;
     }
 
-    /* Swipe Animations from Original */
-    @keyframes swipe-out-right {
+    /* Smooth Swipe Animations with subtle Tilt */
+    @keyframes tilt-out-right {
+        0% {
+            transform: translateX(0) rotate(0deg);
+            opacity: 1;
+        }
+
         100% {
-            transform: translateX(100px) rotate(10deg);
+            transform: translateX(15%) rotate(12deg);
             opacity: 0;
         }
     }
 
-    @keyframes swipe-out-left {
+    @keyframes tilt-out-left {
+        0% {
+            transform: translateX(0) rotate(0deg);
+            opacity: 1;
+        }
+
         100% {
-            transform: translateX(-100px) rotate(-10deg);
+            transform: translateX(-15%) rotate(-12deg);
             opacity: 0;
         }
     }
 
-    .swipe-out-right {
-        animation: swipe-out-right 0.4s ease-out forwards;
+    .animate-swipe-right {
+        animation: tilt-out-right 0.35s ease-out forwards;
     }
 
-    .swipe-out-left {
-        animation: swipe-out-left 0.4s ease-out forwards;
+    .animate-swipe-left {
+        animation: tilt-out-left 0.35s ease-out forwards;
     }
 
-    /* Load In Animation */
+    /* Load In Animation - Pure fade in, no movement */
     @keyframes load-in {
         0% {
-            transform: scale(0.95);
             opacity: 0;
         }
 
         100% {
-            transform: scale(1);
             opacity: 1;
         }
     }
 
     .load-in {
-        animation: load-in 0.4s ease-out forwards;
+        animation: load-in 0.25s ease-out forwards;
     }
 
     /* Level Indicator */
@@ -209,35 +227,36 @@
         <!-- Level Indicator (ID matches what flashcard.js expects) -->
         <div id="card-level" class="card-level" style="display: none;">Level 1</div>
 
-        <div class="flashcard" id="flashcard">
-            <div class="flashcard-front" id="card-front-container">
-                <div class="flashcard-content">
-                    <p id="card-front">Loading...</p>
+        <div class="flashcard-wrapper" id="flashcard-wrapper">
+            <div class="flashcard" id="flashcard">
+                <div class="flashcard-front" id="card-front-container">
+                    <div class="flashcard-content">
+                        <p id="card-front">Loading...</p>
+                    </div>
                 </div>
-            </div>
-            <div class="flashcard-back" id="card-back-container">
-                <div class="flashcard-content">
-                    <p id="card-back"></p>
+                <div class="flashcard-back" id="card-back-container">
+                    <div class="flashcard-content">
+                        <p id="card-back"></p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Action Buttons -->
-    <div
-        style="display: flex; justify-content: center; gap: var(--space-4); margin-top: var(--space-4); min-height: 80px;">
-        <button class="btn-primary" id="flip-btn" style="min-width: 200px;">
-            Flip Card <span style="opacity: 0.7; font-weight: normal; margin-left: 5px;">(Space)</span>
+    <div style="display: flex; justify-content: center; gap: var(--space-4); margin-top: var(--space-4);">
+        <button class="btn-primary" id="flip-btn" style="min-width: 180px;">
+            Flip Card <span style="opacity: 0.7; font-weight: 400; font-size: 0.875rem;">(Space)</span>
         </button>
 
         <div id="feedback-btns" style="display: none; gap: var(--space-4);">
-            <button class="btn-danger" id="not-known-btn" style="min-width: 150px;">
-                <span class="material-symbols-outlined">close</span> Didn't know <span
-                    style="opacity: 0.7; font-weight: normal; margin-left: 5px;">(A)</span>
+            <button class="btn-danger" id="not-known-btn" style="min-width: 140px;">
+                <span class="material-symbols-outlined" style="font-size: 18px;">close</span> Didn't know <span
+                    style="opacity: 0.7; font-weight: 400; font-size: 0.875rem;">(A)</span>
             </button>
-            <button class="btn-success" id="known-btn" style="min-width: 150px;">
-                <span class="material-symbols-outlined">check</span> Knew it <span
-                    style="opacity: 0.7; font-weight: normal; margin-left: 5px;">(D)</span>
+            <button class="btn-success" id="known-btn" style="min-width: 140px;">
+                <span class="material-symbols-outlined" style="font-size: 18px;">check</span> Knew it <span
+                    style="opacity: 0.7; font-weight: 400; font-size: 0.875rem;">(D)</span>
             </button>
         </div>
     </div>
