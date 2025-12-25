@@ -27,7 +27,6 @@ A modern Flask-based spaced repetition system for vocabulary learning. Verve use
 | ORM          | Flask-SQLAlchemy 3.1.1 |
 | Auth         | Flask-Login 0.6.3      |
 | Password     | bcrypt 4.1.2           |
-| Validation   | email-validator 2.1.0  |
 | WSGI Server  | Gunicorn 21.2.0        |
 | Hosting      | Koyeb                  |
 | Environment  | python-dotenv 1.0.0    |
