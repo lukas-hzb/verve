@@ -101,6 +101,8 @@ def setup_login_manager(app: Flask) -> None:
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Bitte melden Sie sich an, um auf diese Seite zuzugreifen.'
+    login_manager.login_message_category = 'error'
+
     
     @login_manager.user_loader
     def load_user(user_id):
