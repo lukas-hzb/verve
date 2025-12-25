@@ -90,11 +90,17 @@
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="container" style="max-width: 1400px; margin: 0 auto; padding-top: 20px;">
+        <div id="flash-container"
+            style="max-width: 1400px; margin: 0 auto; padding: 15px var(--space-6) 0 var(--space-6);">
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                <!-- You might want to update alert classes to match new design (e.g., using popups or specific card styles if 'alert' class is not in new CSS) -->
-                {{ message }}
+            <div class="alert alert-{{ category }}"
+                onclick="this.remove(); if(!document.querySelector('#flash-container .alert')) document.getElementById('flash-container').remove();">
+                <span class="material-symbols-outlined alert-icon">
+                    {% if category == 'success' %}check_circle{% elif category == 'error' %}error{% else %}info{% endif
+                    %}
+                </span>
+                <span class="alert-message">{{ message }}</span>
+                <span class="material-symbols-outlined alert-close">close</span>
             </div>
             {% endfor %}
         </div>
@@ -115,7 +121,7 @@
                 <p id="confirmationMessage">Are you sure you want to proceed?</p>
             </div>
             <div class="popup-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeConfirmationModal()">Cancel</button>
+                <button type="button" class="btn-danger-secondary" onclick="closeConfirmationModal()">Cancel</button>
                 <button type="button" id="confirmationConfirmBtn" class="btn btn-danger">Confirm</button>
             </div>
         </div>

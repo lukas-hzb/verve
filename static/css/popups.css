@@ -93,7 +93,7 @@
 
 /* Popup Body */
 .popup-body {
-    margin-bottom: var(--space-6);
+    margin-bottom: 0;
     color: var(--color-text-secondary);
     line-height: 1.6;
 }
@@ -105,6 +105,7 @@
     gap: var(--space-3);
     flex-wrap: wrap;
     /* Allow wrapping on small screens */
+    margin-top: var(--space-4);
 }
 
 /* Make buttons fill space in footer */
@@ -132,4 +133,220 @@
 
 .popup-attention .popup-body {
     color: var(--color-text-main);
+}
+
+/* ========================================
+   IMPORT MODAL SPECIFICS
+   ======================================== */
+
+#importModal .popup-header {
+    margin-bottom: var(--space-1);
+}
+
+/* --- Tabs (Distinct Text Style) --- */
+.import-tabs {
+    display: flex;
+    gap: var(--space-6);
+    border-bottom: 2px solid var(--color-border);
+    /* Thicker bottom line */
+    margin-bottom: var(--space-4);
+}
+
+.import-tab {
+    /* Ensure no button properties remain */
+    all: unset;
+    display: inline-block;
+
+    padding: var(--space-4) var(--space-2) var(--space-1);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--color-text-muted);
+    border-bottom: 3px solid transparent;
+    /* Thicker active indicator */
+    margin-bottom: -2px;
+    /* Overlap border */
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    text-transform: uppercase;
+    /* Distinct from standard buttons */
+    letter-spacing: 0.5px;
+}
+
+.import-tab:hover {
+    color: var(--color-text-main);
+    background: transparent;
+    /* Explicitly no background */
+}
+
+.import-tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    background: transparent;
+    /* Explicitly no background */
+}
+
+/* --- Input Sections --- */
+.import-section {
+    margin-bottom: var(--space-6);
+    display: flex;
+    flex-direction: column;
+}
+
+.import-section .card-input-label {
+    margin-bottom: var(--space-3);
+}
+
+/* --- File Upload Area --- */
+.import-file-area {
+    height: 130px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    gap: var(--space-2);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    background-color: transparent;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.import-file-area:hover {
+    border-color: var(--color-primary);
+    background-color: var(--color-bg-surface-hover);
+}
+
+.import-file-icon {
+    font-size: 28px;
+    color: var(--color-text-muted);
+    transition: color 0.2s ease;
+}
+
+.import-file-area:hover .import-file-icon {
+    color: var(--color-primary);
+}
+
+.import-file-text {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.import-file-name {
+    font-weight: 500;
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    min-height: 1.2em;
+}
+
+.import-file-name:empty {
+    display: none;
+}
+
+/* --- Text Input Area --- */
+.import-textarea {
+    height: 130px !important;
+    min-height: 130px;
+    resize: none;
+    box-sizing: border-box;
+    display: block;
+}
+
+/* --- Settings Box --- */
+.import-box {
+    background-color: var(--color-bg-surface-hover);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-6);
+}
+
+/* --- Preview Section --- */
+.import-preview-box {
+    background-color: var(--color-bg-surface-hover);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-6);
+}
+
+.preview-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+    /* Increased spacing for larger header */
+}
+
+.preview-header {
+    margin: 0;
+    font-size: 1.1rem;
+    /* Significantly larger */
+    font-weight: 700;
+    color: var(--color-text-main);
+    letter-spacing: -0.01em;
+}
+
+.preview-note {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    font-weight: 500;
+    margin: 0;
+}
+
+.preview-grid {
+    display: flex;
+    gap: var(--space-4);
+    align-items: stretch;
+}
+
+.preview-column {
+    flex: 1;
+    min-width: 0;
+}
+
+.preview-label-compact {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-1);
+}
+
+.preview-content {
+    background: var(--color-bg-surface);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    word-break: break-word;
+}
+
+.preview-separator {
+    width: 1px;
+    background-color: var(--color-border);
+    align-self: stretch;
+    margin-top: 20px;
+    /* Offset for label */
+}
+
+background-color: var(--color-border);
+margin-top: 0;
+align-self: stretch;
+}
+
+.preview-note {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin: 0;
+    text-align: right;
+    white-space: nowrap;
+    /* Prevent wrapping */
 }

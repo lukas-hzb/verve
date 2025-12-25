@@ -188,33 +188,19 @@
 
 <!-- Delete Account Confirmation Modal -->
 <div id="delete-account-modal" class="popup-overlay">
-    <div class="popup-content">
+    <div class="popup-content popup-attention" style="max-width: 400px;">
         <div class="popup-header">
             <h3 class="popup-title">Delete Account</h3>
-            <button class="popup-close-btn" onclick="closeDeleteModal()">
-                <span class="material-symbols-outlined">close</span>
-            </button>
         </div>
         <div class="popup-body">
-            <div class="popup-attention"
-                style="display: flex; align-items: flex-start; gap: var(--space-4); margin-bottom: var(--space-4);">
-                <div
-                    style="background-color: var(--color-accent-1-light); border-radius: 50%; padding: 8px; display: flex;">
-                    <span class="material-symbols-outlined" style="color: var(--color-accent-1);">warning</span>
-                </div>
-                <div>
-                    <h4 style="margin: 0 0 var(--space-1) 0; color: var(--color-accent-1);">Are you sure?</h4>
-                    <p style="margin: 0; color: var(--color-text-muted);">This action cannot be undone. All your sets
-                        and progress will be permanently deleted.</p>
-                </div>
-            </div>
-
-            <div class="popup-footer">
-                <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-                <form action="{{ url_for('auth.delete_account') }}" method="POST" style="display: inline;">
-                    <button type="submit" class="btn-danger">Delete Account</button>
-                </form>
-            </div>
+            <p>Are you sure you want to delete your account? This action cannot be undone. All your sets and progress
+                will be permanently deleted.</p>
+        </div>
+        <div class="popup-footer">
+            <button type="button" class="btn-danger-secondary" onclick="closeDeleteModal()">Cancel</button>
+            <form action="{{ url_for('auth.delete_account') }}" method="POST" style="display: contents;">
+                <button type="submit" class="btn-danger">Delete Account</button>
+            </form>
         </div>
     </div>
 </div>

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anmelden - Verve</title>
+    <title>Login - Verve</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -38,21 +38,27 @@
 
 <body>
     <div class="auth-container">
-        <div class="card-normal" style="padding: 40px;">
-            <div style="text-align: center; margin-bottom: var(--space-6);">
+        <div class="card-normal" style="padding: var(--space-6);">
+            <div style="text-align: center; margin-bottom: var(--space-8);">
                 <h1
-                    style="font-family: var(--font-family-display); font-size: 2.5rem; color: var(--color-primary); font-weight: 700; margin-bottom: var(--space-2);">
+                    style="font-family: var(--font-family-display); font-size: 2.5rem; color: var(--color-primary); font-weight: 700; margin-bottom: var(--space-1);">
                     Verve</h1>
-                <p style="color: var(--color-text-muted);">Willkommen zurück!</p>
+                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-text-main); margin: 0;">Welcome
+                    back!</h2>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             <div style="margin-bottom: var(--space-6);">
                 {% for category, message in messages %}
-                <div
-                    style="padding: var(--space-3); border-radius: var(--radius-md); background-color: {% if category == 'error' %}var(--color-accent-1-light){% else %}var(--color-success-light){% endif %}; color: {% if category == 'error' %}var(--color-accent-1){% else %}var(--color-success){% endif %}; margin-bottom: var(--space-2); font-size: var(--font-size-sm);">
-                    {{ message }}
+                <div class="alert alert-{{ category }}"
+                    onclick="this.remove(); if(!this.parentElement.querySelector('.alert')) this.parentElement.remove();">
+                    <span class="material-symbols-outlined alert-icon">
+                        {% if category == 'success' %}check_circle{% elif category == 'error' %}error{% else %}info{%
+                        endif %}
+                    </span>
+                    <span class="alert-message">{{ message }}</span>
+                    <span class="material-symbols-outlined alert-close">close</span>
                 </div>
                 {% endfor %}
             </div>
@@ -61,33 +67,34 @@
 
             <form method="POST" action="{{ url_for('auth.login') }}">
                 <div class="card-input-group">
-                    <label for="username_or_email" class="card-input-label">Benutzername oder E-Mail</label>
+                    <label for="username_or_email" class="card-input-label">Username or Email</label>
                     <input type="text" id="username_or_email" name="username_or_email"
                         value="{{ username_or_email or '' }}" class="card-input" required autofocus>
                 </div>
 
                 <div class="card-input-group">
-                    <label for="password" class="card-input-label">Passwort</label>
+                    <label for="password" class="card-input-label">Password</label>
                     <input type="password" id="password" name="password" class="card-input" required>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-6);">
+                <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 0;">
                     <input type="checkbox" id="remember" name="remember"
                         style="width: 16px; height: 16px; accent-color: var(--color-primary);">
-                    <label for="remember" style="font-size: var(--font-size-sm); user-select: none;">Angemeldet
-                        bleiben</label>
+                    <label for="remember" style="font-size: var(--font-size-sm); user-select: none;">Remember me</label>
                 </div>
 
-                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">
+                <button type="submit" class="btn-primary"
+                    style="width: 100%; justify-content: center; margin-top: var(--space-4);">
                     <span class="material-symbols-outlined">login</span>
-                    Anmelden
+                    Login
                 </button>
             </form>
 
-            <div style="text-align: center; margin-top: var(--space-6); font-size: var(--font-size-sm);">
-                <p>Noch kein Konto? <a href="{{ url_for('auth.register') }}"
-                        style="color: var(--color-primary); font-weight: 600; text-decoration: none;">Jetzt
-                        registrieren</a></p>
+            <div
+                style="text-align: center; margin-top: var(--space-4); font-size: var(--font-size-base); color: var(--color-text-secondary);">
+                <p>Don't have an account? <a href="{{ url_for('auth.register') }}"
+                        style="color: var(--color-primary); font-weight: 500; text-decoration: none;">Register now</a>
+                </p>
             </div>
         </div>
     </div>

@@ -32,7 +32,7 @@ def register():
         try:
             # Validate password confirmation
             if password != password_confirm:
-                flash('Passwörter stimmen nicht überein.', 'error')
+                flash('Passwords do not match.', 'error')
                 return render_template('auth/register.html', 
                                      username=username, 
                                      email=email)
@@ -43,7 +43,7 @@ def register():
             # Auto-login after registration
             login_user(user, remember=True)
             
-            flash(f'Willkommen {username}! Ihr Konto wurde erfolgreich erstellt.', 'success')
+            flash(f'Welcome {username}! Your account was created successfully.', 'success')
             return redirect(url_for('main.index'))
             
         except UserAlreadyExistsError as e:
@@ -57,7 +57,7 @@ def register():
                                  username=username, 
                                  email=email)
         except Exception as e:
-            flash(f'Ein Fehler ist aufgetreten: {str(e)}', 'error')
+            flash(f'An error occurred: {str(e)}', 'error')
             return render_template('auth/register.html', 
                                  username=username, 
                                  email=email)
@@ -89,15 +89,15 @@ def login():
             if next_page:
                 return redirect(next_page)
             
-            flash(f'Willkommen zurück, {user.username}!', 'success')
+            flash(f'Welcome back, {user.username}!', 'success')
             return redirect(url_for('main.index'))
             
         except InvalidCredentialsError:
-            flash('Ungültiger Benutzername/E-Mail oder Passwort.', 'error')
+            flash('Invalid username/email or password.', 'error')
             return render_template('auth/login.html', 
                                  username_or_email=username_or_email)
         except Exception as e:
-            flash(f'Ein Fehler ist aufgetreten: {str(e)}', 'error')
+            flash(f'An error occurred: {str(e)}', 'error')
             return render_template('auth/login.html', 
                                  username_or_email=username_or_email)
     
@@ -110,7 +110,7 @@ def logout():
     """Log out the current user."""
     username = current_user.username
     logout_user()
-    flash(f'Auf Wiedersehen, {username}!', 'info')
+    flash(f'Goodbye, {username}!', 'info')
     return redirect(url_for('auth.login'))
 
 
@@ -149,13 +149,13 @@ def update_profile():
     
     try:
         UserService.update_user_profile(current_user.id, username, email, avatar_file, remove_avatar)
-        flash('Profil erfolgreich aktualisiert!', 'success')
+        flash('Profile updated successfully!', 'success')
     except UserAlreadyExistsError as e:
         flash(str(e), 'error')
     except InvalidInputError as e:
         flash(str(e), 'error')
     except Exception as e:
-        flash(f'Ein Fehler ist aufgetreten: {str(e)}', 'error')
+        flash(f'An error occurred: {str(e)}', 'error')
         
     return redirect(url_for('auth.profile'))
 
@@ -171,11 +171,11 @@ def change_password():
         
         try:
             if new_password != confirm_password:
-                flash('Die neuen Passwörter stimmen nicht überein.', 'error')
+                flash('New passwords do not match.', 'error')
                 return render_template('auth/change_password.html')
                 
             UserService.change_password(current_user.id, current_password, new_password)
-            flash('Passwort erfolgreich geändert!', 'success')
+            flash('Password changed successfully!', 'success')
             return redirect(url_for('auth.profile'))
             
         except InvalidCredentialsError as e:
@@ -183,7 +183,7 @@ def change_password():
         except InvalidInputError as e:
             flash(str(e), 'error')
         except Exception as e:
-            flash(f'Ein Fehler ist aufgetreten: {str(e)}', 'error')
+            flash(f'An error occurred: {str(e)}', 'error')
             
     return render_template('auth/change_password.html')
 
@@ -199,11 +199,11 @@ def delete_account():
         # Log out the user
         logout_user()
         
-        flash('Ihr Account und alle zugehörigen Daten wurden erfolgreich gelöscht.', 'success')
+        flash('Your account and all associated data have been successfully deleted.', 'success')
         return redirect(url_for('main.index'))
         
     except Exception as e:
         current_app.logger.error(f"Error deleting account: {e}")
-        flash(f'Ein Fehler ist aufgetreten: {str(e)}', 'error')
+        flash(f'An error occurred: {str(e)}', 'error')
         return redirect(url_for('auth.profile'))
 

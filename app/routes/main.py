@@ -53,7 +53,7 @@ def import_set():
                 field_separator = request.form.get("custom_field_separator", "\\t")
             
             if not set_name:
-                flash("Bitte geben Sie einen Namen für das Set ein.", "error")
+                flash("Please enter a name for the set.", "error")
                 return redirect(request.url)
             
             file = None
@@ -62,12 +62,12 @@ def import_set():
             if import_type == "file":
                 file = request.files.get("file")
                 if not file or not file.filename:
-                    flash("Bitte wählen Sie eine Datei aus.", "error")
+                    flash("Please select a file.", "error")
                     return redirect(request.url)
             else:
                 text_content = request.form.get("text_content")
                 if not text_content:
-                    flash("Bitte geben Sie Vokabeln ein.", "error")
+                    flash("Please enter vocabulary.", "error")
                     return redirect(request.url)
                 
             ImportService.import_set(
@@ -79,14 +79,14 @@ def import_set():
                 field_separator=field_separator
             )
             
-            flash(f"Set '{set_name}' erfolgreich importiert!", "success")
+            flash(f"Set '{set_name}' imported successfully!", "success")
             return redirect(url_for("main.index"))
             
         except InvalidInputError as e:
             flash(str(e), "error")
             return redirect(request.url)
         except Exception as e:
-            flash(f"Ein Fehler ist aufgetreten: {str(e)}", "error")
+            flash(f"An error occurred: {str(e)}", "error")
             return redirect(request.url)
             
     sets = VocabService.get_all_set_names(current_user.id)
@@ -223,14 +223,14 @@ def rename_set(set_id: str):
     try:
         new_name = request.form.get("new_name")
         if not new_name:
-            flash("Bitte geben Sie einen Namen ein.", "error")
+            flash("Please enter a name.", "error")
             return redirect(url_for('main.set_overview', set_id=set_id))
             
         VocabService.rename_set(set_id, new_name, current_user.id)
-        flash("Set erfolgreich umbenannt!", "success")
+        flash("Set renamed successfully!", "success")
         return redirect(url_for('main.set_overview', set_id=set_id))
     except Exception as e:
-        flash(f"Fehler beim Umbenennen: {str(e)}", "error")
+        flash(f"Error renaming: {str(e)}", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
@@ -257,12 +257,12 @@ def import_into_set(set_id: str):
         if import_type == "file":
             file = request.files.get("file")
             if not file or not file.filename:
-                flash("Bitte wählen Sie eine Datei aus.", "error")
+                flash("Please select a file.", "error")
                 return redirect(url_for('main.set_overview', set_id=set_id))
         else:
             text_content = request.form.get("text_content")
             if not text_content:
-                flash("Bitte geben Sie Vokabeln ein.", "error")
+                flash("Please enter vocabulary.", "error")
                 return redirect(url_for('main.set_overview', set_id=set_id))
             
         count = ImportService.import_into_set(
@@ -274,14 +274,14 @@ def import_into_set(set_id: str):
             field_separator=field_separator
         )
         
-        flash(f"{count} Karten erfolgreich importiert!", "success")
+        flash(f"{count} cards imported successfully!", "success")
         return redirect(url_for('main.set_overview', set_id=set_id))
     except Exception as e:
         import sys
         import traceback
         sys.stderr.write(f"DEBUG: Error in import_into_set: {str(e)}\n")
         traceback.print_exc()
-        flash(f"Fehler beim Importieren: {str(e)}", "error")
+        flash(f"Error importing: {str(e)}", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 

@@ -177,3 +177,79 @@ textarea.popup-input {
 .card-normal>.card-input-group:last-child>.card-input-description:last-child {
     margin-bottom: 0;
 }
+
+/* ========================================
+   ALERT COMPONENT
+   ======================================== */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-4);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    border: 1px solid transparent;
+}
+
+.alert:hover {
+    transform: translateY(-1px);
+}
+
+.alert:last-child {
+    margin-bottom: 0;
+}
+
+.alert-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.alert-message {
+    flex: 1;
+    font-weight: 500;
+}
+
+.alert-close {
+    font-size: 20px;
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+}
+
+.alert:hover .alert-close {
+    opacity: 1;
+}
+
+/* Success Alert */
+.alert-success {
+    background-color: color-mix(in srgb, var(--color-accent-4) 10%, var(--color-bg-surface));
+    border-color: color-mix(in srgb, var(--color-accent-4) 30%, transparent);
+    color: var(--color-text-main);
+}
+
+.alert-success .alert-icon {
+    color: var(--color-accent-4);
+}
+
+/* Error Alert */
+.alert-error {
+    background-color: color-mix(in srgb, var(--color-accent-1) 10%, var(--color-bg-surface));
+    border-color: color-mix(in srgb, var(--color-accent-1) 30%, transparent);
+    color: var(--color-text-main);
+}
+
+.alert-error .alert-icon {
+    color: var(--color-accent-1);
+}
+
+/* Info Alert */
+.alert-info {
+    background-color: color-mix(in srgb, var(--color-accent-2) 10%, var(--color-bg-surface));
+    border-color: color-mix(in srgb, var(--color-accent-2) 30%, transparent);
+    color: var(--color-text-main);
+}
+
+.alert-info .alert-icon {
+    color: var(--color-accent-2);
+}
