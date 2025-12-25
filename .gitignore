@@ -46,5 +46,5 @@ build/
 *.bak
 *.tmp
 
-# Firebase
-firebaseAdmin.json
+# Other files
+NOTES.md
