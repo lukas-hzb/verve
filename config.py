@@ -21,7 +21,7 @@ class Config:
     # Database settings
     
     # Database settings
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or 'sqlite:///' + str(BASE_DIR / 'app.db')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') # or 'sqlite:///' + str(BASE_DIR / 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PERMANENT_SESSION_LIFETIME = 365 * 24 * 60 * 60  # 1 year in seconds
     SESSION_COOKIE_HTTPONLY = True
