@@ -48,6 +48,16 @@
     <!-- Cards List -->
     <div style="margin-bottom: var(--space-8);">
         <h2 style="margin-bottom: var(--space-4);">Cards</h2>
+
+        <!-- Search Bar -->
+        <div class="card-normal" style="margin-bottom: var(--space-6);">
+            <div class="card-input-group">
+                <span class="material-symbols-outlined card-input-icon">search</span>
+                <input type="text" id="cardSearchInput" class="card-input card-input-with-icon"
+                    placeholder="Search cards..." autocomplete="off" onkeyup="filterCards()">
+            </div>
+        </div>
+
         <div id="cards-list" class="card-list">
             <!-- Cards will be loaded via JS and appended as card-list-item -->
             <div style="text-align: center; padding: var(--space-6); color: var(--color-text-muted);"
@@ -178,7 +188,7 @@
                             <select id="field_separator" name="field_separator" class="card-input"
                                 onchange="toggleCustom('field'); updatePreview()">
                                 <option value="\t">Tab (\t)</option>
-                                <option value=",">Comma (,)</option>
+                                <option value="," selected>Comma (,)</option>
                                 <option value=";">Semicolon (;)</option>
                                 <option value="|">Pipe (|)</option>
                                 <option value="custom">Custom</option>
@@ -402,7 +412,52 @@
         }
     }
 
+    function filterCards() {
+        const input = document.getElementById('cardSearchInput');
+        const filter = input.value.toLowerCase();
+        const container = document.getElementById('cards-list');
+        const cards = container.getElementsByClassName('card-list-item');
+        let visibleCards = [];
+
+        for (let i = 0; i < cards.length; i++) {
+            const frontElement = cards[i].querySelector('.card-list-item-title');
+            const backElement = cards[i].querySelector('.card-list-item-subtitle');
+
+            let match = false;
+
+            if (frontElement) {
+                const frontValue = frontElement.textContent || frontElement.innerText;
+                if (frontValue.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                }
+            }
+
+            if (!match && backElement) {
+                const backValue = backElement.textContent || backElement.innerText;
+                if (backValue.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                }
+            }
+
+            // Reset styles
+            cards[i].style.borderBottom = "";
+
+            if (match) {
+                cards[i].style.display = ""; // Restore default display
+                visibleCards.push(cards[i]);
+            } else {
+                cards[i].style.display = "none";
+            }
+        }
+
+        // Remove border from the last visible card
+        if (visibleCards.length > 0) {
+            visibleCards[visibleCards.length - 1].style.borderBottom = "none";
+        }
+    }
+
     function updatePreview() {
+
         const importType = document.getElementById('import_type').value;
         let content = '';
         if (importType === 'text') {

@@ -201,7 +201,8 @@
 /* --- File Upload Area --- */
 .import-file-area {
     height: 130px;
-    border: 1px dashed var(--color-border);
+    border: 2px dashed var(--color-border);
+
     border-radius: var(--radius-md);
     display: flex;
     flex-direction: column;
