@@ -44,8 +44,6 @@ def create_app(config_name: str = 'default') -> Flask:
     # Initialize database
     from app.database import init_db
     init_db(app)
-    # from app.firestore_db import init_firestore
-    # init_firestore(app)
     
     # Initialize Flask-Login
     setup_login_manager(app)
@@ -55,8 +53,6 @@ def create_app(config_name: str = 'default') -> Flask:
     
     # Register error handlers
     register_error_handlers(app)
-    
-    # Sync listeners removed as we now write directly to Firestore
     
     # Log startup
     app.logger.info(f"Verve application started with {config_name} configuration")

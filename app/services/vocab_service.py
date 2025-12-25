@@ -4,7 +4,7 @@ Adapted for SQLAlchemy.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
 from app.database import db

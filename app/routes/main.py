@@ -152,17 +152,6 @@ def stats(set_id: str):
         return redirect(url_for('main.index'))
 
 
-@main_bp.route("/api/set/<string:set_id>/cards")
-@login_required
-def get_set_cards(set_id: str):
-    """Return all cards of a set as JSON for overview page."""
-    try:
-        cards = VocabService.get_all_cards(set_id, current_user.id)
-        return jsonify({"cards": cards})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 @main_bp.route("/set/<string:set_id>/overview")
 @login_required
 def set_overview(set_id: str):
@@ -213,58 +202,6 @@ def add_card(set_id: str):
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-@main_bp.route("/api/set/<string:set_id>/due_cards")
-@login_required
-def get_due_cards(set_id: str):
-    """Get all due cards for a set."""
-    try:
-        due_cards = VocabService.get_due_cards(set_id, current_user.id)
-        return jsonify({"cards": due_cards})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@main_bp.route("/api/set/<string:set_id>/next_card")
-@login_required
-def get_next_card(set_id: str):
-    """Get the next due card for a set."""
-    try:
-        due_cards = VocabService.get_due_cards(set_id, current_user.id)
-        if not due_cards:
-            return jsonify({"card": None})
-            
-        # Return the first due card
-        # In a real app, you might want to randomize or prioritize
-        return jsonify({"card": due_cards[0]})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@main_bp.route("/api/set/<string:set_id>/rate", methods=["POST"])
-@login_required
-def rate_card(set_id: str):
-    """Rate a card."""
-    try:
-        data = request.get_json()
-        card_front = data.get("card_front")
-        quality = data.get("quality")
-        
-        if card_front is None or quality is None:
-            return jsonify({"error": "Missing parameters"}), 400
-            
-        result = VocabService.update_card_performance(
-            set_id, card_front, int(quality), current_user.id
-        )
-        
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-
-
 
 @main_bp.route("/set/<string:set_id>/delete", methods=["POST"])
 @login_required

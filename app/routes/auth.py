@@ -5,7 +5,7 @@ This module provides routes for user authentication including
 registration, login, and logout functionality.
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app.services import UserService, VocabService

@@ -7,6 +7,7 @@ from external files (CSV, TSV).
 
 import csv
 import io
+import uuid
 from typing import List, Dict, Tuple
 from werkzeug.datastructures import FileStorage
 
@@ -142,6 +143,7 @@ class ImportService:
         
         for front, back in cards:
             card = Card(
+                id=str(uuid.uuid4()),
                 front=front,
                 back=back,
                 vocab_set_id=vocab_set.id
@@ -189,6 +191,7 @@ class ImportService:
             existing = vocab_set.find_card(front)
             if not existing:
                 card = Card(
+                    id=str(uuid.uuid4()),
                     front=front,
                     back=back,
                     vocab_set_id=vocab_set.id

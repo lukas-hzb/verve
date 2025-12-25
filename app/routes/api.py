@@ -86,6 +86,32 @@ def get_due_cards(set_id: str):
         return error_response("An error occurred while fetching cards", 500)
 
 
+@api_bp.route("/set/<string:set_id>/next_card")
+@login_required
+def get_next_card(set_id: str):
+    """
+    Get the next due card for a vocabulary set.
+    
+    Args:
+        set_id: ID of the vocabulary set
+        
+    Returns:
+        JSON response with the next due card or null
+    """
+    try:
+        due_cards = VocabService.get_due_cards(set_id, current_user.id)
+        if not due_cards:
+            return jsonify({'card': None})
+        return jsonify({'card': due_cards[0]})
+    except VocabSetNotFoundError as e:
+        return error_response(str(e), 404)
+    except UnauthorizedAccessError as e:
+        return error_response(str(e), 403)
+    except Exception as e:
+        current_app.logger.error(f"Error fetching next card: {e}")
+        return error_response("An error occurred while fetching the next card", 500)
+
+
 @api_bp.route("/set/<string:set_id>/all")
 @api_bp.route("/set/<string:set_id>/cards")
 @login_required
