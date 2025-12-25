@@ -158,7 +158,7 @@
                 </div>
 
                 <div class="button-group" style="margin-top: var(--space-6);">
-                    <button type="submit" id="save-profile-btn" class="btn-primary" disabled>
+                    <button type="submit" id="save-profile-btn" class="btn-secondary" disabled>
                         <span class="material-symbols-outlined">save</span>
                         Save Changes
                     </button>
@@ -238,6 +238,13 @@
 
         if (saveBtn) {
             saveBtn.disabled = !hasChanges;
+            if (hasChanges) {
+                saveBtn.classList.remove('btn-secondary');
+                saveBtn.classList.add('btn-primary');
+            } else {
+                saveBtn.classList.remove('btn-primary');
+                saveBtn.classList.add('btn-secondary');
+            }
         }
     };
 
