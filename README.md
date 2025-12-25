@@ -61,7 +61,7 @@ Verve is deployed on [Koyeb](https://www.koyeb.com/).
 | Setting        | Value                                              |
 |----------------|----------------------------------------------------|
 | Build Command  | `pip install -r requirements.txt`                  |
-| Run Command    | `gunicorn app:app`                                 |
+| Run Command    | `gunicorn prod:app`                                |
 | Port           | `8000` (default)                                   |
 
 **Required Environment Variables:**
@@ -82,7 +82,7 @@ Verve is deployed on [Koyeb](https://www.koyeb.com/).
 
 ## Local vs. Production
 
-| Aspect             | Local (`local.py`)           | Production (`app.py`)           |
+| Aspect             | Local (`devel.py`)           | Production (`prod.py`)          |
 |--------------------|------------------------------|---------------------------------|
 | Configuration      | `DevelopmentConfig`          | `ProductionConfig`              |
 | Debug Mode         | Enabled                      | Disabled                        |
@@ -105,7 +105,7 @@ pip install -r requirements.txt
 cp .env.example .env
 
 # 4. Run the development server
-python local.py
+python devel.py
 ```
 
 The app will start at: `http://127.0.0.1:8080`
@@ -125,8 +125,8 @@ Verve_NewDesign_Supabase_Production/
 │   └── utils/             # Utility functions
 ├── static/                # CSS, JS, images
 ├── templates/             # Jinja2 templates
-├── app.py                 # Production WSGI entry point
-├── local.py               # Local development entry point
+├── prod.py                # Production WSGI entry point
+├── devel.py               # Local development entry point
 ├── config.py              # Configuration classes
 ├── requirements.txt       # Python dependencies
 └── .env                   # Environment variables (not in repo)
