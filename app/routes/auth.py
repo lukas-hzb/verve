@@ -152,6 +152,9 @@ def update_profile():
     try:
         updated_user = UserService.update_user_profile(current_user.id, username, email, avatar_file, remove_avatar)
         
+        flash('Profile updated successfully!', 'success')
+
+        # Check if it's an AJAX request (accepts JSON)
         if request.headers.get('Accept') == 'application/json':
             return jsonify({
                 'success': True,
@@ -162,7 +165,6 @@ def update_profile():
                 'initials': updated_user.username[0].upper()
             })
             
-        flash('Profile updated successfully!', 'success')
     except UserAlreadyExistsError as e:
         if request.headers.get('Accept') == 'application/json':
             return jsonify({'success': False, 'message': str(e)}), 400

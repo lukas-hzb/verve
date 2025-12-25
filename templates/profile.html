@@ -283,54 +283,8 @@
             const data = await response.json();
 
             if (data.success) {
-                // Update Main Avatar UI
-                const img = document.getElementById('avatar-preview-img');
-                let initials = document.getElementById('avatar-initials');
-
-                if (data.avatar_url) {
-                    // Image set
-                    // Append timestamp to force browser to re-fetch image (cache busting)
-                    const timestamp = new Date().getTime();
-                    img.src = data.avatar_url + '?t=' + timestamp;
-                    img.style.display = 'block';
-                    if (initials) initials.style.display = 'none';
-
-                    // Update overlay controls
-                    overlay.innerHTML = `
-                        <span class="material-symbols-outlined" style="color: white;">photo_camera</span>
-                        <span class="material-symbols-outlined" onclick="event.stopPropagation(); resetAvatar();" style="color: white; margin-left: 10px; cursor: pointer;" title="Remove">close</span>
-                    `;
-                    document.getElementById('remove-avatar').value = 'false';
-                } else {
-                    // Image removed (show initials)
-                    img.style.display = 'none';
-                    img.src = '';
-
-                    if (!initials) {
-                        initials = document.createElement('div');
-                        initials.id = 'avatar-initials';
-                        initials.style.display = 'flex';
-                        initials.style.alignItems = 'center';
-                        initials.style.justifyContent = 'center';
-                        initials.style.width = '100%';
-                        initials.style.height = '100%';
-                        initials.textContent = data.initials;
-                        if (img.parentElement) img.parentElement.insertBefore(initials, img);
-                    } else {
-                        initials.textContent = data.initials;
-                        initials.style.display = 'flex';
-                    }
-
-                    overlay.innerHTML = '<span class="material-symbols-outlined" style="color: white;">photo_camera</span>';
-                    document.getElementById('remove-avatar').value = 'true';
-                }
-
-                // Update Sidebar
-                updateSidebar(data);
-
-                // Show success feedback
-                showSuccessMessage('Profile picture updated');
-
+                // Reload the page to ensure stability and show the flash message
+                window.location.reload();
             } else {
                 alert('Error: ' + data.message);
                 overlay.innerHTML = originalOverlayContent; // Revert on error
@@ -341,10 +295,6 @@
             overlay.innerHTML = originalOverlayContent; // Revert on error
         } finally {
             overlay.style.opacity = ''; // Remove forced opacity
-            // Clear file input to allow re-selecting the same file if needed
-            if (file) {
-                document.getElementById('avatar').value = '';
-            }
         }
     };
 
@@ -353,9 +303,7 @@
         if (!sidebarPlaceholder) return;
 
         if (data.avatar_url) {
-            // Append timestamp for cache busting
-            const timestamp = new Date().getTime();
-            sidebarPlaceholder.innerHTML = `<img src="${data.avatar_url}?t=${timestamp}" alt="Avatar" class="sidebar-avatar">`;
+            sidebarPlaceholder.innerHTML = `<img src="${data.avatar_url}" alt="Avatar" class="sidebar-avatar">`;
         } else {
             sidebarPlaceholder.innerHTML = `<div class="sidebar-avatar-text">${data.initials}</div>`;
         }
