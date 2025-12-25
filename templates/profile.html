@@ -205,30 +205,15 @@
 </div>
 
 <script>
-    // ... (Keeping script logic identical)
-    function openDeleteModal() { document.getElementById('delete-account-modal').classList.add('active'); }
-    function closeDeleteModal() { document.getElementById('delete-account-modal').classList.remove('active'); }
-
-    window.addEventListener('click', function (event) {
-        const modal = document.getElementById('delete-account-modal');
-        if (event.target == modal) {
-            modal.classList.remove('active');
-        }
-    });
-
+    // Store original values to track changes
     window.originalValues = {
         username: '',
-        email: '',
-        hasAvatar: false
+        email: ''
     };
-
-    window.avatarChanged = false;
-    window.avatarRemoved = false;
 
     document.addEventListener('DOMContentLoaded', function () {
         const usernameInput = document.getElementById('username');
         const emailInput = document.getElementById('email');
-        const avatarImg = document.getElementById('avatar-preview-img');
 
         if (usernameInput) {
             window.originalValues.username = usernameInput.value;
@@ -237,9 +222,6 @@
         if (emailInput) {
             window.originalValues.email = emailInput.value;
             emailInput.addEventListener('input', window.checkFormChanges);
-        }
-        if (avatarImg && avatarImg.src && avatarImg.style.display !== 'none') {
-            window.originalValues.hasAvatar = true;
         }
 
         window.checkFormChanges();
@@ -252,74 +234,145 @@
 
         const hasChanges =
             username !== window.originalValues.username ||
-            email !== window.originalValues.email ||
-            window.avatarChanged ||
-            window.avatarRemoved;
+            email !== window.originalValues.email;
 
         if (saveBtn) {
             saveBtn.disabled = !hasChanges;
         }
     };
 
+    // Auto-save Avatar on Selection
     window.previewAvatar = function (input) {
         if (input.files && input.files[0]) {
-            var reader = new FileReader();
+            handleAvatarUpdate(input.files[0], false);
+        }
+    };
 
-            reader.onload = function (e) {
-                var img = document.getElementById('avatar-preview-img');
-                var initials = document.getElementById('avatar-initials');
-                const overlay = document.querySelector('.avatar-overlay');
+    // Auto-save Avatar on Removal
+    window.resetAvatar = function () {
+        handleAvatarUpdate(null, true);
+    };
 
-                img.src = e.target.result;
-                img.style.display = 'block';
-                if (initials) {
-                    initials.style.display = 'none';
+    window.handleAvatarUpdate = async function (file, remove) {
+        const overlay = document.querySelector('.avatar-overlay');
+        const originalOverlayContent = overlay.innerHTML;
+
+        // Show loading state in overlay
+        overlay.innerHTML = '<span class="material-symbols-outlined" style="color: white; animation: spin 1s linear infinite;">sync</span>';
+        overlay.style.opacity = '1'; // Force show overlay
+
+        const formData = new FormData();
+        // Append current text values (required by backend to not clear them)
+        formData.append('username', document.getElementById('username').value);
+        formData.append('email', document.getElementById('email').value);
+
+        if (remove) {
+            formData.append('remove_avatar', 'true');
+        } else if (file) {
+            formData.append('avatar', file);
+            formData.append('remove_avatar', 'false');
+        }
+
+        try {
+            const response = await fetch("{{ url_for('auth.update_profile') }}", {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update Main Avatar UI
+                const img = document.getElementById('avatar-preview-img');
+                let initials = document.getElementById('avatar-initials');
+
+                if (data.avatar_url) {
+                    // Image set
+                    img.src = data.avatar_url;
+                    img.style.display = 'block';
+                    if (initials) initials.style.display = 'none';
+
+                    // Update overlay controls
+                    overlay.innerHTML = `
+                        <span class="material-symbols-outlined" style="color: white;">photo_camera</span>
+                        <span class="material-symbols-outlined" onclick="event.stopPropagation(); resetAvatar();" style="color: white; margin-left: 10px; cursor: pointer;" title="Remove">close</span>
+                    `;
+                    document.getElementById('remove-avatar').value = 'false';
+                } else {
+                    // Image removed (show initials)
+                    img.style.display = 'none';
+                    img.src = '';
+
+                    if (!initials) {
+                        initials = document.createElement('div');
+                        initials.id = 'avatar-initials';
+                        initials.style.display = 'flex';
+                        initials.style.alignItems = 'center';
+                        initials.style.justifyContent = 'center';
+                        initials.style.width = '100%';
+                        initials.style.height = '100%';
+                        initials.textContent = data.initials;
+                        if (img.parentElement) img.parentElement.insertBefore(initials, img);
+                    } else {
+                        initials.textContent = data.initials;
+                        initials.style.display = 'flex';
+                    }
+
+                    overlay.innerHTML = '<span class="material-symbols-outlined" style="color: white;">photo_camera</span>';
+                    document.getElementById('remove-avatar').value = 'true';
                 }
 
-                overlay.innerHTML = `
-                    <span class="material-symbols-outlined" style="color: white;">photo_camera</span>
-                    <span class="material-symbols-outlined" onclick="event.stopPropagation(); resetAvatar();" style="color: white; margin-left: 8px; cursor: pointer;" title="Remove">close</span>
-                `;
+                // Update Sidebar
+                updateSidebar(data);
 
-                window.avatarChanged = true;
-                window.avatarRemoved = false;
-                document.getElementById('remove-avatar').value = 'false';
-                window.checkFormChanges();
-            };
+                // Show success feedback
+                showSuccessMessage('Profile picture updated');
 
-            reader.readAsDataURL(input.files[0]);
+            } else {
+                alert('Error: ' + data.message);
+                overlay.innerHTML = originalOverlayContent; // Revert on error
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An unexpected error occurred.');
+            overlay.innerHTML = originalOverlayContent; // Revert on error
+        } finally {
+            overlay.style.opacity = ''; // Remove forced opacity
         }
     };
 
-    window.resetAvatar = function () {
-        const img = document.getElementById('avatar-preview-img');
-        const fileInput = document.getElementById('avatar');
-        let initials = document.getElementById('avatar-initials');
-        const overlay = document.querySelector('.avatar-overlay');
+    function updateSidebar(data) {
+        const sidebarPlaceholder = document.querySelector('.sidebar-icon-placeholder');
+        if (!sidebarPlaceholder) return;
 
-        fileInput.value = '';
-        img.style.display = 'none';
-        img.src = '';
-
-        if (!initials) {
-            initials = document.createElement('div');
-            initials.id = 'avatar-initials';
-            initials.style.cssText = "width: 100%; height: 100%; border-radius: 50%; background-color: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700;";
-            initials.textContent = '{{ current_user.username[0].upper() }}';
-            // Insert before img
-            if (img.parentElement) img.parentElement.insertBefore(initials, img);
+        if (data.avatar_url) {
+            sidebarPlaceholder.innerHTML = `<img src="${data.avatar_url}" alt="Avatar" class="sidebar-avatar">`;
         } else {
-            initials.style.display = 'flex';
+            sidebarPlaceholder.innerHTML = `<div class="sidebar-avatar-text">${data.initials}</div>`;
         }
+    }
 
-        overlay.innerHTML = '<span class="material-symbols-outlined" style="color: white;">photo_camera</span>';
+    function showSuccessMessage(msg) {
+        const container = document.querySelector('.profile-card').parentNode;
+        const existingAlert = container.querySelector('.alert-success');
+        if (existingAlert) existingAlert.remove();
 
-        window.avatarRemoved = true;
-        window.avatarChanged = false;
-        document.getElementById('remove-avatar').value = 'true';
-        window.checkFormChanges();
-    };
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success';
+        alertDiv.innerHTML = `
+            <span class="material-symbols-outlined alert-icon">check_circle</span>
+            <span class="alert-message">${msg}</span>
+            <span class="material-symbols-outlined alert-close" onclick="this.parentElement.remove()">close</span>
+        `;
+        container.insertBefore(alertDiv, document.querySelector('.profile-card'));
+        setTimeout(() => {
+            alertDiv.style.opacity = '0';
+            setTimeout(() => alertDiv.remove(), 300);
+        }, 3000);
+    }
 
+    // Handle updates for Text Fields (Button Press)
     window.handleProfileUpdate = async function (event) {
         event.preventDefault();
 
@@ -335,51 +388,28 @@
             const response = await fetch("{{ url_for('auth.update_profile') }}", {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    'Accept': 'application/json'
-                }
+                headers: { 'Accept': 'application/json' }
             });
 
             const data = await response.json();
 
             if (data.success) {
-                // Update original values to current ones so button disables again
                 window.originalValues.username = document.getElementById('username').value;
                 window.originalValues.email = document.getElementById('email').value;
-                window.avatarChanged = false;
-                window.avatarRemoved = false;
-
-                // Show success message (using a temporary alert since we don't have a toast system ready)
-                // Or inject alert into DOM like login page
-                const container = document.querySelector('.profile-card').parentNode;
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-success';
-                alertDiv.innerHTML = `
-                    <span class="material-symbols-outlined alert-icon">check_circle</span>
-                    <span class="alert-message">${data.message}</span>
-                    <span class="material-symbols-outlined alert-close" onclick="this.parentElement.remove()">close</span>
-                `;
-
-                // Insert before profile card
-                container.insertBefore(alertDiv, document.querySelector('.profile-card'));
-
-                // Remove after 3 seconds
-                setTimeout(() => {
-                    alertDiv.style.opacity = '0';
-                    setTimeout(() => alertDiv.remove(), 300);
-                }, 3000);
-
+                showSuccessMessage(data.message);
+                updateSidebar(data); // Sync sidebar in case initials changed due to username change
                 window.checkFormChanges();
             } else {
                 alert('Error: ' + data.message);
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('An unexpected error occurred. Please try again.');
+            alert('An unexpected error occurred.');
         } finally {
             saveBtn.innerHTML = originalText;
-            window.checkFormChanges(); // Re-evaluate button state
+            window.checkFormChanges();
         }
     };
 </script>
 {% endblock %}
+```

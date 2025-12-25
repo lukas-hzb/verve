@@ -152,14 +152,14 @@ def update_profile():
     try:
         updated_user = UserService.update_user_profile(current_user.id, username, email, avatar_file, remove_avatar)
         
-        # Check if it's an AJAX request (accepts JSON)
         if request.headers.get('Accept') == 'application/json':
             return jsonify({
                 'success': True,
                 'message': 'Profile updated successfully!',
                 'username': updated_user.username,
                 'email': updated_user.email,
-                'avatar_url': updated_user.avatar_file
+                'avatar_url': updated_user.avatar_file,
+                'initials': updated_user.username[0].upper()
             })
             
         flash('Profile updated successfully!', 'success')
