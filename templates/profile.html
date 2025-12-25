@@ -289,7 +289,9 @@
 
                 if (data.avatar_url) {
                     // Image set
-                    img.src = data.avatar_url;
+                    // Append timestamp to force browser to re-fetch image (cache busting)
+                    const timestamp = new Date().getTime();
+                    img.src = data.avatar_url + '?t=' + timestamp;
                     img.style.display = 'block';
                     if (initials) initials.style.display = 'none';
 
@@ -339,6 +341,10 @@
             overlay.innerHTML = originalOverlayContent; // Revert on error
         } finally {
             overlay.style.opacity = ''; // Remove forced opacity
+            // Clear file input to allow re-selecting the same file if needed
+            if (file) {
+                document.getElementById('avatar').value = '';
+            }
         }
     };
 
@@ -347,7 +353,9 @@
         if (!sidebarPlaceholder) return;
 
         if (data.avatar_url) {
-            sidebarPlaceholder.innerHTML = `<img src="${data.avatar_url}" alt="Avatar" class="sidebar-avatar">`;
+            // Append timestamp for cache busting
+            const timestamp = new Date().getTime();
+            sidebarPlaceholder.innerHTML = `<img src="${data.avatar_url}?t=${timestamp}" alt="Avatar" class="sidebar-avatar">`;
         } else {
             sidebarPlaceholder.innerHTML = `<div class="sidebar-avatar-text">${data.initials}</div>`;
         }
