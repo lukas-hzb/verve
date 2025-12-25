@@ -137,8 +137,7 @@
         <h2 style="margin-bottom: var(--space-4);">Account Settings</h2>
 
         <div class="card-normal">
-            <form action="{{ url_for('auth.update_profile') }}" method="POST" enctype="multipart/form-data"
-                id="profile-form">
+            <form id="profile-form" onsubmit="handleProfileUpdate(event)">
 
                 <h3 class="card-normal-title">Username</h3>
                 <div class="card-input-group" style="margin-bottom: var(--space-6);">
@@ -319,6 +318,68 @@
         window.avatarChanged = false;
         document.getElementById('remove-avatar').value = 'true';
         window.checkFormChanges();
+    };
+
+    window.handleProfileUpdate = async function (event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const saveBtn = document.getElementById('save-profile-btn');
+        const originalText = saveBtn.innerHTML;
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Saving...';
+
+        try {
+            const response = await fetch("{{ url_for('auth.update_profile') }}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Update original values to current ones so button disables again
+                window.originalValues.username = document.getElementById('username').value;
+                window.originalValues.email = document.getElementById('email').value;
+                window.avatarChanged = false;
+                window.avatarRemoved = false;
+
+                // Show success message (using a temporary alert since we don't have a toast system ready)
+                // Or inject alert into DOM like login page
+                const container = document.querySelector('.profile-card').parentNode;
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success';
+                alertDiv.innerHTML = `
+                    <span class="material-symbols-outlined alert-icon">check_circle</span>
+                    <span class="alert-message">${data.message}</span>
+                    <span class="material-symbols-outlined alert-close" onclick="this.parentElement.remove()">close</span>
+                `;
+
+                // Insert before profile card
+                container.insertBefore(alertDiv, document.querySelector('.profile-card'));
+
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    alertDiv.style.opacity = '0';
+                    setTimeout(() => alertDiv.remove(), 300);
+                }, 3000);
+
+                window.checkFormChanges();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An unexpected error occurred. Please try again.');
+        } finally {
+            saveBtn.innerHTML = originalText;
+            window.checkFormChanges(); // Re-evaluate button state
+        }
     };
 </script>
 {% endblock %}

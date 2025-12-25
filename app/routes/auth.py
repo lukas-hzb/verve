@@ -142,19 +142,38 @@ def profile():
 @login_required
 def update_profile():
     """Update user profile information."""
+    from flask import jsonify
+
     username = request.form.get('username', '').strip()
     email = request.form.get('email', '').strip()
     avatar_file = request.files.get('avatar')
     remove_avatar = request.form.get('remove_avatar', 'false') == 'true'
     
     try:
-        UserService.update_user_profile(current_user.id, username, email, avatar_file, remove_avatar)
+        updated_user = UserService.update_user_profile(current_user.id, username, email, avatar_file, remove_avatar)
+        
+        # Check if it's an AJAX request (accepts JSON)
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({
+                'success': True,
+                'message': 'Profile updated successfully!',
+                'username': updated_user.username,
+                'email': updated_user.email,
+                'avatar_url': updated_user.avatar_file
+            })
+            
         flash('Profile updated successfully!', 'success')
     except UserAlreadyExistsError as e:
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({'success': False, 'message': str(e)}), 400
         flash(str(e), 'error')
     except InvalidInputError as e:
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({'success': False, 'message': str(e)}), 400
         flash(str(e), 'error')
     except Exception as e:
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'}), 500
         flash(f'An error occurred: {str(e)}', 'error')
         
     return redirect(url_for('auth.profile'))

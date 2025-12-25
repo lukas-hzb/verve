@@ -16,3 +16,6 @@ psycopg2-binary==2.9.9
 
 # Production Server
 gunicorn==21.2.0
+
+# Image Processing
+Pillow==10.0.0
