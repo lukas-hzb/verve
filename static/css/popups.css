@@ -337,10 +337,7 @@
     /* Offset for label */
 }
 
-background-color: var(--color-border);
-margin-top: 0;
-align-self: stretch;
-}
+
 
 .preview-note {
     font-size: 0.75rem;
