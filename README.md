@@ -80,28 +80,33 @@ Create a `.env` file in the project root:
 
 ## Deployment
 
-### Koyeb (Docker)
+### Docker
 
-Verve includes a `Dockerfile` for deployment on [Koyeb](https://www.koyeb.com/).
+Verve includes a `Dockerfile` for containerized deployment.
 
-**Deployment Steps:**
-
-1. Select **"Repository"** as deployment source
-2. Configure build settings:
+**Configuration:**
 
 | Setting          | Value        |
 |------------------|--------------|
 | Dockerfile Path  | `Dockerfile` |
-| Docker Context   | `/`          |
 | Port             | `8000`       |
 
-3. Add environment variables:
+**Required Environment Variables:**
 
 | Variable                  | Value                          |
 |---------------------------|--------------------------------|
 | `SECRET_KEY`              | Secure random string           |
 | `SQLALCHEMY_DATABASE_URI` | PostgreSQL connection string   |
 | `FLASK_CONFIG`            | `production`                   |
+
+### Recommended Platforms
+
+| Platform | Free Tier | Notes |
+|----------|-----------|-------|
+| [Koyeb](https://www.koyeb.com/) | ✅ | Docker support, auto-deploy from GitHub |
+| [Railway](https://railway.app/) | ✅ | Simple setup, Dockerfile auto-detection |
+| [Render](https://render.com/) | ✅ | Free PostgreSQL, Docker support |
+| [Fly.io](https://fly.io/) | ✅ | Global edge deployment |
 
 ### Supabase Database
 
