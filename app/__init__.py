@@ -54,6 +54,9 @@ def create_app(config_name: str = 'default') -> Flask:
     # Register error handlers
     register_error_handlers(app)
     
+    # Register static file routes for root-level files (favicon, apple-touch-icon)
+    register_static_routes(app, base_dir)
+    
     # Log startup
     app.logger.info(f"Verve application started with {config_name} configuration")
     
@@ -187,6 +190,25 @@ def register_error_handlers(app: Flask) -> None:
             sidebar_collapsed=sidebar_collapsed,
             error_message=str(error)
         ), 500
+
+
+def register_static_routes(app: Flask, base_dir: Path) -> None:
+    """
+    Register routes for root-level static files (favicon, apple-touch-icon).
+    
+    Args:
+        app: Flask application instance
+        base_dir: Base directory of the application
+    """
+    from flask import send_from_directory
+    
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(base_dir, 'favicon.ico', mimetype='image/x-icon')
+    
+    @app.route('/apple-touch-icon.png')
+    def apple_touch_icon():
+        return send_from_directory(base_dir, 'apple-touch-icon.png', mimetype='image/png')
 
 
 __version__ = '2.0.0'
