@@ -110,7 +110,13 @@ Verve includes a `Dockerfile` for containerized deployment.
 
 Verve works with **any PostgreSQL database**. There is no dependency on a specific provider.
 
-**Recommended: Supabase Setup**
+**Recommended Providers:**
+
+| Provider | Notes |
+|----------|-------|
+| [Supabase](https://supabase.com/) | Easy setup, generous free tier |
+
+**Example: Supabase Setup**
 
 1. Create a project at [supabase.com](https://supabase.com)
 2. Go to **Settings → Database → Connection string**
