@@ -105,17 +105,27 @@ Verve includes a `Dockerfile` for containerized deployment.
 |----------|-----------|-------|
 | [Koyeb](https://www.koyeb.com/) | ✅ | Docker support, auto-deploy from GitHub |
 | [Railway](https://railway.app/) | ✅ | Simple setup, Dockerfile auto-detection |
-| [Render](https://render.com/) | ✅ | Free PostgreSQL, Docker support |
-| [Fly.io](https://fly.io/) | ✅ | Global edge deployment |
 
-### Supabase Database
+### Database
+
+Verve works with **any PostgreSQL database**. There is no dependency on a specific provider.
+
+**Recommended Providers:**
+
+| Provider | Free Tier | Notes |
+|----------|-----------|-------|
+| [Supabase](https://supabase.com/) | ✅ | Easy setup, generous free tier |
+| [Neon](https://neon.tech/) | ✅ | Serverless PostgreSQL |
+| [Railway](https://railway.app/) | ✅ | Integrated with app hosting |
+| Local PostgreSQL | — | For development |
+
+**Example: Supabase Setup**
 
 1. Create a project at [supabase.com](https://supabase.com)
 2. Go to **Settings → Database → Connection string**
 3. Select **Transaction pooling** mode
 4. Copy connection string and replace `[YOUR-PASSWORD]`
 
-**Connection String Format:**
 ```
 postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
 ```
