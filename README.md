@@ -51,7 +51,7 @@ The app runs at: **http://127.0.0.1:8080**
 
 ### Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root with these variables:
 
 | Variable                  | Required | Description                          |
 |---------------------------|----------|--------------------------------------|
@@ -152,7 +152,7 @@ Verve/
 ├── devel.py               # Development entry point
 ├── config.py              # Configuration classes
 ├── requirements.txt       # Dependencies
-├── Procfile               # Koyeb/Heroku config
+├── Dockerfile             # Container configuration
 
 └── .env                   # Local config (not in repo)
 ```
@@ -164,13 +164,10 @@ Verve/
 | Layer        | Technology                             |
 |--------------|----------------------------------------|
 | Backend      | Flask 2.3.3                            |
-| Database     | PostgreSQL (Supabase)                  |
+| Database     | PostgreSQL                             |
 | ORM          | Flask-SQLAlchemy 3.1.1                 |
-| DB Driver    | psycopg2-binary 2.9.9                  |
 | Auth         | Flask-Login 0.6.3, bcrypt 4.1.2        |
-| Image        | Pillow 10.0.0                          |
 | Server       | Gunicorn 21.2.0                        |
-| Hosting      | Koyeb                                  |
 
 ---
 
