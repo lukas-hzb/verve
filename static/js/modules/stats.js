@@ -11,6 +11,8 @@ export class StatsManager {
         this.totalCardsEl = document.getElementById("total-cards");
         this.levelProgressEl = document.getElementById("level-progress");
         this.resetSetBtn = document.getElementById("reset-set-btn");
+        this.masteryStatValueEl = document.getElementById("mastery-stat-value");
+        this.masteryStatIconWrapperEl = document.getElementById("mastery-stat-icon-wrapper");
 
         // Constants
         this.LEVEL_COLORS = {
@@ -50,6 +52,21 @@ export class StatsManager {
     displayStats(stats) {
         // Display total cards
         this.totalCardsEl.textContent = stats.total_cards;
+
+        // Calculate and display Mastery (Level 5)
+        const masteryCount = stats.level_counts[this.MAX_LEVEL_DISPLAY] || 0;
+        const masteryPercentage = stats.total_cards > 0
+            ? (masteryCount / stats.total_cards) * 100
+            : 0;
+
+        if (this.masteryStatValueEl) {
+            this.masteryStatValueEl.textContent = `${Math.round(masteryPercentage)}%`;
+        }
+
+        if (this.masteryStatIconWrapperEl) {
+            // Set color to Level 5 color (Accent 5) to match the last level
+            this.masteryStatIconWrapperEl.style.setProperty('--icon-color', 'var(--color-accent-5)');
+        }
 
         // Clear previous progress bars
         this.levelProgressEl.innerHTML = "";
