@@ -84,24 +84,24 @@ Create a `.env` file in the project root:
 
 Verve includes a `Dockerfile` for deployment on [Koyeb](https://www.koyeb.com/).
 
-**Setup:**
+**Deployment Steps:**
 
 1. Select **"Repository"** as deployment source
 2. Configure build settings:
 
-| Setting         | Value        |
-|-----------------|--------------|
-| Dockerfile Path | `Dockerfile` |
-| Docker Context  | `/`          |
-| Port            | `8000`       |
+| Setting          | Value        |
+|------------------|--------------|
+| Dockerfile Path  | `Dockerfile` |
+| Docker Context   | `/`          |
+| Port             | `8000`       |
 
-**Required Environment Variables:**
+3. Add environment variables:
 
-| Variable                  | Value                              |
-|---------------------------|------------------------------------|
-| `SECRET_KEY`              | Secure random string               |
-| `SQLALCHEMY_DATABASE_URI` | PostgreSQL connection string       |
-| `FLASK_CONFIG`            | `production`                       |
+| Variable                  | Value                          |
+|---------------------------|--------------------------------|
+| `SECRET_KEY`              | Secure random string           |
+| `SQLALCHEMY_DATABASE_URI` | PostgreSQL connection string   |
+| `FLASK_CONFIG`            | `production`                   |
 
 ### Supabase Database
 
