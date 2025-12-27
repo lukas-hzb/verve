@@ -84,10 +84,14 @@ Verve includes a `Dockerfile` for containerized deployment on any Docker-compati
 
 ### Requirements
 
+Configure these settings in your hosting platform:
+
 | Setting          | Value        |
 |------------------|--------------|
 | Dockerfile Path  | `Dockerfile` |
 | Port             | `8000`       |
+
+Set these environment variables:
 
 | Variable                  | Description                    |
 |---------------------------|--------------------------------|
@@ -97,14 +101,20 @@ Verve includes a `Dockerfile` for containerized deployment on any Docker-compati
 
 ### Hosting Platforms
 
+Tested platforms for deploying Verve:
+
 | Platform | Notes |
 |----------|-------|
 | [Koyeb](https://www.koyeb.com/) | Docker support, auto-deploy from GitHub |
 | [Railway](https://railway.app/) | Simple setup, Dockerfile auto-detection |
 
-### Database
+---
+
+## Database
 
 Verve works with **any PostgreSQL database**. There is no dependency on a specific provider.
+
+Tested database providers:
 
 | Provider | Notes |
 |----------|-------|
