@@ -5,8 +5,7 @@ This blueprint handles the main page routes for the Verve application.
 Now with user authentication support.
 """
 
-import os
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 
 from app.services import VocabService
@@ -15,24 +14,6 @@ from app.utils.exceptions import InvalidInputError
 
 
 main_bp = Blueprint('main', __name__)
-
-
-@main_bp.route('/apple-touch-icon.png')
-def apple_touch_icon():
-    return send_from_directory(
-        os.path.join(current_app.root_path, 'static', 'img'),
-        'apple-touch-icon.png',
-        mimetype='image/png'
-    )
-
-
-@main_bp.route('/favicon.ico')
-def favicon():
-    return send_from_directory(
-        os.path.join(current_app.root_path, 'static', 'img'),
-        'favicon.png',
-        mimetype='image/vnd.microsoft.icon'
-    )
 
 
 @main_bp.route("/")
