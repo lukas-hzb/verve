@@ -80,26 +80,22 @@ Create a `.env` file in the project root:
 
 ## Deployment
 
-### Docker
+Verve includes a `Dockerfile` for containerized deployment on any Docker-compatible platform.
 
-Verve includes a `Dockerfile` for containerized deployment.
-
-**Configuration:**
+### Requirements
 
 | Setting          | Value        |
 |------------------|--------------|
 | Dockerfile Path  | `Dockerfile` |
 | Port             | `8000`       |
 
-**Required Environment Variables:**
-
-| Variable                  | Value                          |
+| Variable                  | Description                    |
 |---------------------------|--------------------------------|
 | `SECRET_KEY`              | Secure random string           |
 | `SQLALCHEMY_DATABASE_URI` | PostgreSQL connection string   |
-| `FLASK_CONFIG`            | `production`                   |
+| `FLASK_CONFIG`            | Set to `production`            |
 
-### Recommended Platforms
+### Hosting Platforms
 
 | Platform | Notes |
 |----------|-------|
@@ -109,8 +105,6 @@ Verve includes a `Dockerfile` for containerized deployment.
 ### Database
 
 Verve works with **any PostgreSQL database**. There is no dependency on a specific provider.
-
-**Recommended Providers:**
 
 | Provider | Notes |
 |----------|-------|
