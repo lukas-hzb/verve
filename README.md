@@ -80,23 +80,28 @@ Create a `.env` file in the project root:
 
 ## Deployment
 
-### Koyeb
+### Koyeb (Docker)
 
-Verve is configured for deployment on [Koyeb](https://www.koyeb.com/).
+Verve includes a `Dockerfile` for deployment on [Koyeb](https://www.koyeb.com/).
 
-**Settings:**
+**Setup:**
 
-| Setting        | Value                            |
-|----------------|----------------------------------|
-| Build Command  | `pip install -r requirements.txt`|
-| Run Command    | `gunicorn prod:app`              |
-| Port           | `8000`                           |
+1. Select **"Repository"** as deployment source
+2. Configure build settings:
+
+| Setting         | Value        |
+|-----------------|--------------|
+| Dockerfile Path | `Dockerfile` |
+| Docker Context  | `/`          |
+| Port            | `8000`       |
 
 **Required Environment Variables:**
 
-- `SECRET_KEY` — Generate a secure random string
-- `SQLALCHEMY_DATABASE_URI` — Your database connection string
-- `FLASK_CONFIG` — Set to `production`
+| Variable                  | Value                              |
+|---------------------------|------------------------------------|
+| `SECRET_KEY`              | Secure random string               |
+| `SQLALCHEMY_DATABASE_URI` | PostgreSQL connection string       |
+| `FLASK_CONFIG`            | `production`                       |
 
 ### Supabase Database
 
