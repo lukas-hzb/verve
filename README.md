@@ -101,16 +101,16 @@ Verve includes a `Dockerfile` for containerized deployment.
 
 ### Recommended Platforms
 
-| Platform | Free Tier | Notes |
-|----------|-----------|-------|
-| [Koyeb](https://www.koyeb.com/) | ✅ | Docker support, auto-deploy from GitHub |
-| [Railway](https://railway.app/) | ✅ | Simple setup, Dockerfile auto-detection |
+| Platform | Notes |
+|----------|-------|
+| [Koyeb](https://www.koyeb.com/) | Docker support, auto-deploy from GitHub |
+| [Railway](https://railway.app/) | Simple setup, Dockerfile auto-detection |
 
 ### Database
 
 Verve works with **any PostgreSQL database**. There is no dependency on a specific provider.
 
-**Example: Supabase Setup**
+**Recommended: Supabase Setup**
 
 1. Create a project at [supabase.com](https://supabase.com)
 2. Go to **Settings → Database → Connection string**
