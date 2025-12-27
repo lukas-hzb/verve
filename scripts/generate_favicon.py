@@ -1,6 +1,6 @@
 import os
 import requests
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 # Configuration
 # Variable font URL - Outfit font weight 700 to match UI
@@ -8,10 +8,11 @@ FONT_URL = "https://raw.githubusercontent.com/google/fonts/main/ofl/outfit/Outfi
 FONT_PATH = "Outfit.ttf"
 SYSTEM_FONT_PATH = "/Library/Fonts/Arial Unicode.ttf"
 PRIMARY_COLOR = "#6c63ff"
+GLOW_COLOR = (108, 99, 255, 100)  # Primary color with alpha for glow
 OUTPUT_DIR = "../static/img"
 
-# Icon dimensions - 180x180 for favicon and apple-touch-icon
-ICON_SIZE = 180
+# Icon dimensions - 512x512 for high resolution
+ICON_SIZE = 512
 
 def download_font():
     # Try downloading Outfit
@@ -38,7 +39,7 @@ def download_font():
     
     return None
 
-def create_icon(size, filename, bg_color=None, font_path=None):
+def create_icon(size, filename, bg_color=None, font_path=None, add_glow=False):
     # Create image
     if bg_color:
         img = Image.new('RGBA', (size, size), bg_color)
@@ -79,6 +80,23 @@ def create_icon(size, filename, bg_color=None, font_path=None):
     x = (size - text_width) / 2 - bbox[0]
     y = (size - text_height) / 2 - bbox[1]
 
+    # Add glow effect for apple-touch-icon
+    if add_glow:
+        # Create glow layer
+        glow_layer = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        glow_draw = ImageDraw.Draw(glow_layer)
+        
+        # Draw text in glow color (multiple times for stronger effect)
+        for offset in range(3):
+            glow_draw.text((x, y), text, font=font, fill=GLOW_COLOR)
+        
+        # Apply gaussian blur for glow effect
+        glow_layer = glow_layer.filter(ImageFilter.GaussianBlur(radius=size * 0.05))
+        
+        # Composite glow under the main image
+        img = Image.alpha_composite(img, glow_layer)
+        draw = ImageDraw.Draw(img)
+
     # Draw text
     draw.text((x, y), text, font=font, fill=PRIMARY_COLOR)
 
@@ -98,8 +116,8 @@ def main():
     # Favicon (180x180, transparent background)
     create_icon(ICON_SIZE, "favicon.png", bg_color=None, font_path=font_path)
 
-    # Apple Touch Icon (180x180, white background)
-    create_icon(ICON_SIZE, "apple-touch-icon.png", bg_color="white", font_path=font_path)
+    # Apple Touch Icon (512x512, white background, with glow effect)
+    create_icon(ICON_SIZE, "apple-touch-icon.png", bg_color="white", font_path=font_path, add_glow=True)
 
     # Cleanup downloaded font file if it exists and we downloaded it (not system)
     if font_path == FONT_PATH and os.path.exists(FONT_PATH):
