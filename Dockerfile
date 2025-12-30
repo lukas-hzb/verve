@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 8000
 
 # Run with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "prod:app"]
+CMD ["gunicorn", "--timeout", "120", "--bind", "0.0.0.0:8000", "prod:app"]

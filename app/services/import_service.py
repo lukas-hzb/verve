@@ -137,20 +137,26 @@ class ImportService:
         # Create set
         vocab_set = VocabService.create_user_set(user_id, set_name)
         
-        # Add cards to set
+        # Add cards to set using chunked batch insert for Railway free tier
         from app.models import Card
         from app.database import db
         
-        for front, back in cards:
-            card = Card(
-                id=str(uuid.uuid4()),
-                front=front,
-                back=back,
-                vocab_set_id=vocab_set.id
-            )
-            db.session.add(card)
-            
-        db.session.commit()
+        # Use chunked inserts to avoid Railway free tier timeouts
+        CHUNK_SIZE = 50
+        
+        for i in range(0, len(cards), CHUNK_SIZE):
+            chunk = cards[i:i + CHUNK_SIZE]
+            card_objects = [
+                Card(
+                    id=str(uuid.uuid4()),
+                    front=front,
+                    back=back,
+                    vocab_set_id=vocab_set.id
+                )
+                for front, back in chunk
+            ]
+            db.session.add_all(card_objects)
+            db.session.commit()  # Commit each chunk to avoid long transactions
         
         return vocab_set.id
 
@@ -181,24 +187,33 @@ class ImportService:
         # Verify set access
         vocab_set = VocabService.get_vocab_set(set_id, user_id)
         
-        # Add cards to set
+        # Add cards to set using chunked batch insert for Railway free tier
         from app.models import Card
         from app.database import db
         
-        count = 0
-        for front, back in cards:
-            # Check if card already exists in this set
-            existing = vocab_set.find_card(front)
-            if not existing:
-                card = Card(
+        # Get existing fronts to check for duplicates
+        existing_fronts = {card.front for card in vocab_set.cards}
+        
+        # Filter out duplicates first
+        new_cards = [(front, back) for front, back in cards if front not in existing_fronts]
+        
+        # Use chunked inserts to avoid Railway free tier timeouts
+        CHUNK_SIZE = 50
+        total_added = 0
+        
+        for i in range(0, len(new_cards), CHUNK_SIZE):
+            chunk = new_cards[i:i + CHUNK_SIZE]
+            card_objects = [
+                Card(
                     id=str(uuid.uuid4()),
                     front=front,
                     back=back,
                     vocab_set_id=vocab_set.id
                 )
-                db.session.add(card)
-                count += 1
-            
-        db.session.commit()
+                for front, back in chunk
+            ]
+            db.session.add_all(card_objects)
+            db.session.commit()  # Commit each chunk to avoid long transactions
+            total_added += len(card_objects)
         
-        return count
+        return total_added
