@@ -205,6 +205,24 @@
 </div>
 
 <script>
+    // Delete Account Modal Functions
+    function openDeleteModal() {
+        document.getElementById('delete-account-modal').classList.add('active');
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('delete-account-modal').classList.remove('active');
+    }
+    
+    // Close modal on overlay click
+    document.getElementById('delete-account-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+</script>
+
+<script>
     // Store original values to track changes
     window.originalValues = {
         username: '',
