@@ -190,7 +190,11 @@ class VocabService:
         # Access check
         if not vset.is_shared and vset.user_id != user_id:
             raise UnauthorizedAccessError("vocabulary set", set_id)
-            
+        
+        # Bulk delete cards first (faster than cascade for large sets)
+        Card.query.filter_by(vocab_set_id=set_id).delete(synchronize_session=False)
+        
+        # Now delete the set
         db.session.delete(vset)
         db.session.commit()
         
@@ -207,14 +211,16 @@ class VocabService:
         """Reset all cards in a set to level 1."""
         vset = VocabService.get_vocab_set(set_id, user_id)
         
-        for card in vset.cards:
-            card.level = 1
-            card.next_review = datetime.utcnow()
+        # Bulk update all cards (faster than iterating for large sets)
+        count = Card.query.filter_by(vocab_set_id=set_id).update(
+            {'level': 1, 'next_review': datetime.utcnow()},
+            synchronize_session=False
+        )
         
         vset.updated_at = datetime.utcnow()
         db.session.commit()
         
-        return {'status': 'success', 'message': f'Reset {len(vset.cards.all())} cards to level 1'}
+        return {'status': 'success', 'message': f'Reset {count} cards to level 1'}
 
     @staticmethod
     def restore_card(set_id: str, card_front: str, level: int, next_review: str, user_id: str) -> Dict:
