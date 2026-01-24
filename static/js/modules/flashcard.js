@@ -125,9 +125,8 @@ export class FlashcardManager {
               return;
          }
          
-         // Calculate remaining
-         // Index 0 means 1st card. So reviewed = index.
-         const reviewed = this.currentCardIndex;
+         // Calculate remaining based on actual stats, not card index (which lags during animation)
+         const reviewed = this.sessionStats.correct + this.sessionStats.wrong;
          const remaining = total - reviewed;
          
          // Update Text
