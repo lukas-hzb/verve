@@ -17,8 +17,9 @@ export class FlashcardManager {
         this.isPracticeMode = false;
         this.isWrongAnswersMode = false;
         
-        // Storage key for session persistence
-        this.storageKey = `flashcardSession_${this.setId}`;
+        // Storage keys for session persistence (separate for each mode)
+        this.learningStorageKey = `flashcardSession_LEARNING_${this.setId}`;
+        this.practiceStorageKey = `flashcardSession_PRACTICE_${this.setId}`;
         
         // Sync queue for delayed API requests
         this.syncQueue = [];
@@ -77,6 +78,10 @@ export class FlashcardManager {
         }
     }
 
+    getStorageKey() {
+        return this.isPracticeMode ? this.practiceStorageKey : this.learningStorageKey;
+    }
+
     saveSession() {
         const sessionData = {
             cards: this.cards,
@@ -87,12 +92,12 @@ export class FlashcardManager {
             isWrongAnswersMode: this.isWrongAnswersMode,
             timestamp: Date.now()
         };
-        localStorage.setItem(this.storageKey, JSON.stringify(sessionData));
+        localStorage.setItem(this.getStorageKey(), JSON.stringify(sessionData));
         this.updateProgress();
     }
 
     loadSession() {
-        const saved = localStorage.getItem(this.storageKey);
+        const saved = localStorage.getItem(this.getStorageKey());
         if (!saved) return false;
 
         try {
@@ -103,11 +108,10 @@ export class FlashcardManager {
             this.currentCardIndex = data.currentCardIndex || 0;
             this.undoHistory = data.undoHistory || [];
             this.sessionStats = data.paddingStats || { correct: 0, wrong: 0, total: this.cards.length };
-            this.isPracticeMode = data.isPracticeMode || false;
+            // Mode is determined by checkbox state, not saved data
             this.isWrongAnswersMode = data.isWrongAnswersMode || false;
             
             // Restore UI toggles
-            if(this.practiceModeCheckbox) this.practiceModeCheckbox.checked = this.isPracticeMode;
             if(this.wrongAnswersCheckbox) this.wrongAnswersCheckbox.checked = this.isWrongAnswersMode;
             
             return true;
@@ -118,13 +122,11 @@ export class FlashcardManager {
     }
 
     clearSession() {
-        localStorage.removeItem(this.storageKey);
+        localStorage.removeItem(this.getStorageKey());
     }
     
     updateProgress() {
-         // Don't update progress in practice mode
-         if (this.isPracticeMode) return;
-         
+         // Calculate for both modes
          const total = this.sessionStats.total; // Use fixed total from session start
          if (total === 0) {
               if (this.progressText) this.progressText.textContent = "0 / 0";
@@ -148,11 +150,7 @@ export class FlashcardManager {
     
     updateProgressBarVisibility() {
         if (this.progressContainer) {
-            if (this.isPracticeMode) {
-                this.progressContainer.style.display = 'none';
-            } else {
-                this.progressContainer.style.display = 'block';
-            }
+            this.progressContainer.style.display = 'block';
         }
     }
 

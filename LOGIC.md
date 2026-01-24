@@ -96,12 +96,24 @@ The progress bar visualizes learning progress during a study session.
 
 ### Design Requirements
 
-**Location**: Positioned directly above the flashcard with matching width
+**Location**: Positioned directly above the flashcard with matching width (card width minus 2× corner radius)
 
 **Display**: Three-segment bar showing:
 - **Green** (`var(--color-accent-4)`): Correctly answered cards
 - **Red** (`var(--color-accent-1)`): Incorrectly answered cards  
 - **Gray** (transparent): Remaining cards
+
+### Reset vs. Persist Behavior
+
+| Action | Learning Mode | Practice Mode |
+|--------|---------------|---------------|
+| **Enable Practice Mode** | (N/A) | ✅ Resets progress |
+| **Disable Practice Mode** | ✅ Resets progress | (N/A) |
+| **Page Reload** | ❌ Keeps progress | ❌ Keeps progress |
+| **Click Restart** | ✅ Resets progress | ✅ Resets progress |
+| **Toggle Wrong Only** | ✅ Resets progress | ✅ Resets progress |
+
+**Key Insight**: Each mode has **independent session storage**. Switching modes loads the appropriate session (or starts fresh if none exists).
 
 ### Tracking Logic
 
@@ -132,16 +144,18 @@ Progress Calculation:
 
 #### Practice Mode
 
-**Progress bar is DISABLED** in practice mode because:
-- Practice mode doesn't affect card statistics
-- Users can review ALL cards, not just due cards
-- The concept of "progress" doesn't apply to casual practice
+The progress bar tracks **all cards in the current practice session**:
 
 ```
-IF isPracticeMode:
-    Hide progress bar
-ELSE:
-    Show progress bar with due cards tracking
+Initial State:
+- Fetch all_cards (or filtered by wrong_only)
+- total = count(all_cards)
+- correct_count = 0
+- wrong_count = 0
+
+On Each Answer:
+- correct_count++ or wrong_count++
+- Progress updates identically to learning mode
 ```
 
 ### Implementation Details
@@ -150,22 +164,24 @@ ELSE:
 - Frontend: `static/js/modules/flashcard.js`
 - Template: `templates/set.html`
 
+**Session Storage Keys**:
+- Learning Mode: `flashcardSession_LEARNING_{setId}`
+- Practice Mode: `flashcardSession_PRACTICE_{setId}`
+
 The progress bar state is saved in `sessionStats`:
 ```javascript
 sessionStats: {
     correct: 0,
     wrong: 0,
-    total: initial_due_cards_count
+    total: initial_cards_count
 }
 ```
-
-**IMPORTANT**: `sessionStats.total` is set once at session start and represents the count of due cards at that moment, NOT all cards in the set.
 
 ### Visual Behavior
 
 - Segments animate smoothly with CSS transitions (0.3s)
 - Width is calculated dynamically based on current counts
-- Text displays: "X / Y" where X = reviewed, Y = total due
+- Text displays: "X / Y" where X = reviewed, Y = total
 
 ---
 
@@ -243,7 +259,7 @@ When user clicks "Undo":
 | **Updates `level`** | ✅ Yes | ❌ No |
 | **Updates `next_review`** | ✅ Yes | ❌ No |
 | **Tracks `last_practice_wrong`** | ❌ No | ✅ Yes |
-| **Progress Bar** | ✅ Enabled | ❌ Disabled |
+| **Progress Bar** | ✅ Enabled | ✅ Enabled |
 | **Use Case** | Long-term retention | Quick review/cramming |
 
 ### Mode Toggle Behavior
@@ -252,13 +268,12 @@ When enabling Practice Mode:
 - Show popup: "In Practice Mode, you can review all cards freely..."
 - Fetch all cards via `/api/set/<set_id>/cards`
 - Shuffle cards
-- Hide progress bar
+- Reset progress bar (new practice session)
 
 When disabling Practice Mode:
 - **NO popup shown** (user feedback)
 - Fetch due cards via `/api/set/<set_id>/due_cards`
-- Keep database order
-- Show progress bar
+- Reset progress bar (new learning session)
 
 ---
 
