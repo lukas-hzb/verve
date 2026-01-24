@@ -111,6 +111,9 @@ def auth_callback():
     """Callback for OAuth providers."""
     import logging
     from flask import session
+    from app.models import User
+    from app.database import db
+    from app.services import UserService
     
     logger = logging.getLogger(__name__)
     
