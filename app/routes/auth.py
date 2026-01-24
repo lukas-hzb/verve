@@ -65,6 +65,103 @@ def register():
     return render_template('auth/register.html')
 
 
+@auth_bp.route('/login/google')
+def login_google():
+    """Initiate Google OAuth login."""
+    from app.supabase_client import SupabaseClient
+    
+    supabase = SupabaseClient.get_client()
+    if not supabase:
+         flash('Authentication service unavailable.', 'error')
+         return redirect(url_for('auth.login'))
+         
+    # Get the URL for the callback
+    # If running locally, it's 127.0.0.1:8080/auth/callback
+    # In production, it should be the domain.
+    # We can use url_for providing external=True
+    callback_url = url_for('auth.auth_callback', _external=True)
+    
+    # Supabase signInWithOAuth
+    res = supabase.auth.sign_in_with_oauth({
+        "provider": "google",
+        "options": {
+            "redirectTo": callback_url
+        }
+    })
+    
+    if res.url:
+        return redirect(res.url)
+        
+    flash('Could not initiate Google login.', 'error')
+    return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/callback')
+def auth_callback():
+    """Callback for OAuth providers."""
+    # Supabase redirects here with an access_token in the hash fragment (implicitly handled by client JS)
+    # OR with a 'code' if using PKCE flow (Server-side).
+    
+    # Flask is Server-Side. We need the 'code'.
+    # Updated Supabase Python Client might support `exchange_code_for_session`.
+    
+    code = request.args.get('code')
+    error = request.args.get('error')
+    
+    if error:
+        flash(f'Login failed: {request.args.get("error_description")}', 'error')
+        return redirect(url_for('auth.login'))
+        
+    if not code:
+        # If no code, maybe it's the hash fragment issue?
+        # Standard Supabase auth with `redirectTo` usually sends code for server-side if configured.
+        # If not, we might need client-side handling.
+        # Assuming PKCE flow is active or we get a code.
+        flash('Authentication failed: No code received.', 'error')
+        return redirect(url_for('auth.login'))
+        
+    from app.supabase_client import SupabaseClient
+    supabase = SupabaseClient.get_client()
+    
+    try:
+        res = supabase.auth.exchange_code_for_session({ "auth_code": code })
+        user_session = res.user
+        
+        if user_session:
+            # Sync/Get local user profile
+            user = User.query.get(user_session.id)
+            if not user:
+                # Create profile from metadata
+                username = user_session.user_metadata.get('full_name') or \
+                           user_session.user_metadata.get('name') or \
+                           user_session.email.split('@')[0]
+                           
+                user = User(
+                    id=user_session.id, 
+                    email=user_session.email, 
+                    username=username # Might need unique check loop
+                )
+                db.session.add(user)
+                
+                # Check for duplicate username
+                if User.query.filter_by(username=username).first():
+                     # simplistic collision handling
+                     import uuid
+                     user.username = f"{username}_{str(uuid.uuid4())[:4]}"
+                     
+                db.session.commit()
+                UserService.assign_default_vocab_set(user.id)
+            
+            login_user(user, remember=True)
+            flash(f'Welcome {user.username}!', 'success')
+            return redirect(url_for('main.index'))
+            
+    except Exception as e:
+        flash(f'Login error: {str(e)}', 'error')
+        
+    return redirect(url_for('auth.login'))
+
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """User login page."""

@@ -19,3 +19,6 @@ gunicorn==21.2.0
 
 # Image Processing
 Pillow==10.0.0
+
+# External Services
+supabase>=2.0.0

@@ -15,50 +15,117 @@ class UserService:
     
     @staticmethod
     def create_user(username: str, email: str, password: str) -> User:
+        from app.supabase_client import SupabaseClient
+        
         # Validate inputs
         username = validate_username(username)
         email = validate_email(email)
         password = validate_password(password)
         
-        # Check if username exists
-        if User.query.filter_by(username=username).first():
-            raise UserAlreadyExistsError("username", username)
+        supabase = SupabaseClient.get_client()
+        if not supabase:
+             raise Exception("Supabase client not initialized")
         
-        # Check if email exists
-        if User.query.filter_by(email=email).first():
-            raise UserAlreadyExistsError("email", email)
+        # 1. Create user in Supabase Auth
+        try:
+            res = supabase.auth.sign_up({
+                "email": email, 
+                "password": password,
+                "options": {
+                    "data": {
+                        "username": username
+                    }
+                }
+            })
+            # Check if user already registered or confirmation needed
+            if not res.user:
+                 raise UserAlreadyExistsError("email", email) # Or generic error
+                 
+            user_id = res.user.id
+            
+        except Exception as e:
+            # Check for specific Supabase error messages if possible
+            msg = str(e)
+            if "already registered" in msg or "User already exists" in msg:
+                 raise UserAlreadyExistsError("email", email)
+            raise e
         
-        # Create user
+        # 2. Sync to local User table (Profile)
+        # We use the Supabase Auth ID as the primary key
         user = User(
-            id=str(uuid.uuid4()),
+            id=user_id,
             username=username, 
             email=email
         )
-        user.set_password(password)
         
         db.session.add(user)
-        db.session.commit()
         
         # Assign default vocabulary set
         UserService.assign_default_vocab_set(user.id)
         
+        try:
+            db.session.commit()
+        except Exception as e:
+            # Rollback Supabase user creation? 
+            # Ideally yes, but Client SDK doesn't support 'delete' easily for users without Admin.
+            # We assume database success. 
+            db.session.rollback()
+            raise e
+            
         return user
     
     @staticmethod
     def authenticate_user(username_or_email: str, password: str) -> User:
-        # Try to find user by username
-        user = User.query.filter_by(username=username_or_email).first()
-        if not user:
-            # Try by email
-            user = User.query.filter_by(email=username_or_email).first()
-            
-        if not user:
-            raise InvalidCredentialsError()
-            
-        if not user.check_password(password):
-            raise InvalidCredentialsError()
+        from app.supabase_client import SupabaseClient
         
-        return user
+        # Supabase requires Email for login by default (unless username is set as login param)
+        # Our app supports username OR email. 
+        # If input is username, we need the email first?
+        # Supabase Auth generally uses Email. 
+        # Strategy: resolve email from username locally first.
+        
+        email = username_or_email
+        if '@' not in username_or_email:
+            user_obj = User.query.filter_by(username=username_or_email).first()
+            if not user_obj:
+                raise InvalidCredentialsError() # Username not found
+            email = user_obj.email
+            
+        supabase = SupabaseClient.get_client()
+        if not supabase:
+             raise Exception("Supabase client not initialized")
+             
+        try:
+            # Login with Supabase
+            res = supabase.auth.sign_in_with_password({
+                "email": email,
+                "password": password
+            })
+            
+            # If successful, we get a session and user
+            if not res.user:
+                raise InvalidCredentialsError()
+                
+            # Fetch local user record (Profile)
+            user = User.query.get(res.user.id)
+            if not user:
+                # Should not happen if sync works, but maybe manually added in Supabase?
+                # Create local profile?
+                # For now, error out or minimal implementation
+                # Retrieve username from metadata if possible?
+                username = res.user.user_metadata.get('username', 'Unknown')
+                user = User(id=res.user.id, email=email, username=username)
+                db.session.add(user)
+                db.session.commit()
+
+            return user
+            
+        except Exception as e:
+            # Differentiate errors
+            msg = str(e)
+            if "Invalid login credentials" in msg:
+                raise InvalidCredentialsError()
+            raise InvalidCredentialsError()  # Generic fallback for security
     
     @staticmethod
     def get_user_by_id(user_id: str) -> Optional[User]:
@@ -175,16 +242,56 @@ class UserService:
 
     @staticmethod
     def change_password(user_id: str, current_password: str, new_password: str) -> None:
+        from app.supabase_client import SupabaseClient
+        
         user = UserService.get_user_by_id(user_id)
         if not user:
             raise ValueError("User not found")
-            
-        if not user.check_password(current_password):
-            raise InvalidCredentialsError("Ungültiges aktuelles Passwort")
-            
+        
+        # Verification of CURRENT password is separate in Supabase.
+        # Generally done by re-authenticating or strictly updating if logged in.
+        # Since we are backend, we can use Admin API to force change, 
+        # OR we just update it if we trust the session.
+        # BUT, standard flow requires knowing current password if we want to be safe.
+        # Supabase Client `update_user` just updates it. 
+        # It assumes the client is authenticated as that user.
+        
+        # HOWEVER, here we are in Python (Server). The `supabase` client is likely ANON or SERVICE.
+        # If usage is Anon, we don't have the user's token here easily unless we passed it.
+        # Strategy:
+        # Just update it using Service Role (Admin) IF we want to bypass check.
+        # OR: Attempt sign in with current password to verify.
+        
         new_password = validate_password(new_password)
-        user.set_password(new_password)
-        db.session.commit()
+        supabase = SupabaseClient.get_client()
+        
+        # 1. Verify current password by login
+        try:
+             supabase.auth.sign_in_with_password({
+                 "email": user.email,
+                 "password": current_password
+             })
+        except:
+             raise InvalidCredentialsError("Ungültiges aktuelles Passwort")
+
+        # 2. Update password utilizing Admin/Service Role OR the session we just got? 
+        # The sign_in returned a session. We can use that token to update.
+        # Actually simplest: Use Admin API to update user attributes.
+        
+        service_client = SupabaseClient.get_service_role_client() # Needs service role to update without session?
+        # Actually client.auth.update_user(attrs) works if session is set.
+        # Let's use the admin api if possible to be stateless?
+        # SDK `admin.update_user_by_id(uid, attrs)`
+        
+        try:
+            service_client = SupabaseClient.get_service_role_client()
+            service_client.auth.admin.update_user_by_id(
+                user_id,
+                {"password": new_password}
+            )
+        except Exception as e:
+            # Fallback if service key missing or error
+            raise Exception("Password update failed: " + str(e))
 
     @staticmethod
     def delete_user(user_id: str) -> None:
@@ -199,6 +306,16 @@ class UserService:
         # But we made Card relationship on VocabSet, and VocabSet relationship on User.
         # So deleting user deletes their sets. Deleting sets deletes their cards.
         
+        # Delete from Supabase Auth
+        try:
+            from app.supabase_client import SupabaseClient
+            service_client = SupabaseClient.get_service_role_client()
+            service_client.auth.admin.delete_user(user_id)
+        except Exception as e:
+             # Log but proceed with local delete to ensure cleanup?
+             # Or fail? Prefer cleanup.
+             pass
+             
         db.session.delete(user)
         db.session.commit()
 

@@ -14,31 +14,20 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     avatar_file = db.Column(db.Text, nullable=True) # Store as Base64 string for now to match previous logic
 
+    # Authentication is now handled by Supabase
+    # The 'id' column should match Supabase Auth User ID (UUID)
+    
+    # Deprecated: usage of local password hash
+    # password_hash = db.Column(db.String(128)) 
+    # Kept for migration safety if needed, but should not be used in new auth flow.
+    
     # Relationships
     sets = db.relationship('VocabSet', backref='owner', lazy='dynamic', cascade='all, delete-orphan')
 
-    def set_password(self, password: str) -> None:
-        """Hash and set the user's password."""
-        password_bytes = password.encode('utf-8')
-        salt = bcrypt.gensalt()
-        self.password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
-    
-    def check_password(self, password: str) -> bool:
-        """Verify a password against the stored hash."""
-        if not self.password_hash:
-            return False
-        password_bytes = password.encode('utf-8')
-        hash_bytes = self.password_hash.encode('utf-8')
-        return bcrypt.checkpw(password_bytes, hash_bytes)
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.username,
-            'email': self.email,
-            'created_at': self.created_at,
-            'avatar_file': self.avatar_file
-        }
+    # Remove set_password and check_password as we delegate to Supabase
+    @property
+    def is_supabase_user(self):
+        return True
 
     def __repr__(self):
         return f'<User {self.username}>'
