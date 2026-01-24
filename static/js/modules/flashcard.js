@@ -476,28 +476,48 @@ export class FlashcardManager {
     }
     
     showToast(message) {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = message;
+        let container = document.getElementById('flash-container');
         
-        container.appendChild(toast);
+        // Ensure container exists (it might not if no flask messages were present)
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'flash-container';
+            container.style.maxWidth = '1400px';
+            container.style.margin = '0 auto';
+            container.style.padding = '15px var(--space-6) 0 var(--space-6)';
+            
+            // Insert after navbar (home-section first child approximation)
+            const homeSection = document.querySelector('.home-section');
+            if (homeSection) {
+                homeSection.insertBefore(container, homeSection.firstChild);
+            }
+        }
         
-        // Trigger reflow for animation
-        void toast.offsetWidth;
+        const alert = document.createElement('div');
+        // Use standard alert classes. 'info' creates a blueish style typically.
+        alert.className = 'alert alert-info';
+        alert.innerHTML = `
+            <span class="material-symbols-outlined alert-icon">info</span>
+            <span class="alert-message">${message}</span>
+            <span class="material-symbols-outlined alert-close">close</span>
+        `;
         
-        toast.classList.add('show');
+        // Add click listener to close
+        alert.addEventListener('click', () => {
+             alert.remove();
+             if (container.children.length === 0 && container.getAttribute('data-dynamic') === 'true') {
+                 container.remove();
+             }
+        });
         
+        container.appendChild(alert);
+        
+        // Auto-remove after 4 seconds
         setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                if (container.contains(toast)) {
-                    container.removeChild(toast);
-                }
-            }, 300);
-        }, 3500);
+            if (container.contains(alert)) {
+                alert.remove();
+            }
+        }, 4000);
     }
 
     /**
