@@ -8,6 +8,9 @@ for learning vocabulary efficiently.
 import logging
 from pathlib import Path
 from flask import Flask
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from config import config
 

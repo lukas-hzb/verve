@@ -6,7 +6,7 @@ Flask-SQLAlchemy==3.1.1
 
 # Authentication
 Flask-Login==0.6.3
-bcrypt==4.1.2
+
 
 # Development tools (optional)
 python-dotenv==1.0.0  # For environment variable management

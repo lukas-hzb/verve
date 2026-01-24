@@ -6,7 +6,11 @@ from pathlib import Path
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent.absolute()))
 
-from app import create_app, db
+from dotenv import load_dotenv
+load_dotenv()
+
+from app import create_app
+from app.database import db
 from app.models import User
 from app.supabase_client import SupabaseClient
 
@@ -114,60 +118,96 @@ def migrate_users():
                     # 1. Create with random password
                     import secrets
                     temp_pass = secrets.token_urlsafe(12)
-                    res = supabase.auth.admin.create_user({
-                        "email": user.email,
-                        "password": temp_pass,
-                        "email_confirm": True,
-                        "user_metadata": {"username": user.username}
-                    })
-                    auth_user_id = res.user.id
-                    
-                    # 2. Overwrite password hash with old hash using Direct SQL
-                    # user.password_hash is the bcrypt string.
-                    update_pass_sql = text("""
-                        UPDATE auth.users 
-                        SET encrypted_password = :hash 
-                        WHERE id = :uid
-                    """)
-                    db.session.execute(update_pass_sql, {'hash': user.password_hash, 'uid': auth_user_id})
-                    db.session.commit() # Commit the auth change
-                    
-                    logger.info(f"User created and password hash synced for {user.email}")
+                    try:
+                        res = supabase.auth.admin.create_user({
+                            "email": user.email,
+                            "password": temp_pass,
+                            "email_confirm": True,
+                            "user_metadata": {"username": user.username}
+                        })
+                        auth_user_id = res.user.id
+                        
+                        # Only update password hash if we just created them
+                        # 2. Overwrite password hash with old hash using Direct SQL
+                        update_pass_sql = text("""
+                            UPDATE auth.users 
+                            SET encrypted_password = :hash 
+                            WHERE id = :uid
+                        """)
+                        db.session.execute(update_pass_sql, {'hash': user.password_hash, 'uid': auth_user_id})
+                        db.session.commit() # Commit the auth change
+                        logger.info(f"User created and password hash synced for {user.email}")
+                        
+                    except Exception as e:
+                        # If user exists, we need to find their ID. 
+                        # We try querying again or assume we found it in step 1 BUT step 1 returned None earlier?
+                        # Maybe partial failure.
+                        # Let's try querying auth.users again.
+                        logger.warning(f"Could not create user (maybe exists?): {e}")
+                        
+                        existing = db.session.execute(check_sql, {'email': user.email}).fetchone()
+                        if existing:
+                             auth_user_id = existing[0]
+                             logger.info(f"Found existing Auth ID: {auth_user_id}")
+                        else:
+                             logger.error("Failed to create user and could not find ID.")
+                             continue
 
                 # 3. Update public.users ID to match auth_user_id
-                # This is tricky specifically because of Foreign Keys.
-                # If we change the ID of the user, we must update all VocabSets and Cards.
                 if str(user.id) != str(auth_user_id):
                     logger.info(f"Updating user ID from {user.id} to {auth_user_id}")
                     
-                    # We need to disable FK constraints or update in order? 
-                    # Better: Create a new User record with the new ID? 
-                    # OR specific SQL Update with CASCADE?
-                    # Postgres supports `ON UPDATE CASCADE` if configured.
-                    # If not, we do it manually.
-                    
                     # Define update logic for dependencies
-                    old_id = user.id
-                    new_id = auth_user_id
+                    old_id = str(user.id)
+                    new_id = str(auth_user_id)
                     
-                    # Update related tables
-                    # VocabSet
-                    db.session.execute(text("UPDATE vocab_sets SET user_id = :new_id WHERE user_id = :old_id"), {'new_id': new_id, 'old_id': old_id})
+                    # Strategy: Insert NEW user -> Move FKs -> Delete OLD user
+                    # This avoids FK violation constraints.
                     
-                    # User table itself? 
-                    # We can't update part of the Primary Key easily if it's referenced.
-                    # But we can try updating the PK directly if Cascade is on.
-                    # If not, the previous command will fail or we do it carefully.
+                    # 1. Create new user row in public.users
+                    # Check if it exists first (partial migration)
+                    existing_new = db.session.execute(text("SELECT id FROM users WHERE id = :new_id"), {'new_id': new_id}).fetchone()
+                    if not existing_new:
+                        logger.info("Temporarily renaming old user to avoid unique usage...")
+                        # We append a modification to the old user so we can insert the new one
+                        # and then delete the old one.
+                        db.session.execute(text("""
+                            UPDATE users 
+                            SET email = email || '.migrated', username = username || '_migrated'
+                            WHERE id = :old_id
+                        """), {'old_id': old_id})
+                        
+                        logger.info("Creating new public user row...")
+                        # Copy attributes from old user (stripping the suffix we just added? No, select original?)
+                        # We just modified the DB. So we should have selected BEFORE modifying OR strip suffix.
+                        # Easier: Input the values from the `user` object we already loaded!
+                        # `user` object in the loop still has the original values in memory (unless we refreshed).
+                        
+                        db.session.execute(text("""
+                            INSERT INTO users (id, username, email, password_hash, created_at, avatar_file)
+                            VALUES (:new_id, :username, :email, :password_hash, :created_at, :avatar_file)
+                        """), {
+                            'new_id': new_id, 
+                            'username': user.username, # From memory
+                            'email': user.email, # From memory
+                            'password_hash': user.password_hash,
+                            'created_at': user.created_at,
+                            'avatar_file': user.avatar_file
+                        })
                     
-                    # Let's try raw SQL update of the user ID.
-                    try:
-                        # We might need to handle deferred constraints
-                        db.session.execute(text("UPDATE users SET id = :new_id WHERE id = :old_id"), {'new_id': new_id, 'old_id': old_id})
-                        db.session.commit()
-                        logger.info("ID update successful.")
-                    except Exception as e:
-                        logger.error(f"Failed to update ID: {e}")
-                        db.session.rollback()
+                    # 2. Update VocabSets (which have FK to users)
+                    logger.info("Moving VocabSets...")
+                    db.session.execute(text("UPDATE vocab_sets SET user_id = :new_id WHERE user_id = :old_id"), 
+                                     {'new_id': new_id, 'old_id': old_id})
+                                     
+                    # 3. Delete old user
+                    # We need to ensure no other FKs are hanging. 
+                    # Cards depend on VocabSets, not Users directly.
+                    logger.info("Deleting old user row...")
+                    db.session.execute(text("DELETE FROM users WHERE id = :old_id"), {'old_id': old_id})
+                    
+                    db.session.commit()
+                    logger.info("ID update successful.")
                         
             except Exception as e:
                 logger.error(f"Error migrating user {user.username}: {e}")
