@@ -178,12 +178,42 @@
         border-radius: 50%;
     }
 
-    input:checked+.slider {
-        background-color: var(--color-primary);
-    }
-
     input:checked+.slider:before {
         transform: translateX(20px);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .toast {
+        background-color: var(--color-bg-card);
+        color: var(--color-text-main);
+        padding: 10px 20px;
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        font-size: 0.9rem;
+        font-weight: 500;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        border: 1px solid var(--color-border);
+        white-space: nowrap;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
     }
 </style>
 
@@ -232,7 +262,11 @@
             <button class="btn-secondary" id="back-btn" disabled>
                 <span class="material-symbols-outlined">undo</span> Undo
             </button>
-        </div>
+            </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+</div>
     </div>
 
     <!-- Progress Bar -->

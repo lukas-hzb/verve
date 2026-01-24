@@ -455,14 +455,54 @@ export class FlashcardManager {
         // Best to restart.
         this.clearSession();
         this.fetchAndLoadCards();
+        
+        if (enabled) {
+            this.showToast("Practice Mode: Review all cards freely without affecting stats.");
+        } else {
+            this.showToast("Learning Mode: Your progress and card levels will be saved.");
+        }
     }
     
     toggleWrongAnswersMode(enabled) {
         this.isWrongAnswersMode = enabled;
         this.clearSession();
         this.fetchAndLoadCards();
+        
+        if (enabled) {
+            this.showToast("Wrong Only: Focusing on cards you missed or haven't learned (Level 1).");
+        } else {
+            this.showToast("All Cards: Reviewing the entire set.");
+        }
+    }
+    
+    showToast(message) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        
+        container.appendChild(toast);
+        
+        // Trigger reflow for animation
+        void toast.offsetWidth;
+        
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (container.contains(toast)) {
+                    container.removeChild(toast);
+                }
+            }, 300);
+        }, 3500);
     }
 
+    /**
+     * Fisher-Yates shuffle algorithm
+     */
     shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
