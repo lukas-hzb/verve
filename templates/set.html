@@ -203,19 +203,6 @@
         </div>
     </div>
 
-    <!-- Progress Bar -->
-    <div style="margin-bottom: var(--space-4);">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.875rem; color: var(--color-text-secondary);">
-            <span>Progress</span>
-            <span id="progress-text">0 / 0</span>
-        </div>
-        <div style="height: 8px; background-color: var(--color-bg-card); border-radius: 4px; overflow: hidden; display: flex;">
-            <div id="progress-correct" style="width: 0%; background-color: var(--color-success); transition: width 0.3s;"></div>
-            <div id="progress-wrong" style="width: 0%; background-color: var(--color-danger); transition: width 0.3s;"></div>
-            <div id="progress-remaining" style="width: 100%; background-color: var(--color-border); transition: width 0.3s;"></div>
-        </div>
-    </div>
-
     <!-- Controls Bar -->
     <div class="card-normal"
         style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-4); margin-bottom: var(--space-8); flex-wrap: wrap; gap: var(--space-4);">
@@ -237,7 +224,7 @@
         </div>
         <div class="button-group" style="gap: var(--space-2);">
             <button class="btn-secondary" id="restart-btn" title="Restart Session">
-                <span class="material-symbols-outlined">refresh</span>
+                <span class="material-symbols-outlined">refresh</span> Restart
             </button>
             <button class="btn-secondary" id="shuffle-btn">
                 <span class="material-symbols-outlined">shuffle</span> Shuffle
@@ -245,6 +232,19 @@
             <button class="btn-secondary" id="back-btn" disabled>
                 <span class="material-symbols-outlined">undo</span> Undo
             </button>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div style="margin-bottom: var(--space-4);">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.875rem; color: var(--color-text-secondary);">
+            <span>Progress</span>
+            <span id="progress-text">0 / 0</span>
+        </div>
+        <div style="height: 8px; background-color: var(--color-bg-card); border-radius: 4px; overflow: hidden; display: flex;">
+            <div id="progress-correct" style="width: 0%; background-color: var(--color-success); transition: width 0.3s;"></div>
+            <div id="progress-wrong" style="width: 0%; background-color: var(--color-danger); transition: width 0.3s;"></div>
+            <div id="progress-remaining" style="width: 100%; background-color: var(--color-border); transition: width 0.3s;"></div>
         </div>
     </div>
 
