@@ -450,15 +450,13 @@ export class FlashcardManager {
 
     togglePracticeMode(enabled) {
         this.isPracticeMode = enabled;
-        // Mode change invalidates current session logic usually.
-        // Best to restart.
         this.clearSession();
         this.fetchAndLoadCards();
         
         if (enabled) {
-            this.showToast("Practice Mode: Review all cards freely without affecting stats.");
+            this.showInfoPopup("Practice Mode", "In Practice Mode, you can review all cards freely without affecting your statistics or card levels. Perfect for cramming!");
         } else {
-            this.showToast("Learning Mode: Your progress and card levels will be saved.");
+            this.showInfoPopup("Learning Mode", "You are back in Learning Mode. Your progress will be tracked and standard spaced repetition rules apply.");
         }
     }
     
@@ -468,55 +466,73 @@ export class FlashcardManager {
         this.fetchAndLoadCards();
         
         if (enabled) {
-            this.showToast("Wrong Only: Focusing on cards you missed or haven't learned (Level 1).");
+            this.showInfoPopup("Wrong Answers Only", "Focusing exclusively on cards currently at Level 1 (new or recently answered incorrectly).");
         } else {
-            this.showToast("All Cards: Reviewing the entire set.");
+            this.showInfoPopup("All Cards", "Filter removed. You are now reviewing all due cards in the set.");
         }
     }
     
-    showToast(message) {
-        let container = document.getElementById('flash-container');
+    showInfoPopup(title, message) {
+        // Remove existing if any
+        const existing = document.getElementById('dynamic-info-popup');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'dynamic-info-popup';
+        overlay.className = 'popup-overlay active';
+        overlay.style.zIndex = '3000'; // Ensure it's on top
+
+        const content = document.createElement('div');
+        content.className = 'popup-content';
         
-        // Ensure container exists (it might not if no flask messages were present)
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'flash-container';
-            container.style.maxWidth = '1400px';
-            container.style.margin = '0 auto';
-            container.style.padding = '15px var(--space-6) 0 var(--space-6)';
-            
-            // Insert after navbar (home-section first child approximation)
-            const homeSection = document.querySelector('.home-section');
-            if (homeSection) {
-                homeSection.insertBefore(container, homeSection.firstChild);
+        // Header
+        const header = document.createElement('div');
+        header.className = 'popup-header';
+        
+        const titleEl = document.createElement('h3');
+        titleEl.className = 'popup-title';
+        titleEl.textContent = title;
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'popup-close-btn';
+        closeBtn.innerHTML = '<span class="material-symbols-outlined">close</span>';
+        closeBtn.onclick = () => overlay.remove();
+        
+        header.appendChild(titleEl);
+        header.appendChild(closeBtn);
+        
+        // Body
+        const body = document.createElement('div');
+        body.className = 'popup-body';
+        const p = document.createElement('p');
+        p.textContent = message;
+        body.appendChild(p);
+        
+        // Footer
+        const footer = document.createElement('div');
+        footer.className = 'popup-footer';
+        
+        const okBtn = document.createElement('button');
+        okBtn.className = 'btn-primary';
+        okBtn.textContent = 'Got it';
+        okBtn.onclick = () => overlay.remove();
+        
+        footer.appendChild(okBtn);
+        
+        // Assemble
+        content.appendChild(header);
+        content.appendChild(body);
+        content.appendChild(footer);
+        overlay.appendChild(content);
+        
+        document.body.appendChild(overlay);
+        
+        // Close on outside click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
             }
-        }
-        
-        const alert = document.createElement('div');
-        // Use standard alert classes. 'info' creates a blueish style typically.
-        alert.className = 'alert alert-info';
-        alert.innerHTML = `
-            <span class="material-symbols-outlined alert-icon">info</span>
-            <span class="alert-message">${message}</span>
-            <span class="material-symbols-outlined alert-close">close</span>
-        `;
-        
-        // Add click listener to close
-        alert.addEventListener('click', () => {
-             alert.remove();
-             if (container.children.length === 0 && container.getAttribute('data-dynamic') === 'true') {
-                 container.remove();
-             }
         });
-        
-        container.appendChild(alert);
-        
-        // Auto-remove after 4 seconds
-        setTimeout(() => {
-            if (container.contains(alert)) {
-                alert.remove();
-            }
-        }, 4000);
     }
 
     /**
