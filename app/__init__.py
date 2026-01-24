@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 from flask import Flask
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
 
@@ -50,6 +51,9 @@ def create_app(config_name: str = 'default') -> Flask:
     
     # Initialize Flask-Login
     setup_login_manager(app)
+    
+    # Apply ProxyFix for correct URL generation behind reverse proxies (Railway/Heroku)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     
     # Register blueprints
     register_blueprints(app)
