@@ -10,16 +10,12 @@ class User(UserMixin, db.Model):
     id = db.Column(db.String(36), primary_key=True)  # UUID
     username = db.Column(db.String(64), unique=True, index=True)
     email = db.Column(db.String(120), unique=True, index=True)
-    password_hash = db.Column(db.String(128))
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     avatar_file = db.Column(db.Text, nullable=True) # Store as Base64 string for now to match previous logic
 
     # Authentication is now handled by Supabase
     # The 'id' column should match Supabase Auth User ID (UUID)
-    
-    # Deprecated: usage of local password hash
-    # password_hash = db.Column(db.String(128)) 
-    # Kept for migration safety if needed, but should not be used in new auth flow.
     
     # Relationships
     sets = db.relationship('VocabSet', backref='owner', lazy='dynamic', cascade='all, delete-orphan')
