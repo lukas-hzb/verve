@@ -270,15 +270,15 @@
     </div>
 
     <!-- Progress Bar -->
-    <div style="margin-bottom: var(--space-4);">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.875rem; color: var(--color-text-secondary);">
+    <div style="margin-bottom: var(--space-8);">
+        <div style="height: 8px; background-color: var(--color-bg-card); border-radius: 4px; overflow: hidden; display: flex;">
+            <div id="progress-correct" style="width: 0%; background-color: var(--color-accent-4); transition: width 0.3s;"></div>
+            <div id="progress-wrong" style="width: 0%; background-color: var(--color-accent-1); transition: width 0.3s;"></div>
+            <div id="progress-remaining" style="width: 100%; background-color: var(--color-border); transition: width 0.3s;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.875rem; color: var(--color-text-secondary);">
             <span>Progress</span>
             <span id="progress-text">0 / 0</span>
-        </div>
-        <div style="height: 8px; background-color: var(--color-bg-card); border-radius: 4px; overflow: hidden; display: flex;">
-            <div id="progress-correct" style="width: 0%; background-color: var(--color-success); transition: width 0.3s;"></div>
-            <div id="progress-wrong" style="width: 0%; background-color: var(--color-danger); transition: width 0.3s;"></div>
-            <div id="progress-remaining" style="width: 100%; background-color: var(--color-border); transition: width 0.3s;"></div>
         </div>
     </div>
 
