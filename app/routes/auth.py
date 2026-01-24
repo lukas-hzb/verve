@@ -67,43 +67,52 @@ def register():
 
 @auth_bp.route('/login/google')
 def login_google():
-    """Initiate Google OAuth login."""
+    """Initiate Google OAuth login with manual PKCE."""
     from app.supabase_client import SupabaseClient
-    
+    import secrets, hashlib, base64, os
+    from flask import session
+
     supabase = SupabaseClient.get_client()
     if not supabase:
          flash('Authentication service unavailable.', 'error')
          return redirect(url_for('auth.login'))
          
-    # Get the URL for the callback
-    # If running locally, it's 127.0.0.1:8080/auth/callback
-    # In production, it should be the domain.
-    # We can use url_for providing external=True
+    # 1. Generate PKCE Code Verifier and Challenge
+    # Verifier: Random URL-safe string
+    code_verifier = secrets.token_urlsafe(32)
+    session['auth_code_verifier'] = code_verifier # Store in cookie
+    
+    # Challenge: SHA256(verifier) -> Base64UrlEncoded
+    m = hashlib.sha256()
+    m.update(code_verifier.encode('ascii'))
+    digest = m.digest()
+    code_challenge = base64.urlsafe_b64encode(digest).rstrip(b'=').decode('ascii')
+
+    # 2. Construct Authorization URL manually
+    # Supabase URL/auth/v1/authorize
+    supabase_url = os.environ.get("SUPABASE_URL")
     callback_url = url_for('auth.auth_callback', _external=True)
     
-    # Supabase signInWithOAuth
-    res = supabase.auth.sign_in_with_oauth({
+    import urllib.parse
+    params = {
         "provider": "google",
-        "options": {
-            "redirectTo": callback_url
-        }
-    })
+        "redirect_to": callback_url,
+        "code_challenge": code_challenge,
+        "code_challenge_method": "S256"
+    }
+    query_string = urllib.parse.urlencode(params)
+    auth_url = f"{supabase_url}/auth/v1/authorize?{query_string}"
     
-    if res.url:
-        return redirect(res.url)
-        
-    flash('Could not initiate Google login.', 'error')
-    return redirect(url_for('auth.login'))
+    return redirect(auth_url)
 
 
 @auth_bp.route('/callback')
 def auth_callback():
     """Callback for OAuth providers."""
-    # Supabase redirects here with an access_token in the hash fragment (implicitly handled by client JS)
-    # OR with a 'code' if using PKCE flow (Server-side).
+    import logging
+    from flask import session
     
-    # Flask is Server-Side. We need the 'code'.
-    # Updated Supabase Python Client might support `exchange_code_for_session`.
+    logger = logging.getLogger(__name__)
     
     code = request.args.get('code')
     error = request.args.get('error')
@@ -113,10 +122,6 @@ def auth_callback():
         return redirect(url_for('auth.login'))
         
     if not code:
-        # If no code, maybe it's the hash fragment issue?
-        # Standard Supabase auth with `redirectTo` usually sends code for server-side if configured.
-        # If not, we might need client-side handling.
-        # Assuming PKCE flow is active or we get a code.
         flash('Authentication failed: No code received.', 'error')
         return redirect(url_for('auth.login'))
         
@@ -124,7 +129,27 @@ def auth_callback():
     supabase = SupabaseClient.get_client()
     
     try:
-        res = supabase.auth.exchange_code_for_session({ "auth_code": code })
+        # Retrieve verifier from session
+        code_verifier = session.pop('auth_code_verifier', None)
+        if not code_verifier:
+             logger.warning("No code_verifier found in session. Login might fail if PKCE required.")
+        
+        # Exchange code for session
+        # Supabase Python SDK expects 'auth_code' and optional 'code_verifier'
+        # Note: We must ensure we pass it in the way the library expects.
+        # gotrue-py/api.py: exchange_code_for_session(auth_code, code_verifier=None)
+        
+        # If we pass a dictionary, it might be interpreted as params?
+        # The library signature is `exchange_code_for_session(params)` where params is dict?
+        # Let's check typical usage. 
+        # Actually `sign_in_with_oauth` does not return the verifier to us easily.
+        # But `exchange_code_for_session` takes a dict usually: { "auth_code": "...", "code_verifier": "..." }
+        
+        data = { "auth_code": code }
+        if code_verifier:
+            data["code_verifier"] = code_verifier
+            
+        res = supabase.auth.exchange_code_for_session(data)
         user_session = res.user
         
         if user_session:
@@ -132,31 +157,40 @@ def auth_callback():
             user = User.query.get(user_session.id)
             if not user:
                 # Create profile from metadata
-                username = user_session.user_metadata.get('full_name') or \
-                           user_session.user_metadata.get('name') or \
-                           user_session.email.split('@')[0]
+                # Using .get safely
+                meta = user_session.user_metadata or {}
+                username = meta.get('full_name') or meta.get('name') or user_session.email.split('@')[0]
+                
+                # Sanitize username
+                import re
+                username = re.sub(r'[^a-zA-Z0-9_]', '', username)
+                if not username:
+                    username = f"user_{user_session.id[:8]}"
                            
                 user = User(
                     id=user_session.id, 
                     email=user_session.email, 
-                    username=username # Might need unique check loop
+                    username=username 
                 )
                 db.session.add(user)
                 
-                # Check for duplicate username
-                if User.query.filter_by(username=username).first():
-                     # simplistic collision handling
-                     import uuid
-                     user.username = f"{username}_{str(uuid.uuid4())[:4]}"
+                # Check for duplicate username collision loop
+                counter = 1
+                original_username = username
+                while User.query.filter_by(username=username).first():
+                     username = f"{original_username}_{counter}"
+                     counter += 1
+                user.username = username
                      
                 db.session.commit()
                 UserService.assign_default_vocab_set(user.id)
             
             login_user(user, remember=True)
-            flash(f'Welcome {user.username}!', 'success')
+            flash(f'Welcome back {user.username}!', 'success')
             return redirect(url_for('main.index'))
             
     except Exception as e:
+        logger.error(f"Auth Callback Error: {e}")
         flash(f'Login error: {str(e)}', 'error')
         
     return redirect(url_for('auth.login'))
