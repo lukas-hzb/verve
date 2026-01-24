@@ -203,17 +203,42 @@
         </div>
     </div>
 
+    <!-- Progress Bar -->
+    <div style="margin-bottom: var(--space-4);">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.875rem; color: var(--color-text-secondary);">
+            <span>Progress</span>
+            <span id="progress-text">0 / 0</span>
+        </div>
+        <div style="height: 8px; background-color: var(--color-bg-card); border-radius: 4px; overflow: hidden; display: flex;">
+            <div id="progress-correct" style="width: 0%; background-color: var(--color-success); transition: width 0.3s;"></div>
+            <div id="progress-wrong" style="width: 0%; background-color: var(--color-danger); transition: width 0.3s;"></div>
+            <div id="progress-remaining" style="width: 100%; background-color: var(--color-border); transition: width 0.3s;"></div>
+        </div>
+    </div>
+
     <!-- Controls Bar -->
     <div class="card-normal"
-        style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-4); margin-bottom: var(--space-8);">
-        <div style="display: flex; align-items: center;">
-            <label class="switch">
-                <input type="checkbox" id="practice-mode-checkbox">
-                <span class="slider round"></span>
-            </label>
-            <span style="font-weight: 500; font-size: var(--font-size-base);">Practice Mode</span>
+        style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-4); margin-bottom: var(--space-8); flex-wrap: wrap; gap: var(--space-4);">
+        <div style="display: flex; gap: var(--space-6);">
+            <div style="display: flex; align-items: center;">
+                <label class="switch">
+                    <input type="checkbox" id="practice-mode-checkbox">
+                    <span class="slider round"></span>
+                </label>
+                <span style="font-weight: 500; font-size: var(--font-size-base); margin-left: var(--space-2);">Practice Mode</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <label class="switch">
+                    <input type="checkbox" id="wrong-answers-checkbox">
+                    <span class="slider round"></span>
+                </label>
+                <span style="font-weight: 500; font-size: var(--font-size-base); margin-left: var(--space-2);">Wrong Only</span>
+            </div>
         </div>
         <div class="button-group" style="gap: var(--space-2);">
+            <button class="btn-secondary" id="restart-btn" title="Restart Session">
+                <span class="material-symbols-outlined">refresh</span>
+            </button>
             <button class="btn-secondary" id="shuffle-btn">
                 <span class="material-symbols-outlined">shuffle</span> Shuffle
             </button>
