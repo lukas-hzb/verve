@@ -68,9 +68,12 @@ class VocabService:
         return [c.to_dict() for c in vset.get_due_cards()]
 
     @staticmethod
-    def get_all_cards(set_id: str, user_id: str) -> List[Dict]:
+    def get_all_cards(set_id: str, user_id: str, wrong_only: bool = False) -> List[Dict]:
         vset = VocabService.get_vocab_set(set_id, user_id)
-        return [c.to_dict() for c in vset.get_all_cards()]
+        cards = vset.get_all_cards()
+        if wrong_only:
+            cards = [c for c in cards if c.last_practice_wrong]
+        return [c.to_dict() for c in cards]
 
     @staticmethod
     def update_card_performance(set_id: str, card_front: str, quality: int, user_id: str) -> Dict:
@@ -257,6 +260,46 @@ class VocabService:
         card.level = level
         card.next_review = next_review_date
         
+        vset.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return {
+            'status': 'success',
+            'card': card.to_dict()
+        }
+
+    @staticmethod
+    def mark_practice_wrong(set_id: str, card_front: str, user_id: str) -> Dict:
+        """Mark a card as answered incorrectly in practice mode."""
+        card_front = validate_card_front(card_front)
+        
+        vset = VocabService.get_vocab_set(set_id, user_id)
+        card = vset.find_card(card_front)
+        
+        if not card:
+            raise CardNotFoundError(card_front, vset.name)
+        
+        card.last_practice_wrong = True
+        vset.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return {
+            'status': 'success',
+            'card': card.to_dict()
+        }
+
+    @staticmethod
+    def mark_practice_correct(set_id: str, card_front: str, user_id: str) -> Dict:
+        """Mark a card as answered correctly in practice mode."""
+        card_front = validate_card_front(card_front)
+        
+        vset = VocabService.get_vocab_set(set_id, user_id)
+        card = vset.find_card(card_front)
+        
+        if not card:
+            raise CardNotFoundError(card_front, vset.name)
+        
+        card.last_practice_wrong = False
         vset.updated_at = datetime.utcnow()
         db.session.commit()
         

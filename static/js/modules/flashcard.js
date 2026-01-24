@@ -6,25 +6,27 @@
 export class FlashcardManager {
     constructor(setId) {
         this.setId = setId;
-        this.storageKey = `verve_session_${this.setId}`;
         
-        // State
+        // Session
         this.cards = [];
         this.currentCardIndex = 0;
+        this.sessionStats = { correct: 0, wrong: 0, total: 0 };
         this.undoHistory = [];
+        
+        // Mode
         this.isPracticeMode = false;
         this.isWrongAnswersMode = false;
-        this.areControlsDisabled = false;
-        this.syncQueue = [];
-        this.isSyncProcessing = false;
         
-        // Stats for current session
-        this.sessionStats = {
-            correct: 0,
-            wrong: 0,
-            total: 0
-        };
-
+        // Storage key for session persistence
+        this.storageKey = `flashcardSession_${this.setId}`;
+        
+        // Sync queue for delayed API requests
+        this.syncQueue = [];
+        this.processingSync = false;
+        
+        // Other state
+        this.areControlsDisabled = false;
+        
         // DOM elements
         this.cardFront = document.getElementById("card-front");
         this.cardBack = document.getElementById("card-back");
@@ -46,6 +48,7 @@ export class FlashcardManager {
         this.progressCorrect = document.getElementById("progress-correct");
         this.progressWrong = document.getElementById("progress-wrong");
         this.progressRemaining = document.getElementById("progress-remaining");
+        this.progressContainer = document.getElementById("progress-container");
 
         // Constants
         this.LEVEL_COLORS = {
@@ -119,13 +122,16 @@ export class FlashcardManager {
     }
     
     updateProgress() {
-         const total = this.cards.length;
+         // Don't update progress in practice mode
+         if (this.isPracticeMode) return;
+         
+         const total = this.sessionStats.total; // Use fixed total from session start
          if (total === 0) {
               if (this.progressText) this.progressText.textContent = "0 / 0";
               return;
          }
          
-         // Calculate remaining based on actual stats, not card index (which lags during animation)
+         // Calculate reviewed based on stats
          const reviewed = this.sessionStats.correct + this.sessionStats.wrong;
          const remaining = total - reviewed;
          
@@ -134,12 +140,20 @@ export class FlashcardManager {
              this.progressText.textContent = `${reviewed} / ${total}`;
          }
          
-         // Update Bars
+         // Update Bars (percentage based on initial due cards count)
          if (this.progressCorrect) this.progressCorrect.style.width = `${(this.sessionStats.correct / total) * 100}%`;
          if (this.progressWrong) this.progressWrong.style.width = `${(this.sessionStats.wrong / total) * 100}%`;
-         // Remaining space fills the rest or can be explicit
-         // We use flex bars. Remaining bar width should be proportional to remaining cards.
          if (this.progressRemaining) this.progressRemaining.style.width = `${(remaining / total) * 100}%`;
+    }
+    
+    updateProgressBarVisibility() {
+        if (this.progressContainer) {
+            if (this.isPracticeMode) {
+                this.progressContainer.style.display = 'none';
+            } else {
+                this.progressContainer.style.display = 'block';
+            }
+        }
     }
 
     attachEventListeners() {
@@ -203,17 +217,23 @@ export class FlashcardManager {
         // Clear old session when fetching new
         this.clearSession();
         
-        const url = this.isPracticeMode
-            ? `/api/set/${this.setId}/cards`
-            : `/api/set/${this.setId}/due_cards`;
+        let url;
+        if (this.isPracticeMode) {
+            url = `/api/set/${this.setId}/cards`;
+            if (this.isWrongAnswersMode) {
+                url += '?wrong_only=true'; // Server-side filter for practice mode
+            }
+        } else {
+            url = `/api/set/${this.setId}/due_cards`;
+        }
 
         try {
             const response = await fetch(url);
             const data = await response.json();
             let loadedCards = data.cards || [];
             
-            // Filter if Wrong Answers Only
-            if (this.isWrongAnswersMode) {
+            // Client-side filter for learning mode + wrong only
+            if (this.isWrongAnswersMode && !this.isPracticeMode) {
                  loadedCards = loadedCards.filter(c => c.level === 1);
             }
 
@@ -221,11 +241,16 @@ export class FlashcardManager {
             this.undoHistory = [];
             this.updateBackButtonState();
             this.currentCardIndex = 0;
-            this.sessionStats = { correct: 0, wrong: 0, total: this.cards.length };
+            
+            // IMPORTANT: total represents due cards at session start (learning mode only)
+            this.sessionStats = { correct: 0, wrong: 0, total: loadedCards.length };
 
             if (this.isPracticeMode) {
                 this.shuffleArray(this.cards);
             }
+            
+            // Update progress bar visibility based on mode
+            this.updateProgressBarVisibility();
 
             this.saveSession(); // Initial save
             this.updateUI();
@@ -327,8 +352,18 @@ export class FlashcardManager {
             this.undoHistory.push(originalCard);
             this.updateBackButtonState();
 
-            // Queue sync (only in learning mode)
-            if (!this.isPracticeMode) {
+            // Queue sync based on mode
+            if (this.isPracticeMode) {
+                // Practice mode: use mark_correct/mark_wrong endpoints
+                const endpoint = quality >= 3 ? 'mark_correct' : 'mark_wrong';
+                this.queuePracticeSync({
+                    cardFront: originalCard.front,
+                    endpoint: endpoint,
+                    timestamp: Date.now(),
+                    retries: 0
+                });
+            } else {
+                // Learning mode: use rate endpoint
                 this.queueSync({
                     cardFront: originalCard.front,
                     quality: quality,
@@ -453,11 +488,11 @@ export class FlashcardManager {
         this.clearSession();
         this.fetchAndLoadCards();
         
+        // Only show popup when ENABLING
         if (enabled) {
             this.showInfoPopup("Practice Mode", "In Practice Mode, you can review all cards freely without affecting your statistics or card levels. Perfect for cramming!");
-        } else {
-            this.showInfoPopup("Learning Mode", "You are back in Learning Mode. Your progress will be tracked and standard spaced repetition rules apply.");
         }
+        // No popup when disabling (returning to learning mode)
     }
     
     toggleWrongAnswersMode(enabled) {
@@ -465,11 +500,14 @@ export class FlashcardManager {
         this.clearSession();
         this.fetchAndLoadCards();
         
+        // Only show popup when ENABLING
         if (enabled) {
-            this.showInfoPopup("Wrong Answers Only", "Focusing exclusively on cards currently at Level 1 (new or recently answered incorrectly).");
-        } else {
-            this.showInfoPopup("All Cards", "Filter removed. You are now reviewing all due cards in the set.");
+            const message = this.isPracticeMode 
+                ? "Showing only cards you answered incorrectly during practice sessions."
+                : "Focusing exclusively on cards at Level 1 (new or recently answered incorrectly).";
+            this.showInfoPopup("Wrong Answers Only", message);
         }
+        // No popup when disabling
     }
     
     showInfoPopup(title, message) {
@@ -601,6 +639,46 @@ export class FlashcardManager {
                 syncItem.retries++;
                 if (syncItem.retries >= 3) {
                     console.error(`Failed to sync card after 3 retries:`, syncItem.cardFront);
+                    this.syncQueue.shift(); 
+                } else {
+                    const delay = Math.pow(2, syncItem.retries - 1) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        this.isSyncProcessing = false;
+    }
+
+    queuePracticeSync(syncItem) {
+        this.syncQueue.push(syncItem);
+        this.processPracticeSyncQueue();
+    }
+
+    async processPracticeSyncQueue() {
+        if (this.isSyncProcessing || this.syncQueue.length === 0) return;
+
+        this.isSyncProcessing = true;
+
+        while (this.syncQueue.length > 0) {
+            const syncItem = this.syncQueue[0];
+
+            try {
+                await fetch(`/api/set/${this.setId}/${syncItem.endpoint}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        card_front: syncItem.cardFront
+                    })
+                });
+
+                this.syncQueue.shift();
+            } catch (error) {
+                console.error("Error syncing practice card:", error);
+
+                syncItem.retries++;
+                if (syncItem.retries >= 3) {
+                    console.error(`Failed to sync practice card after 3 retries:`, syncItem.cardFront);
                     this.syncQueue.shift(); 
                 } else {
                     const delay = Math.pow(2, syncItem.retries - 1) * 1000;

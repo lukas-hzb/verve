@@ -11,6 +11,7 @@ class Card(db.Model):
     back = db.Column(db.Text, nullable=False)
     level = db.Column(db.Integer, default=1)
     next_review = db.Column(db.DateTime, default=datetime.utcnow)
+    last_practice_wrong = db.Column(db.Boolean, nullable=False, default=False)
 
     def is_due(self) -> bool:
         """Check if the card is due for review."""
@@ -23,7 +24,8 @@ class Card(db.Model):
             'front': self.front,
             'back': self.back,
             'level': self.level,
-            'next_review': self.next_review
+            'next_review': self.next_review.isoformat() if self.next_review else None,
+            'last_practice_wrong': self.last_practice_wrong
         }
 
     def __repr__(self):

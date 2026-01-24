@@ -122,11 +122,15 @@ def get_all_cards(set_id: str):
     Args:
         set_id: ID of the vocabulary set (Firestore string ID)
         
+    Query Parameters:
+        wrong_only: If 'true', only return cards marked wrong in practice mode
+        
     Returns:
         JSON response with cards array
     """
     try:
-        all_cards = VocabService.get_all_cards(set_id, current_user.id)
+        wrong_only = request.args.get('wrong_only', 'false').lower() == 'true'
+        all_cards = VocabService.get_all_cards(set_id, current_user.id, wrong_only=wrong_only)
         return jsonify({'cards': all_cards})
     except VocabSetNotFoundError as e:
         return error_response(str(e), 404)
@@ -183,6 +187,88 @@ def update_card(set_id: str = None):
     except Exception as e:
         current_app.logger.error(f"Error updating card: {e}")
         return error_response("An error occurred while updating the card", 500)
+
+
+@api_bp.route("/set/<string:set_id>/mark_wrong", methods=["POST"])
+@login_required
+def mark_wrong(set_id: str):
+    """
+    Mark a card as answered incorrectly in practice mode.
+    Does not affect SM2 level or next_review.
+    
+    Expected JSON body:
+        {
+            "card_front": str
+        }
+        
+    Returns:
+        JSON response with update status
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return error_response("No JSON data provided", 400)
+        
+        card_front = data.get('card_front')
+        
+        if not card_front:
+            return error_response("Missing required field: card_front", 400)
+        
+        result = VocabService.mark_practice_wrong(set_id, card_front, current_user.id)
+        
+        return jsonify(success_response(result))
+        
+    except (VocabSetNotFoundError, CardNotFoundError) as e:
+        return error_response(str(e), 404)
+    except UnauthorizedAccessError as e:
+        return error_response(str(e), 403)
+    except InvalidInputError as e:
+        return error_response(str(e), 400)
+    except Exception as e:
+        current_app.logger.error(f"Error marking card wrong: {e}")
+        return error_response("An error occurred while marking the card", 500)
+
+
+@api_bp.route("/set/<string:set_id>/mark_correct", methods=["POST"])
+@login_required
+def mark_correct(set_id: str):
+    """
+    Mark a card as answered correctly in practice mode.
+    Does not affect SM2 level or next_review.
+    
+    Expected JSON body:
+        {
+            "card_front": str
+        }
+        
+    Returns:
+        JSON response with update status
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return error_response("No JSON data provided", 400)
+        
+        card_front = data.get('card_front')
+        
+        if not card_front:
+            return error_response("Missing required field: card_front", 400)
+        
+        result = VocabService.mark_practice_correct(set_id, card_front, current_user.id)
+        
+        return jsonify(success_response(result))
+        
+    except (VocabSetNotFoundError, CardNotFoundError) as e:
+        return error_response(str(e), 404)
+    except UnauthorizedAccessError as e:
+        return error_response(str(e), 403)
+    except InvalidInputError as e:
+        return error_response(str(e), 400)
+    except Exception as e:
+        current_app.logger.error(f"Error marking card correct: {e}")
+        return error_response("An error occurred while marking the card", 500)
 
 
 @api_bp.route("/restore_card", methods=["POST"])
