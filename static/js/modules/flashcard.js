@@ -179,6 +179,7 @@ export class FlashcardManager {
         });
         this.restartBtn?.addEventListener("click", () => {
              // Explicit restart clears session and refetches
+             this.showLoading();
              this.clearSession();
              this.fetchAndLoadCards();
              this.restartBtn.blur();
@@ -278,6 +279,18 @@ export class FlashcardManager {
             ? "No wrong cards to review! Great job."
             : (this.isPracticeMode ? "This set is empty." : "No cards due for review!");
         this.cardBack.textContent = "";
+        this.flipBtn.style.display = "none";
+        this.feedbackBtns.style.display = "none";
+        this.cardLevel.style.display = "none";
+    }
+
+    showLoading() {
+        this.cardFront.textContent = "Loading...";
+        this.cardBack.textContent = "";
+        this.frameRequest = requestAnimationFrame(() => {
+            this.cardContainer.classList.remove('animate-swipe-right', 'animate-swipe-left', 'load-in');
+            this.flashcard.classList.remove("flipped");
+        });
         this.flipBtn.style.display = "none";
         this.feedbackBtns.style.display = "none";
         this.cardLevel.style.display = "none";
@@ -530,6 +543,7 @@ export class FlashcardManager {
                 },
                 // onConfirm
                 async () => {
+                    this.showLoading();
                     this.isPracticeMode = true;
                     this.clearSession();
                     await this.fetchAndLoadCards();
@@ -539,6 +553,7 @@ export class FlashcardManager {
             );
         } else {
             // Disabling (returning to learning mode)
+            this.showLoading();
             this.isPracticeMode = false;
             this.clearSession();
             await this.fetchAndLoadCards();
@@ -561,14 +576,18 @@ export class FlashcardManager {
                 },
                 // onConfirm
                 () => {
+                    this.showLoading();
                     this.isWrongAnswersMode = true;
+                    this.cardContainer.classList.add('wrong-mode-active');
                     this.clearSession();
                     this.fetchAndLoadCards();
                 }
             );
         } else {
             // Disabling
+            this.showLoading();
             this.isWrongAnswersMode = false;
+            this.cardContainer.classList.remove('wrong-mode-active');
             this.clearSession();
             this.fetchAndLoadCards();
         }

@@ -252,6 +252,28 @@
         // Clear except if there are existing items we want to keep? No, clear all to reload.
         // But need to be careful if we want to keep headers. The container IS the list.
         container.innerHTML = '';
+        
+        // Add style for wrong items dynamically
+        if (!document.getElementById('wrong-card-style')) {
+             const style = document.createElement('style');
+             style.id = 'wrong-card-style';
+             style.textContent = `
+                .card-list-item-wrong {
+                    border: 1px solid var(--color-accent-1) !important;
+                    z-index: 1; /* Ensure border is visible */
+                }
+                .card-list-item:first-child.card-list-item-wrong {
+                    border-top-left-radius: var(--radius-lg);
+                    border-top-right-radius: var(--radius-lg);
+                }
+                .card-list-item:last-child.card-list-item-wrong {
+                    border-bottom-left-radius: var(--radius-lg);
+                    border-bottom-right-radius: var(--radius-lg);
+                    border-bottom: 1px solid var(--color-accent-1) !important; /* Ensure bottom border is present */
+                }
+             `;
+             document.head.appendChild(style);
+        }
 
         if (data.cards.length === 0) {
             container.innerHTML = '<p style="text-align: center; color: var(--color-text-muted); padding: var(--space-4);">No cards in this set yet.</p>';
@@ -261,6 +283,44 @@
         data.cards.forEach(card => {
             const div = document.createElement('div');
             div.className = 'card-list-item';
+            
+            if (card.last_practice_wrong) {
+                div.style.border = '1px solid var(--color-accent-1)';
+                // Ensure border radius is respected if it's the first or last item
+                // The CSS controls border-radius on first/last-child, but our inline style overrides the border property.
+                // We should add a class instead or handle it carefully.
+                // Since inline border overrides CSS border, we need to ensure we don't break the rounded corners
+                // of the container by making square corners on the item.
+                // But card-list-item usually has square corners except first/last.
+                // Best approach: Use a specific class 'card-list-item-wrong' and handle it in CSS?
+                // Or just set border-radius in JS if needed?
+                // Actually, card-list-item logic in CSS might be:
+                // .card-list-item:first-child { border-top-left-radius: ... }
+                // So adding a border shouldn't change the radius unless we change 'overflow'.
+                // If the issue is that the border *looks* weird because it's square on a rounded container:
+                // Let's try adding a class and rely on CSS, but since I can't edit CSS easily without seeing it...
+                // Let's assume the user means it looks bad because it doesn't follow the container's rounding.
+                // I will add a class and style it inline with specific attention to potential first/last child issues.
+                
+                // Let's try this:
+                // Check if it is first or last child? No, we are building the list.
+                // Simple fix: rely on CSS class.
+            }
+            // Actually, let's use a class to be cleaner and handle :first-child/:last-child in CSS if possible.
+            // But I cannot edit the main CSS file easily? Wait, I can edit <style> in base or here.
+            // But this is set_overview.html. 
+            // Let's stick to inline style but be smarter.
+            // If I just add 'border-color: red', it might fallback to default border width/style.
+            // card-list-item usually has border-bottom.
+            // If I set 'border', it sets all 4 sides. 
+            // The user said "because the top and bottom element of this list are not rectangles".
+            // This implies the list container has rounded corners, and the items need to match.
+            // We can just add 'overflow: hidden' to the container? Or ensure items have radius.
+            
+            if (card.last_practice_wrong) {
+                 div.classList.add('card-list-item-wrong');
+            }
+            
             div.innerHTML = `
                 <div class="card-list-item-info">
                     <span class="card-list-item-title">${card.front}</span>

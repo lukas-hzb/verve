@@ -30,6 +30,13 @@
         /* Bouncy flip animation */
         transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         cursor: pointer;
+        cursor: pointer;
+    }
+
+    .wrong-mode-active .flashcard-front,
+    .wrong-mode-active .flashcard-back {
+        box-shadow: 0 0 15px rgba(255, 107, 107, 0.3) !important;
+        border-color: var(--color-accent-1) !important;
     }
 
     .flashcard.flipped {
@@ -184,6 +191,11 @@
 
     input:checked+.slider:before {
         transform: translateX(20px);
+    }
+    
+    /* Wrong Answers Toggle Specific Style */
+    #wrong-answers-checkbox:checked + .slider {
+        background-color: var(--color-accent-1);
     }
 </style>
 
