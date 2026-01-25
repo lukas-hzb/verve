@@ -488,7 +488,17 @@ export class FlashcardManager {
         
         // Only show popup when ENABLING
         if (enabled) {
-            this.showInfoPopup("Practice Mode", "In Practice Mode, you can review all cards freely without affecting your statistics or card levels. Perfect for cramming!");
+            this.showInfoPopup(
+                "Practice Mode", 
+                "In Practice Mode, you can review all cards freely without affecting your statistics or card levels. Perfect for cramming!",
+                () => {
+                    // User cancelled - revert checkbox and mode
+                    this.practiceModeCheckbox.checked = false;
+                    this.isPracticeMode = false;
+                    this.clearSession();
+                    this.fetchAndLoadCards();
+                }
+            );
         }
         // No popup when disabling (returning to learning mode)
     }
@@ -503,12 +513,22 @@ export class FlashcardManager {
             const message = this.isPracticeMode 
                 ? "Showing only cards you answered incorrectly during practice sessions."
                 : "Focusing exclusively on cards at Level 1 (new or recently answered incorrectly).";
-            this.showInfoPopup("Wrong Answers Only", message);
+            this.showInfoPopup(
+                "Wrong Answers Only", 
+                message,
+                () => {
+                    // User cancelled - revert checkbox and mode
+                    this.wrongAnswersCheckbox.checked = false;
+                    this.isWrongAnswersMode = false;
+                    this.clearSession();
+                    this.fetchAndLoadCards();
+                }
+            );
         }
         // No popup when disabling
     }
     
-    showInfoPopup(title, message) {
+    showInfoPopup(title, message, onCancel = null) {
         // Remove existing if any
         const existing = document.getElementById('dynamic-info-popup');
         if (existing) existing.remove();
@@ -532,7 +552,10 @@ export class FlashcardManager {
         const closeBtn = document.createElement('button');
         closeBtn.className = 'popup-close-btn';
         closeBtn.innerHTML = '<span class="material-symbols-outlined">close</span>';
-        closeBtn.onclick = () => overlay.remove();
+        closeBtn.onclick = () => {
+            if (onCancel) onCancel();
+            overlay.remove();
+        };
         
         header.appendChild(titleEl);
         header.appendChild(closeBtn);
@@ -547,6 +570,18 @@ export class FlashcardManager {
         // Footer
         const footer = document.createElement('div');
         footer.className = 'popup-footer';
+        
+        // Add Cancel button if onCancel callback is provided
+        if (onCancel) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn-secondary';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.onclick = () => {
+                onCancel();
+                overlay.remove();
+            };
+            footer.appendChild(cancelBtn);
+        }
         
         const okBtn = document.createElement('button');
         okBtn.className = 'btn-primary';
@@ -563,9 +598,10 @@ export class FlashcardManager {
         
         document.body.appendChild(overlay);
         
-        // Close on outside click
+        // Close on outside click (triggers cancel if provided)
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
+                if (onCancel) onCancel();
                 overlay.remove();
             }
         });
