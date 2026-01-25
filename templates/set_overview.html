@@ -58,7 +58,7 @@
             </div>
         </div>
 
-        <div id="cards-list" class="card-list">
+        <div id="cards-list" class="card-list" style="padding: 0;">
             <!-- Cards will be loaded via JS and appended as card-list-item -->
             <div style="text-align: center; padding: var(--space-6); color: var(--color-text-muted);"
                 id="loading-indicator">Loading...</div>
@@ -270,12 +270,12 @@
                 
                 /* Ensure radius on first/last items */
                 .card-list-item:first-child.card-list-item-wrong {
-                    border-top-left-radius: var(--radius-lg) !important;
-                    border-top-right-radius: var(--radius-lg) !important;
+                    border-top-left-radius: var(--radius-xl) !important;
+                    border-top-right-radius: var(--radius-xl) !important;
                 }
                 .card-list-item:last-child.card-list-item-wrong {
-                    border-bottom-left-radius: var(--radius-lg) !important;
-                    border-bottom-right-radius: var(--radius-lg) !important;
+                    border-bottom-left-radius: var(--radius-xl) !important;
+                    border-bottom-right-radius: var(--radius-xl) !important;
                     border-bottom: 1px solid var(--color-accent-1) !important;
                 }
              `;
