@@ -474,8 +474,30 @@ export class FlashcardManager {
         
         if (remaining.length < 2) return; // Nothing to shuffle
         
-        this.shuffleArray(remaining);
-        this.cards = [...reviewed, ...remaining];
+        const currentCardId = remaining[0].id;
+        
+        // Group by Level to preserve "Fächer" priority (Leitner system)
+        const byLevel = {};
+        remaining.forEach(c => {
+            const lvl = c.level || 1;
+            if (!byLevel[lvl]) byLevel[lvl] = [];
+            byLevel[lvl].push(c);
+        });
+
+        // Shuffle within each level group and flatten sorted by level
+        let newRemaining = [];
+        Object.keys(byLevel).sort((a,b) => a - b).forEach(lvl => {
+             this.shuffleArray(byLevel[lvl]);
+             newRemaining = newRemaining.concat(byLevel[lvl]);
+        });
+        
+        // Ensure new current card is different if possible
+        if (newRemaining.length > 1 && newRemaining[0].id === currentCardId) {
+             // Swap with next one to ensure visual change
+             [newRemaining[0], newRemaining[1]] = [newRemaining[1], newRemaining[0]];
+        }
+        
+        this.cards = [...reviewed, ...newRemaining];
         
         // Save new order to server
         const ids = this.cards.map(c => c.id);
