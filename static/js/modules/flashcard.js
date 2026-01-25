@@ -493,8 +493,13 @@ export class FlashcardManager {
         
         // Ensure new current card is different if possible
         if (newRemaining.length > 1 && newRemaining[0].id === currentCardId) {
-             // Swap with next one to ensure visual change
-             [newRemaining[0], newRemaining[1]] = [newRemaining[1], newRemaining[0]];
+             // Find first card that is different (should be index 1 usually, but safer this way)
+             const swapIndex = newRemaining.findIndex(c => c.id !== currentCardId);
+             if (swapIndex !== -1) {
+                 const temp = newRemaining[0];
+                 newRemaining[0] = newRemaining[swapIndex];
+                 newRemaining[swapIndex] = temp;
+             }
         }
         
         this.cards = [...reviewed, ...newRemaining];
