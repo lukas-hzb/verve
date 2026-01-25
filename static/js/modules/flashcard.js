@@ -243,9 +243,10 @@ export class FlashcardManager {
             // IMPORTANT: total represents due cards at session start (learning mode only)
             this.sessionStats = { correct: 0, wrong: 0, total: loadedCards.length };
 
-            if (this.isPracticeMode) {
-                this.shuffleArray(this.cards);
-            }
+            // Auto-shuffle removed to respect persisted order
+            // if (this.isPracticeMode) {
+            //    this.shuffleArray(this.cards);
+            // }
             
             // Update progress bar visibility based on mode
             this.updateProgressBarVisibility();
@@ -476,27 +477,38 @@ export class FlashcardManager {
         this.shuffleArray(remaining);
         this.cards = [...reviewed, ...remaining];
         
+        // Save new order to server
+        const ids = this.cards.map(c => c.id);
+        fetch(`/api/set/${this.setId}/shuffle`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_ids: ids })
+        }).catch(err => console.error("Error saving shuffle order:", err));
+        
         this.saveSession();
         // Reload current card (which might be new now)
         this.loadCard(this.currentCardIndex);
     }
 
-    togglePracticeMode(enabled) {
+    async togglePracticeMode(enabled) {
         this.isPracticeMode = enabled;
         this.clearSession();
-        this.fetchAndLoadCards();
+        await this.fetchAndLoadCards();
         
         // Only show popup when ENABLING
         if (enabled) {
+            // New session -> Shuffle immediately to persist random order
+            this.shuffleCards();
+            
             this.showInfoPopup(
                 "Practice Mode", 
                 "In Practice Mode, you can review all cards freely without affecting your statistics or card levels. Perfect for cramming!",
-                () => {
+                async () => {
                     // User cancelled - revert checkbox and mode
                     this.practiceModeCheckbox.checked = false;
                     this.isPracticeMode = false;
                     this.clearSession();
-                    this.fetchAndLoadCards();
+                    await this.fetchAndLoadCards();
                 }
             );
         }

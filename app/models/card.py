@@ -12,6 +12,7 @@ class Card(db.Model):
     level = db.Column(db.Integer, default=1)
     next_review = db.Column(db.DateTime, default=datetime.utcnow)
     last_practice_wrong = db.Column(db.Boolean, nullable=False, default=False)
+    shuffle_order = db.Column(db.Integer, nullable=True)  # For persistent shuffle order
 
     def is_due(self) -> bool:
         """Check if the card is due for review."""
@@ -25,7 +26,8 @@ class Card(db.Model):
             'back': self.back,
             'level': self.level,
             'next_review': self.next_review.isoformat() if self.next_review else None,
-            'last_practice_wrong': self.last_practice_wrong
+            'last_practice_wrong': self.last_practice_wrong,
+            'shuffle_order': self.shuffle_order
         }
 
     def __repr__(self):

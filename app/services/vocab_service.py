@@ -65,7 +65,10 @@ class VocabService:
     @staticmethod
     def get_due_cards(set_id: str, user_id: str) -> List[Dict]:
         vset = VocabService.get_vocab_set(set_id, user_id)
-        return [c.to_dict() for c in vset.get_due_cards()]
+        cards = vset.get_due_cards()
+        # Sort by shuffle_order if present, putting None at the end
+        cards.sort(key=lambda x: (x.shuffle_order is None, x.shuffle_order))
+        return [c.to_dict() for c in cards]
 
     @staticmethod
     def get_all_cards(set_id: str, user_id: str, wrong_only: bool = False) -> List[Dict]:
@@ -73,6 +76,9 @@ class VocabService:
         cards = vset.get_all_cards()
         if wrong_only:
             cards = [c for c in cards if c.last_practice_wrong]
+        
+        # Sort by shuffle_order if present, putting None at the end
+        cards.sort(key=lambda x: (x.shuffle_order is None, x.shuffle_order))
         return [c.to_dict() for c in cards]
 
     @staticmethod
@@ -308,3 +314,31 @@ class VocabService:
             'card': card.to_dict()
         }
 
+    @staticmethod
+    def save_shuffle_order(set_id: str, card_ids: List[str], user_id: str) -> Dict:
+        """
+        Save the specific order of cards for a set.
+        
+        Args:
+            set_id: The ID of the vocabulary set
+            card_ids: List of card IDs in the desired order
+            user_id: The ID of the requesting user
+        """
+        vset = VocabService.get_vocab_set(set_id, user_id)
+        
+        # Verify all cards belong to the set and update their order
+        # We fetch all cards to minimize DB queries
+        all_cards = {c.id: c for c in vset.get_all_cards()}
+        
+        updated_count = 0
+        for index, card_id in enumerate(card_ids):
+            if card_id in all_cards:
+                all_cards[card_id].shuffle_order = index
+                updated_count += 1
+                
+        db.session.commit()
+        
+        return {
+            'status': 'success',
+            'updated_count': updated_count
+        }

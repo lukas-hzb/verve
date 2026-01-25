@@ -433,6 +433,36 @@ def delete_vocab_set(set_id: str):
         return error_response("An error occurred while deleting the vocabulary set", 500)
 
 
+@api_bp.route("/set/<string:set_id>/shuffle", methods=["POST"])
+@login_required
+def save_shuffle_order(set_id: str):
+    """
+    Save the shuffle order of cards.
+    
+    Expected JSON body:
+        {
+            "card_ids": [str]
+        }
+        
+    Returns:
+        JSON response with status
+    """
+    try:
+        data = request.get_json()
+        if not data or 'card_ids' not in data:
+            return error_response("Missing card_ids", 400)
+            
+        result = VocabService.save_shuffle_order(set_id, data['card_ids'], current_user.id)
+        return success_response(result)
+    except VocabSetNotFoundError as e:
+        return error_response(str(e), 404)
+    except UnauthorizedAccessError as e:
+        return error_response(str(e), 403)
+    except Exception as e:
+        current_app.logger.error(f"Error saving shuffle order: {e}")
+        return error_response("An error occurred", 500)
+
+
 @api_bp.route("/user/profile")
 @login_required
 def get_user_profile():
