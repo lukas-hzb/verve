@@ -260,16 +260,23 @@
              style.textContent = `
                 .card-list-item-wrong {
                     border: 1px solid var(--color-accent-1) !important;
-                    z-index: 1; /* Ensure border is visible */
+                    z-index: 1;
+                    position: relative; /* Needed for z-index */
                 }
+                /* Prevent double borders */
+                .card-list-item-wrong + .card-list-item-wrong {
+                    border-top: none !important;
+                }
+                
+                /* Ensure radius on first/last items */
                 .card-list-item:first-child.card-list-item-wrong {
-                    border-top-left-radius: var(--radius-lg);
-                    border-top-right-radius: var(--radius-lg);
+                    border-top-left-radius: var(--radius-lg) !important;
+                    border-top-right-radius: var(--radius-lg) !important;
                 }
                 .card-list-item:last-child.card-list-item-wrong {
-                    border-bottom-left-radius: var(--radius-lg);
-                    border-bottom-right-radius: var(--radius-lg);
-                    border-bottom: 1px solid var(--color-accent-1) !important; /* Ensure bottom border is present */
+                    border-bottom-left-radius: var(--radius-lg) !important;
+                    border-bottom-right-radius: var(--radius-lg) !important;
+                    border-bottom: 1px solid var(--color-accent-1) !important;
                 }
              `;
              document.head.appendChild(style);
@@ -315,9 +322,11 @@
             // If I set 'border', it sets all 4 sides. 
             // The user said "because the top and bottom element of this list are not rectangles".
             // This implies the list container has rounded corners, and the items need to match.
+            // The user said "because the top and bottom element of this list are not rectangles".
+            // This implies the list container has rounded corners, and the items need to match.
             // We can just add 'overflow: hidden' to the container? Or ensure items have radius.
             
-            if (card.last_practice_wrong) {
+            if (card.last_practice_wrong || card.level === 1) {
                  div.classList.add('card-list-item-wrong');
             }
             

@@ -75,7 +75,7 @@ class VocabService:
         vset = VocabService.get_vocab_set(set_id, user_id)
         cards = vset.get_all_cards()
         if wrong_only:
-            cards = [c for c in cards if c.last_practice_wrong]
+            cards = [c for c in cards if c.last_practice_wrong or c.level == 1]
         
         # Sort by shuffle_order if present, putting None at the end
         cards.sort(key=lambda x: (x.shuffle_order is None, x.shuffle_order))

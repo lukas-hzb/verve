@@ -62,6 +62,16 @@ export class FlashcardManager {
 
         this.ANIMATION_DURATION = 350; // milliseconds
 
+        // Initialize Wrong Answers Mode from local storage
+        const savedWrongMode = localStorage.getItem('wrongAnswersMode') === 'true';
+        if (savedWrongMode) {
+             this.isWrongAnswersMode = true;
+             if (this.wrongAnswersCheckbox) {
+                 this.wrongAnswersCheckbox.checked = true;
+             }
+             this.cardContainer.classList.add('wrong-mode-active');
+        }
+
         this.init();
     }
 
@@ -579,6 +589,7 @@ export class FlashcardManager {
                     this.showLoading();
                     this.isWrongAnswersMode = true;
                     this.cardContainer.classList.add('wrong-mode-active');
+                    localStorage.setItem('wrongAnswersMode', 'true');
                     this.clearSession();
                     this.fetchAndLoadCards();
                 }
@@ -588,6 +599,7 @@ export class FlashcardManager {
             this.showLoading();
             this.isWrongAnswersMode = false;
             this.cardContainer.classList.remove('wrong-mode-active');
+            localStorage.setItem('wrongAnswersMode', 'false');
             this.clearSession();
             this.fetchAndLoadCards();
         }
