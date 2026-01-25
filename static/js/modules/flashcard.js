@@ -168,10 +168,12 @@ export class FlashcardManager {
             this.notKnownBtn.blur();
         });
         this.prevCardBtn?.addEventListener("click", () => {
+            if (this.areControlsDisabled) return;
             this.undoLastCard();
             this.prevCardBtn.blur();
         });
         this.shuffleBtn?.addEventListener("click", () => {
+            if (this.areControlsDisabled) return;
             this.shuffleCards();
             this.shuffleBtn.blur();
         });
@@ -306,10 +308,11 @@ export class FlashcardManager {
         // Remove animations
         this.cardContainer.classList.remove('animate-swipe-right', 'animate-swipe-left', 'load-in');
 
-        if (isFirstLoad) {
-            this.updateCardContent(card);
-        } else {
-            // Trigger reflow
+        // Update content regardless of load type (fix for shuffle/undo not updating UI)
+        this.updateCardContent(card);
+
+        if (!isFirstLoad) {
+            // Trigger reflow for animation
             void this.cardContainer.offsetHeight;
             this.cardContainer.classList.add('load-in');
         }
@@ -348,7 +351,7 @@ export class FlashcardManager {
 
         setTimeout(() => {
             const originalCard = { ...this.cards[this.currentCardIndex] };
-            this.undoHistory.push(originalCard);
+            this.undoHistory.push({ card: originalCard, quality: quality });
             this.updateBackButtonState();
 
             // Queue sync based on mode
@@ -418,20 +421,18 @@ export class FlashcardManager {
     async undoLastCard() {
         if (this.undoHistory.length === 0) return;
 
-        const cardToRestore = this.undoHistory.pop();
+        const historyItem = this.undoHistory.pop();
+        const cardToRestore = historyItem.card;
+        const quality = historyItem.quality;
         this.updateBackButtonState();
         
         // Revert stats
-        // We don't know exactly if it was correct or wrong from history alone unless we stored it.
-        // Simplification: Store decision in history?
-        // For now, let's assume if we undo, we decrement Total Reviewed. 
-        // Logic fix: We need to revert the specific stat. 
-        // Hack: Check current stats vs index? 
-        // Better: Let's accept stats might be slightly off on undo or assume last action.
-        // Correct way: Add `quality` to undoHistory item.
-        // Since we didn't add it to `handleFeedback` undo push, we risk desync. 
-        // For now, user just undos position. Stats logic is complex without history.
-        // Let's assume user wants to retry.
+        if (quality === 5) {
+            this.sessionStats.correct = Math.max(0, this.sessionStats.correct - 1);
+        } else {
+            this.sessionStats.wrong = Math.max(0, this.sessionStats.wrong - 1);
+        }
+        this.updateProgress();
         
         // Find index
         const cardIndexInSet = this.cards.findIndex(c => c.front === cardToRestore.front);
