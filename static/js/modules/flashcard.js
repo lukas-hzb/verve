@@ -513,56 +513,62 @@ export class FlashcardManager {
     }
 
     async togglePracticeMode(enabled) {
-        this.isPracticeMode = enabled;
-        this.clearSession();
-        await this.fetchAndLoadCards();
-        
         // Only show popup when ENABLING
         if (enabled) {
-            // New session -> Shuffle immediately to persist random order
-            this.shuffleCards();
-            
             this.showInfoPopup(
                 "Practice Mode", 
                 "In Practice Mode, you can review all cards freely without affecting your statistics or card levels. Perfect for cramming!",
-                async () => {
-                    // User cancelled - revert checkbox and mode
+                // onCancel
+                () => {
                     this.practiceModeCheckbox.checked = false;
-                    this.isPracticeMode = false;
+                },
+                // onConfirm
+                async () => {
+                    this.isPracticeMode = true;
                     this.clearSession();
                     await this.fetchAndLoadCards();
+                    // New session -> Shuffle immediately to persist random order
+                    this.shuffleCards();
                 }
             );
+        } else {
+            // Disabling (returning to learning mode)
+            this.isPracticeMode = false;
+            this.clearSession();
+            await this.fetchAndLoadCards();
         }
-        // No popup when disabling (returning to learning mode)
     }
     
     toggleWrongAnswersMode(enabled) {
-        this.isWrongAnswersMode = enabled;
-        this.clearSession();
-        this.fetchAndLoadCards();
-        
         // Only show popup when ENABLING
         if (enabled) {
             const message = this.isPracticeMode 
                 ? "Showing only cards you answered incorrectly during practice sessions."
                 : "Focusing exclusively on cards at Level 1 (new or recently answered incorrectly).";
+            
             this.showInfoPopup(
                 "Wrong Answers Only", 
                 message,
+                // onCancel
                 () => {
-                    // User cancelled - revert checkbox and mode
                     this.wrongAnswersCheckbox.checked = false;
-                    this.isWrongAnswersMode = false;
+                },
+                // onConfirm
+                () => {
+                    this.isWrongAnswersMode = true;
                     this.clearSession();
                     this.fetchAndLoadCards();
                 }
             );
+        } else {
+            // Disabling
+            this.isWrongAnswersMode = false;
+            this.clearSession();
+            this.fetchAndLoadCards();
         }
-        // No popup when disabling
     }
     
-    showInfoPopup(title, message, onCancel = null) {
+    showInfoPopup(title, message, onCancel = null, onConfirm = null) {
         // Remove existing if any
         const existing = document.getElementById('dynamic-info-popup');
         if (existing) existing.remove();
@@ -620,7 +626,10 @@ export class FlashcardManager {
         const okBtn = document.createElement('button');
         okBtn.className = 'btn-primary';
         okBtn.textContent = 'Got it';
-        okBtn.onclick = () => overlay.remove();
+        okBtn.onclick = () => {
+            if (onConfirm) onConfirm();
+            overlay.remove();
+        };
         
         footer.appendChild(okBtn);
         
