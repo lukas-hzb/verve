@@ -75,23 +75,35 @@ def setup_logging(app: Flask) -> None:
     Args:
         app: Flask application instance
     """
-    # Create logs directory if it doesn't exist
-    log_file = app.config.get('LOG_FILE')
-    if log_file:
-        log_path = Path(log_file)
-        log_path.parent.mkdir(exist_ok=True)
-        
-        # Configure file handler
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        ))
-        app.logger.addHandler(file_handler)
-    
     # Set log level
     log_level = app.config.get('LOG_LEVEL', 'INFO')
     app.logger.setLevel(getattr(logging, log_level))
+
+    # Always add a stream handler for console/cloud logging (crucial for Vercel)
+    if not any(isinstance(h, logging.StreamHandler) for h in app.logger.handlers):
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(logging.Formatter(
+            '%(levelname)s: %(message)s'
+        ))
+        app.logger.addHandler(stream_handler)
+
+    # Create logs directory if it doesn't exist (only if LOG_FILE is set)
+    log_file = app.config.get('LOG_FILE')
+    if log_file:
+        try:
+            log_path = Path(log_file)
+            log_path.parent.mkdir(exist_ok=True)
+            
+            # Configure file handler
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setLevel(logging.INFO)
+            file_handler.setFormatter(logging.Formatter(
+                '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+            ))
+            app.logger.addHandler(file_handler)
+        except (OSError, IOError) as e:
+            # Fallback for read-only filesystems or permission issues
+            app.logger.warning(f"Failed to setup file logging at {log_file}: {e}. Continuing with console logging.")
 
 
 def setup_login_manager(app: Flask) -> None:

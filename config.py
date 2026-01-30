@@ -30,7 +30,8 @@ class Config:
     UPLOAD_FOLDER = BASE_DIR / "static" / "uploads"
     
     # Logging
-    LOG_FILE = BASE_DIR / "verve.log"
+    # Vercel has a read-only filesystem, so we disable file logging there
+    LOG_FILE = None if os.environ.get('VERCEL') else BASE_DIR / "verve.log"
     LOG_LEVEL = "INFO"
 
     
