@@ -105,8 +105,9 @@ Tested platforms for deploying Verve:
 
 | Platform | Notes |
 |----------|-------|
-| [Koyeb](https://www.koyeb.com/) | Docker support, auto-deploy from GitHub |
-| [Railway](https://railway.app/) | Simple setup, Dockerfile auto-detection, One custom domain per project |
+| [Koyeb](https://www.koyeb.com/) | Docker support, auto-deploy from GitHub, No custom domain in free tier |
+| [Railway](https://railway.app/) | Simple setup, Dockerfile auto-detection, One custom domain per project, Free tier ends after one  |
+| [Vercel](https://vercel.com/) | Serverless functions, strict read-only filesystem, automatic GitHub CI/CD, Custom domain in free tier |
 
 ---
 
