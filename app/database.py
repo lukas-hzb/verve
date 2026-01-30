@@ -19,17 +19,24 @@ def init_db(app: Flask) -> None:
     Args:
         app: Flask application instance
     """
+    import os
     db.init_app(app)
     
-    with app.app_context():
-        # Import models to ensure they're registered with SQLAlchemy
-        from app.models import User, VocabSet, Card
-        
-        # Create all tables
-        db.create_all()
-        
-        # Create default shared vocabulary set if it doesn't exist
-        create_default_vocab_set()
+    # On Vercel, we avoid running create_all() and seeds on every cold start
+    # to prevent database connection spikes (MaxClientsReached).
+    # These should be run once during initial setup or via a migration script.
+    if not os.environ.get('VERCEL'):
+        with app.app_context():
+            # Import models to ensure they're registered with SQLAlchemy
+            from app.models import User, VocabSet, Card
+            
+            # Create all tables
+            db.create_all()
+            
+            # Create default shared vocabulary set if it doesn't exist
+            create_default_vocab_set()
+    else:
+        app.logger.info("Skipping DB schema check/seed on Vercel to optimize startup.")
 
 
 def create_default_vocab_set() -> None:

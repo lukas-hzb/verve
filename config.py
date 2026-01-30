@@ -7,6 +7,7 @@ for development, testing, and production environments.
 
 import os
 from pathlib import Path
+from sqlalchemy.pool import NullPool
 
 
 class Config:
@@ -59,6 +60,14 @@ class ProductionConfig(Config):
     # Secure cookies in production (HTTPS)
     SESSION_COOKIE_SECURE = True
     
+    # SQLAlchemy engine options for Serverless/Supabase
+    # NullPool ensures that connections are not kept open between requests,
+    # which is crucial to avoid "MaxClientsReached" errors in Session mode.
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "poolclass": NullPool,
+        "pool_pre_ping": True,
+    }
+
     # In production, SECRET_KEY must be set via environment variable
     @classmethod
     def init_app(cls, app):
