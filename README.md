@@ -96,9 +96,9 @@ Deployment is straightforward. Most services automatically detect the `Dockerfil
 
 | Platform                               | Pros                                                   | Cons                                                    |
 | :------------------------------------- |  :----------------------------------------------------- | :------------------------------------------------------ |
-| **[Koyeb](https://www.koyeb.com/)** | Simple setup, Nice UI, Many features.                  | No custom domain in free tier.                          |
-| **[Railway](https://railway.app/)** | Simple setup, Nice UI, Many features.                  | No custom domain in free tier.                          |
-| **[Vercel](https://vercel.com/)**   | Custom domain in free tier.                            | Not as intuitive as the others, very slow in free tier. |
+| **[Koyeb](https://www.koyeb.com/)** | User-friendly interface, simple setup, robust feature set. | Custom domains require a paid plan.                     |
+| **[Railway](https://railway.app/)** | User-friendly interface, simple setup, robust feature set. | Custom domains require a paid plan.                     |
+| **[Vercel](https://vercel.com/)**   | Includes custom domain support on the free tier.       | Less intuitive interface, very slow connection in free tier. |
 
 ## Tech Stack
 
