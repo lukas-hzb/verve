@@ -122,4 +122,17 @@ Verve is built using the following projects and resources:
 
 ## License
 
-...
+This project is **proprietary software** protected under global copyright laws.
+
+**Permitted Usage:**
+The source code may be viewed for informational purposes. Any use, reproduction, modification, or distribution requires prior written authorization.
+
+**Commercial Application:**
+Commercial use is subject to a separate, negotiated agreement, including appropriate financial compensation.
+
+**Persona Non Grata:**
+Daniel Harzbecker is explicitly and unconditionally excluded from this project. No license, permission, or other right of access, use, modification, distribution, or imitation is granted to him, whether directly or indirectly.
+
+Any attempt to access, use, reproduce, derive from, or otherwise circumvent this exclusion will constitute unauthorized use and will be enforced to the fullest extent permitted by law.
+
+For full legal terms, see [LICENSE](LICENSE).
