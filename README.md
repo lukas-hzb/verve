@@ -1,200 +1,125 @@
 # Verve
 
-A modern Flask-based spaced repetition system for vocabulary learning. Verve uses the SM2 (SuperMemo 2) algorithm to optimize study sessions through scientifically calculated intervals.
-
----
+Verve is a modern, Flask-based spaced repetition system designed to optimize vocabulary learning. It combines the scientifically proven SM2 (SuperMemo 2) algorithm with other features to create the ultimate learning companion.
 
 ## Features
 
-- **Spaced Repetition (SM2)** — Cards appear at optimal intervals for long-term retention
-- **Vocabulary Sets** — Organize vocabulary into customizable sets
-- **Practice Mode** — Review all cards without affecting progress (random order)
-- **Progress Tracking** — Visual statistics and learning analytics
-- **Undo Functionality** — Revert accidental card ratings
-- **Keyboard Shortcuts** — Efficient navigation via hotkeys
-- **Profile Management** — Secure account handling with data export
-- **Responsive UI** — Clean design with collapsible sidebar
+- **Spaced Repetition (SM2)**: The core algorithm schedules reviews based on performance, maximizing long-term retention.
+- **Smart Import**: Vocabulary can be imported from CSV or text files with custom separators.
+- **Google Login**: One-click secure sign-in via Supabase OAuth.
+- **Vocabulary Sets**: Words can be organized into custom sets (e.g., "Spanish Basics").
+- **Practice Mode**: Cards can be reviewed without affecting the spaced repetition schedule.
+- **Profile Customization**: Avatars and personal profile details are fully manageable.
+- **Progress Tracking**: Learning progress is visualized with intuitive charts and statistics.
+- **Responsive UI**: A clean, modern interface that functions seamlessly, especially on desktop devices.
 
----
+### Screenshots
 
-## Quick Start
+|                                  Dashboard View                                  |                                   Add Card Dialog                                   |
+| :-------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: |
+| <img src="static/images/dashboard_preview.png" alt="Dashboard" width="400" /> | <img src="static/images/add_card_dialog.png" alt="Add Card" width="400" /> |
 
-### Prerequisites
+|                              Study Session                              |                                 Statistics                                 |
+| :-------------------------------------------------------------------------: | :-------------------------------------------------------------------------: |
+| <img src="static/images/study_session.png" alt="Study Session" width="400" /> | <img src="static/images/statistics.png" alt="Statistics" width="400" /> |
 
-- Python 3.11+
-- PostgreSQL database (or Supabase account)
+## Installation
 
 ### Local Setup
 
+Ensure that **Python 3.11** or higher and **Git** are installed on your system. Then execute the following commands in the terminal:
+
 ```bash
-# 1. Clone and navigate to project
+# 1. Download the project
+git clone https://github.com/lukas-hzb/verve.git
 cd Verve
 
-# 2. Create virtual environment
+# 2. Create and activate virtual environment
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# Windows:
+# .venv\Scripts\activate
+
+# Mac/Linux:
+# source .venv/bin/activate
 
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Configure environment (create .env file, see below)
+# 4. Configure environment
+# (Create a .env file as described in the Configuration section below)
 
-# 5. Start development server
+# 5. Start the application
 python devel.py
 ```
-
-The app runs at: **http://127.0.0.1:8080**
-
----
 
 ## Configuration
 
-### Environment Variables
+Verve uses a `.env` file to securely store settings. This file is not shared in the code repository to protect secrets.
 
-Create a `.env` file in the project root with these variables:
+**Step-by-Step:**
 
-| Variable                  | Required | Description                          |
-|---------------------------|----------|--------------------------------------|
-| `SECRET_KEY`              | Yes¹     | Flask secret key (random string)     |
-| `SQLALCHEMY_DATABASE_URI` | Yes      | PostgreSQL connection string         |
-| `FLASK_CONFIG`            | No       | `development` / `production`         |
-| `FLASK_HOST`              | No       | Host address (default: `127.0.0.1`)  |
-| `FLASK_PORT`              | No       | Port number (default: `8080`)        |
+1. Create a new file named `.env` in the root folder.
+2. Copy the content below and paste it into the file.
+3. Replace the placeholder values (like `[YOUR_DB_URI]`) with the actual credentials.
 
-¹ Required in production, optional in development.
+```ini
+# .env file content
 
-> **Security:** Never commit `.env` to version control.
+# Security: Generate a random string (e.g., using 'openssl rand -hex 32')
+SECRET_KEY=the-super-secret-key-goes-here
 
-### Development vs Production
+# Database: See "Database Setup" section below for how to get this URI
+SQLALCHEMY_DATABASE_URI=postgresql://postgres:[PASSWORD]...
 
-| Aspect             | Development (`devel.py`)  | Production (`prod.py`)    |
-|--------------------|---------------------------|---------------------------|
-| Config Class       | `DevelopmentConfig`       | `ProductionConfig`        |
-| Debug Mode         | Enabled                   | Disabled                  |
-| Server             | Flask dev server          | Gunicorn                  |
-| Port               | `8080`                    | `8000`                    |
-| Secret Key         | Fallback allowed          | Required via env          |
-| Secure Cookies     | Disabled                  | Enabled (HTTPS)           |
+# Optional: Set to 'production' only when deploying
+FLASK_CONFIG=development
+```
 
----
+## Database Setup
+
+Verve is optimized for **Supabase**, a free and powerful PostgreSQL provider.
+
+**Step-by-Step:**
+
+1. Go to [supabase.com](https://supabase.com) and create a new project.
+2. Get Credentials:
+   - Click the "Connect" button at the top of the Supabase dashboard.
+   - In the modal that appears, click the "ORMs" tab.
+   - In the dropdown, select "Prisma".
+3. Copy the provided `DATABASE_URL`. It will look like this: `postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres`
+4. Paste this URI into your `.env` file as the `SQLALCHEMY_DATABASE_URI`. Replace `[password]` with your actual database password. (If you forgot it, click the "Connect" button again, then click the "Database Settings" link at the bottom of the modal, and scroll down to "Reset database password". It's only shown once.)
 
 ## Deployment
 
-Verve includes a `Dockerfile` for containerized deployment on any Docker-compatible platform.
+In general, the deployment process is quite simple. Most services will autmatically deploy from GitHub and detect the `Dockerfile`. You will need to set `FLASK_CONFIG` to `production`, `DATABASE_URL` and `SECRET_KEY` environment variables manually (using the same values as your local `.env`).
 
-### Requirements
-
-Configure these settings in your hosting platform:
-
-| Setting          | Value        |
-|------------------|--------------|
-| Dockerfile Path  | `Dockerfile` |
-| Port             | `8000`       |
-
-Set these environment variables:
-
-| Variable                  | Description                    |
-|---------------------------|--------------------------------|
-| `SECRET_KEY`              | Secure random string           |
-| `SQLALCHEMY_DATABASE_URI` | PostgreSQL connection string   |
-| `FLASK_CONFIG`            | Set to `production`            |
-
-### Hosting Platforms
-
-Tested platforms for deploying Verve:
-
-| Platform | Notes |
-|----------|-------|
-| [Koyeb](https://www.koyeb.com/) | Docker support, auto-deploy from GitHub, No custom domain in free tier |
-| [Railway](https://railway.app/) | Simple setup, Dockerfile auto-detection, One custom domain per project, Free tier ends after one  |
-| [Vercel](https://vercel.com/) | Serverless functions, strict read-only filesystem, automatic GitHub CI/CD, Custom domain in free tier |
-
----
-
-## Database
-
-Verve works with **any PostgreSQL database**. There is no dependency on a specific provider.
-
-Tested database providers:
-
-| Provider | Notes |
-|----------|-------|
-| [Supabase](https://supabase.com/) | Easy setup, generous free tier |
-
-**Example: Supabase Setup**
-
-1. Create a project at [supabase.com](https://supabase.com)
-2. Go to **Settings → Database → Connection string**
-3. Select **Transaction pooling** mode
-4. Copy connection string and replace `[YOUR-PASSWORD]`
-
-```
-postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
-```
-
----
-
-## Project Structure
-
-```
-Verve/
-├── app/
-│   ├── __init__.py        # App factory
-│   ├── database.py        # Database initialization
-│   ├── models/            # SQLAlchemy models
-│   ├── routes/            # Flask blueprints
-│   ├── services/          # Business logic (SM2, backup, etc.)
-│   └── utils/             # Helper functions
-├── static/                # CSS, JS, images
-├── templates/             # Jinja2 templates
-├── scripts/               # Utility scripts
-├── tests/                 # Test suite
-├── prod.py                # Production entry point
-├── devel.py               # Development entry point
-├── config.py              # Configuration classes
-├── requirements.txt       # Dependencies
-├── Dockerfile             # Container configuration
-
-└── .env                   # Local config (not in repo)
-```
-
----
+| Platform                               | Pros                                                   | Cons                                                    |
+| :------------------------------------- | :----------------------------------------------------- | :------------------------------------------------------ |
+| **[Koyeb](https://www.koyeb.com/)** | Simple setup, Docker support, auto-deploy from GitHub. | No custom domain in free tier.                          |
+| **[Railway](https://railway.app/)** | Simple setup, One custom domain per project.           | Free tier ends after one month.                         |
+| **[Vercel](https://vercel.com/)**   | Custom domain in free tier.                            | Not as intuitive as the others, very slow in free tier. |
 
 ## Tech Stack
 
-| Layer        | Technology                             |
-|--------------|----------------------------------------|
-| Backend      | Flask 2.3.3                            |
-| Database     | PostgreSQL                             |
-| ORM          | Flask-SQLAlchemy 3.1.1                 |
-| Auth         | Flask-Login 0.6.3, bcrypt 4.1.2        |
-| Server       | Gunicorn 21.2.0                        |
-
----
-
-## Utility Commands
-
-```bash
-# Run development server
-python devel.py
-
-# Create database backup
-python devel.py backup
-
-# Test database connection
-python scripts/test_db_connection.py
-```
-
----
+| Layer              | Technology  | Version |
+| :----------------- | :---------- | :------ |
+| **Backend**  | Flask       | 2.3.3   |
+| **Language** | Python      | 3.11    |
+| **Database** | PostgreSQL  | -       |
+| **ORM**      | SQLAlchemy  | 3.1.1   |
+| **Auth**     | Flask-Login | 0.6.3   |
+| **Server**   | Gunicorn    | 21.2.0  |
 
 ## Credits
 
-- **SM2 Algorithm** — [SuperMemo](https://www.supermemo.com/)
-- **Icons** — [Material Symbols](https://fonts.google.com/icons)
-- **Font** — [Poppins (Google Fonts)](https://fonts.google.com/specimen/Poppins)
+Verve is built using the following projects and resources:
 
----
+- **[SuperMemo 2 (SM2)](https://www.supermemo.com/)**: The algorithm for spaced repetition.
+- **[Flask](https://flask.palletsprojects.com/)**: The Python web framework.
+- **[Material Symbols](https://fonts.google.com/icons)**: Icons by Google.
+- **[Poppins](https://fonts.google.com/specimen/Poppins)**: The font family used.
 
 ## License
 
-This project is available for personal and educational use.
+...
