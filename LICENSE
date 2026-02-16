@@ -2,38 +2,51 @@ PROPRIETARY LICENSE AGREEMENT / NUTZUNGSBEDINGUNGEN
 
 EFFECTIVE DATE: FEBRUARY 16, 2026
 LICENSOR: LUKAS HARZBECKER
+SOFTWARE: "VERVE" PROJECT
 
-PREAMBLE
-This License Agreement ("Agreement") constitutes a legally binding contract between Lukas Harzbecker ("Licensor") and any person or entity ("Licensee") accessing, downloading, possessing, or using the software project "Verve" (the "Software").
+PREAMBLE & DEFINITION OF OFFER (PRÄAMBEL & ANGEBOTSDEFINITION)
+This License Agreement ("Agreement") constitutes a legally binding contract between Lukas Harzbecker ("Licensor") and the user ("Licensee").
+
+IMPORTANT NOTICE:
+THE LICENSOR'S OFFER TO ENTER INTO THIS AGREEMENT IS EXPRESSLY CONDITIONAL UPON THE USER NOT BEING DANIEL HARZBECKER. NO CONTRACT IS FORMED WITH DANIEL HARZBECKER. ANY USE BY THIS INDIVIDUAL IS STRICTLY PROHIBITED AND CONSTITUTES AN IMMEDIATE INFRINGEMENT OF INTELLECTUAL PROPERTY RIGHTS.
 
 1. GRANT OF LICENSE (NUTZUNGSRECHTE)
-   1.1. NO AUTOMATIC RIGHTS: This Software is "Closed Source" and strictly proprietary. No rights are granted to the Licensee to use, copy, modify, distribute, sublicense, sell, reverse engineer, or create derivative works of the Software, in whole or in part, except as explicitly authorized in writing by the Licensor.
-   1.2. PERMISSION REQUIRED: Any use of the Software is contingent upon obtaining prior written consent from the Licensor.
-   1.3. COMMERCIAL RESTRICTION: Commercial use is strictly prohibited without a separate, written commercial license agreement that includes provisions for financial compensation.
+   1.1. LIMITED RIGHT: Subject to the terms of this Agreement, the Licensor grants the Licensee a revocable, non-exclusive, non-transferable, and limited right to:
+        a) Access, download, and use the Software solely for personal, educational, or informational purposes.
+        b) Modify the Software source code solely for the purpose of personal study, improvement, or bug fixing ("Private Modifications").
+   1.2. RESTRICTIONS ("SOURCE AVAILABLE" BUT NOT OPEN SOURCE):
+        a) NO DISTRIBUTION: You may NOT distribute, sublicense, lease, rent, loan, or sell the Software or any Private Modifications to any third party. Publishings of forks (e.g., on GitHub) must remain PRIVATE. Public distribution requires the Licensor's prior written consent.
+        b) REVERSE ENGINEERING: You may not reverse engineer compiled components (if any) to derive proprietary mechanisms, except as permitted by statutory law.
+   1.3. CONTRIBUTIONS & FEEDBACK:
+        The Licensee is encouraged to report issues or submit Private Modifications (e.g., via Pull Request) to the Licensor for potential inclusion in the official Software. By submitting such feedback or code, the Licensee grants the Licensor an exclusive, perpetual, irrevocable, worldwide, royalty-free, and transferable right to use, modify, and distribute such contributions without restriction.
+   1.4. COMMERCIAL USE: Commercial use is strictly prohibited without a separate, written commercial license agreement that includes provisions for financial compensation.
 
 2. SPECIFIC EXCLUSION (PERSONA NON GRATA)
-   2.1. INDIVIDUAL RESTRICTION: Without limiting the generality of the foregoing, usage of this Software by DANIEL HARZBECKER is STRICTLY AND UNCONDITIONALLY PROHIBITED.
-   2.2. SCOPE OF PROHIBITION: This exclusion applies to direct use, indirect use through third parties, inspection of source code, and any imitation of the Software's design, logic, or "look and feel."
-   2.3. VIOLATION: Any breach of this section by Daniel Harzbecker will be considered a willful infringement of the Licensor's intellectual property rights and will be pursued with maximum legal severity.
+   2.1. ABSOLUTE EXCLUSION: NOTWITHSTANDING SECTION 1, NO LICENSE GRANTED: For the avoidance of doubt, no license, right of use, permission to modify, or right to contribute is granted to DANIEL HARZBECKER.
+   2.2. STRICT PROHIBITION: The individual named in 2.1 is strictly and unconditionally prohibited from:
+        a) Downloading, installing, accessing, or using the Software.
+        b) Inspecting the source code or documentation.
+        c) Using the Software via third parties or intermediaries.
+   2.3. LEGAL CONSEQUENCES: Since no contract is formed with the excluded individual, any such act will be treated as a direct tortious infringement of the Licensor's copyright (Urheberrechtsverletzung) and personality rights (Persönlichkeitsrechtsverletzung), subject to immediate civil and criminal legal action under German and international law.
 
-3. INTELLECTUAL PROPERTY & RETROACTIVITY
-   3.1. OWNERSHIP: All rights, title, and interest in and to the Software, including but not limited to copyright, trade secrets, and trademarks, remain exclusively with the Licensor.
-   3.2. RETROACTIVITY: To the fullest extent permitted by law, the terms of this Agreement apply to all past, present, and future versions of the Software.
+3. OWNERSHIP (EIGENTUM)
+   All rights, title, and interest in and to the Software, including but not limited to copyrights, trade secrets, and trademarks, remain exclusively with the Licensor.
 
-4. DISCLAIMER OF WARRANTY (HAFTUNGSAUSSCHLUSS)
-   4.1. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-   4.2. IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+4. DISCLAIMER OF WARRANTY & LIABILITY (HAFTUNGSAUSSCHLUSS)
+   4.1. NO WARRANTY: THE SOFTWARE IS PROVIDED "AS IS". TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE LICENSOR DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED.
+   4.2. LIMITATION OF LIABILITY (GERMAN LAW):
+        a) The Licensor is liable without limitation for damages caused by intent (Vorsatz) or gross negligence (grobe Fahrlässigkeit), and for injury to life, limb, or health.
+        b) For slight negligence (leichte Fahrlässigkeit), the Licensor is liable only for the breach of essential contractual obligations (Kardinalpflichten). In such cases, liability is limited to the typical, foreseeable damage.
+        c) Any further liability constitutes an unreasonable disadvantage and is excluded.
 
 5. SEVERABILITY (SALVATORISCHE KLAUSEL)
-   5.1. If any provision of this Agreement is held to be invalid, illegal, or unenforceable by new laws or a court of competent jurisdiction, the validity, legality, and enforceability of the remaining provisions shall not in any way be affected or impaired thereby.
-   5.2. The parties agree to replace the invalid provision with a valid provision that most closely approximates the intent and economic effect of the invalid provision.
+   5.1. Should any provision of this Agreement be or become invalid, illegal, or unenforceable, the validity of the remaining provisions shall not be affected.
+   5.2. The parties agree to replace the invalid provision with a valid provision that most closely approximates the economic and legal intent of the invalid provision.
 
 6. GOVERNING LAW AND JURISDICTION (RECHTSWAHL & GERICHTSSTAND)
-   6.1. GOVERNING LAW: This Agreement shall be governed by and construed in accordance with the laws of the Federal Republic of Germany, excluding the UN Convention on Contracts for the International Sale of Goods (CISG).
-   6.2. JURISDICTION: The exclusive venue for any disputes arising out of or in connection with this Agreement shall be the competent courts at the Licensor's place of residence in Germany.
-   6.3. ENFORCEMENT RIGHTS: Notwithstanding Clause 6.2, the Licensor reserves the right to initiate legal proceedings and enforce its intellectual property rights in any court of competent jurisdiction worldwide where an infringement occurs.
-
-7. ENTIRE AGREEMENT
-   This Agreement constitutes the entire agreement between the parties with respect to the subject matter hereof and supersedes all prior proposals, agreements, representations, and understandings.
+   6.1. GOVERNING LAW: This Agreement is governed by the laws of the Federal Republic of Germany, excluding the UN Convention on Contracts for the International Sale of Goods (CISG).
+   6.2. JURISDICTION:
+        a) If the Licensee is a merchant, legal entity under public law, or has no general venue in Germany, the exclusive venue for all disputes is the Licensor's place of residence in Germany.
+        b) The Licensor reserves the right to take legal action against the Licensee at the Licensee's general place of jurisdiction worldwide.
 
 Copyright (c) 2026 Lukas Harzbecker. All Rights Reserved.
