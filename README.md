@@ -125,7 +125,7 @@ Verve is built using the following projects and resources:
 This project is **proprietary software** protected under global copyright laws.
 
 **Permitted Usage:**
-The source code is available for **educational and informational purposes**. You may download and modify the code for personal study or to create private improvements. **Contributions** (e.g., Bug Reports, Pull Requests) are welcome and encouraged to help improve the project.
+The source code is available for educational and informational purposes. You may download and modify the code for personal study or to create private improvements. Contributions (e.g., Bug Reports, Pull Requests) are welcome and encouraged to help improve the project.
 
 **Restrictions:**
 You may NOT redistribute the software or your modifications publicly (e.g., no public forks without permission). This is "Source Available", not Open Source.
