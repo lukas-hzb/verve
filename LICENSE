@@ -8,9 +8,6 @@ Lukas Harzbecker (natural person), Germany
 SOFTWARE:
 "VERVE" — all past, present and future versions, source code, binaries, documentation, and related materials
 
-IMPORTANT NOTE:
-This Agreement preserves all substantive restrictions and effects present in prior drafts (non-commercial, source-available but not open source; private modifications only; exclusive ownership; named exclusion). The language below is rephrased and tightened for contractual clarity, express acceptance, stronger remedies, minimum compliance with mandatory law, and practical enforcement on code-hosting platforms and controlled distribution channels.
-
 1. DEFINITIONS
 1.1 "Agreement" means this Proprietary Source-Available License Agreement as amended in writing.
 1.2 "Licensor" means the person named above.
@@ -88,4 +85,4 @@ This Agreement preserves all substantive restrictions and effects present in pri
 15.1 Licensee acknowledges that breach of clause 6 (Excluded Person) or clause 4 (Restrictions) may cause Licensor irreparable harm for which monetary damages would be an inadequate remedy. Licensor is therefore entitled to seek immediate injunctive relief (including ex parte relief where permitted) in addition to other remedies.
 
 COPYRIGHT
-Copyright © 2026 Lukas Harzbecker. All rights reserved.
+Copyright (c) 2026 Lukas Harzbecker. All rights reserved.
