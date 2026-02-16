@@ -95,9 +95,9 @@ Verve is optimized for **Supabase**, a free and powerful PostgreSQL provider.
 In general, the deployment process is quite simple. Most services will autmatically deploy from GitHub and detect the `Dockerfile`. You will need to set `FLASK_CONFIG` to `production`, `DATABASE_URL` and `SECRET_KEY` environment variables manually (using the same values as your local `.env`).
 
 | Platform                               | Pros                                                   | Cons                                                    |
-| :------------------------------------- | :----------------------------------------------------- | :------------------------------------------------------ |
-| **[Koyeb](https://www.koyeb.com/)** | Simple setup, Docker support, auto-deploy from GitHub. | No custom domain in free tier.                          |
-| **[Railway](https://railway.app/)** | Simple setup, One custom domain per project.           | Free tier ends after one month.                         |
+| :------------------------------------- |  :----------------------------------------------------- | :------------------------------------------------------ |
+| **[Koyeb](https://www.koyeb.com/)** | Simple setup, Nice UI, Many features.                  | No custom domain in free tier.                          |
+| **[Railway](https://railway.app/)** | Simple setup, Nice UI, Many features.                  | No custom domain in free tier.                          |
 | **[Vercel](https://vercel.com/)**   | Custom domain in free tier.                            | Not as intuitive as the others, very slow in free tier. |
 
 ## Tech Stack
