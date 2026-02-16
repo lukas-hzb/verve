@@ -92,7 +92,7 @@ Verve is optimized for **Supabase**, a free and powerful PostgreSQL provider.
 
 ## Deployment
 
-In general, the deployment process is quite simple. Most services will autmatically deploy from GitHub and detect the `Dockerfile`. You will need to set `FLASK_CONFIG` to `production`, `DATABASE_URL` and `SECRET_KEY` environment variables manually (using the same values as your local `.env`).
+Deployment is straightforward. Most services automatically detect the `Dockerfile` and deploy directly from GitHub. You only need to manually configure the `FLASK_CONFIG` (needs to be `production`), `DATABASE_URL`, and `SECRET_KEY` environment variables, using the values from your local `.env` file.
 
 | Platform                               | Pros                                                   | Cons                                                    |
 | :------------------------------------- |  :----------------------------------------------------- | :------------------------------------------------------ |
