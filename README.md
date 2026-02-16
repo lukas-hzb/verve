@@ -69,7 +69,7 @@ Verve uses a `.env` file to securely store settings. This file is not shared in 
 # Security: Generate a random string (e.g., using 'openssl rand -hex 32')
 SECRET_KEY=the-super-secret-key-goes-here
 
-# Database: See "Database Setup" section below for how to get this URI
+# Database: See "Database Setup" section below for how to get this URI and the password
 SQLALCHEMY_DATABASE_URI=postgresql://postgres:[PASSWORD]...
 
 # Optional: Set to 'production' only when deploying
@@ -87,7 +87,7 @@ Verve is optimized for **Supabase**, a free and powerful PostgreSQL provider.
    - Click the "Connect" button at the top of the Supabase dashboard.
    - In the modal that appears, click the "ORMs" tab.
    - In the dropdown, select "Prisma".
-3. Copy the provided `DATABASE_URL`. It will look like this: `postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres`
+3. Copy the provided `DATABASE_URL`. It will look like this: `postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres` (Port 6543 connects to a transaction pooler (Supavisor) instead of the database directly, which is essential for managing high connection loads and preventing errors in serverless environments.)
 4. Paste this URI into your `.env` file as the `SQLALCHEMY_DATABASE_URI`. Replace `[password]` with your actual database password. (If you forgot it, click the "Connect" button again, then click the "Database Settings" link at the bottom of the modal, and scroll down to "Reset database password". It's only shown once.)
 
 ## Deployment
