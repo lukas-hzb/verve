@@ -1,6 +1,6 @@
 # Verve
 
-Verve is a modern, Flask-based spaced repetition system designed to optimize vocabulary learning. It combines the scientifically proven SM2 (SuperMemo 2) algorithm with other features to create the ultimate learning companion.
+Verve is a modern, Flask-based spaced repetition system designed to optimize vocabulary learning. It combines the scientifically proven SM2 (SuperMemo 2) algorithm with other features to create the ultimate learning companion. Experience the app at [verve.hzb.app](verve.hzb.app).
 
 ## Features
 
