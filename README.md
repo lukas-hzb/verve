@@ -108,7 +108,8 @@ Supabase secrets.
 
 ## Deployment
 
-The current deployment targets Vercel through `vercel.json` and `index.py`.
+The current deployment targets Vercel through the automatically detected
+`wsgi.py` entry point. Docker and Procfile deployments use the same WSGI app.
 Container platforms can use the included `Dockerfile` instead. Configure these
 environment variables in the hosting platform:
 
