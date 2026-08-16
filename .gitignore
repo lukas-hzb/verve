@@ -49,3 +49,4 @@ build/
 # Other files
 NOTES.md
 LOGIC.md
+.vercel/
