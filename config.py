@@ -6,6 +6,7 @@ for development, testing, and production environments.
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 from sqlalchemy.pool import NullPool
 
@@ -22,9 +23,19 @@ class Config:
     # Database settings
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    PERMANENT_SESSION_LIFETIME = 365 * 24 * 60 * 60  # 1 year in seconds
+    PERMANENT_SESSION_LIFETIME = timedelta(days=1)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
+    REMEMBER_COOKIE_DURATION = timedelta(days=30)
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
+    REMEMBER_COOKIE_REFRESH_EACH_REQUEST = False
+    SESSION_REFRESH_EACH_REQUEST = False
+    WTF_CSRF_TIME_LIMIT = 2 * 60 * 60
+
+    # Google OpenID Connect (optional)
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
     
     # File upload settings
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max file size
@@ -59,10 +70,11 @@ class ProductionConfig(Config):
     
     # Secure cookies in production (HTTPS)
     SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SECURE = True
     
-    # SQLAlchemy engine options for Serverless/Supabase
+    # SQLAlchemy engine options for serverless Postgres providers such as Neon.
     # NullPool ensures that connections are not kept open between requests,
-    # which is crucial to avoid "MaxClientsReached" errors in Session mode.
+    # which avoids leaking connections across serverless invocations.
     SQLALCHEMY_ENGINE_OPTIONS = {
         "poolclass": NullPool,
         "pool_pre_ping": True,

@@ -46,8 +46,8 @@ def create_default_vocab_set() -> None:
     """
     from app.models import VocabSet, Card
     from app.data.standard_sets import HAUPTSTAEDTE_DATA
-    from datetime import datetime
     import uuid
+    from app.utils.time import utc_now
     
     # Check if default set already exists
     default_set = VocabSet.query.filter_by(name="Hauptstädte", is_shared=True).first()
@@ -62,23 +62,24 @@ def create_default_vocab_set() -> None:
             name="Hauptstädte",
             user_id=None,
             is_shared=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=utc_now(),
+            updated_at=utc_now()
         )
         db.session.add(vocab_set)
-        
-        # Create cards
-        for item in HAUPTSTAEDTE_DATA:
-            card = Card(
+
+        cards = [
+            Card(
                 id=str(uuid.uuid4()),
                 vocab_set_id=set_id,
                 front=item['front'],
                 back=item['back'],
                 level=1,
-                next_review=datetime.utcnow()
+                next_review=utc_now()
             )
-            db.session.add(card)
-        
+            for item in HAUPTSTAEDTE_DATA
+        ]
+        db.session.add_all(cards)
+
         db.session.commit()
         print(f"✓ Created default shared vocabulary set: Hauptstädte with {len(HAUPTSTAEDTE_DATA)} cards")
         

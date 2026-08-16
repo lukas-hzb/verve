@@ -5,13 +5,15 @@ This module provides the business logic for importing vocabulary sets
 from external files (CSV, TSV).
 """
 
-import csv
-import io
 import uuid
-from typing import List, Dict, Tuple
+from typing import List, Tuple
 from werkzeug.datastructures import FileStorage
 
+from app.database import db
+from app.models import Card
 from app.services.vocab_service import VocabService
+from app.utils.time import utc_now
+from app.utils.validators import validate_card_back, validate_card_front
 from app.utils.exceptions import InvalidInputError
 
 
@@ -63,7 +65,7 @@ class ImportService:
             back = parts[1].strip()
             
             if front and back:
-                cards.append((front, back))
+                cards.append((validate_card_front(front), validate_card_back(back)))
                 
         if not cards:
             raise InvalidInputError("content", "No valid vocabulary cards found")
@@ -107,11 +109,13 @@ class ImportService:
             
         except UnicodeDecodeError:
             raise InvalidInputError("file", "File must be UTF-8 encoded")
-        except Exception as e:
-            raise InvalidInputError("file", f"Error parsing file: {str(e)}")
+        except InvalidInputError:
+            raise
+        except Exception:
+            raise InvalidInputError("file", "The file could not be parsed")
 
     @staticmethod
-    def import_set(user_id: int, set_name: str, file: FileStorage = None, text_content: str = None, 
+    def import_set(user_id: str, set_name: str, file: FileStorage = None, text_content: str = None,
                   card_separator: str = '\n', field_separator: str = '\t') -> int:
         """
         Import a vocabulary set from a file or text content.
@@ -134,34 +138,28 @@ class ImportService:
         else:
             raise InvalidInputError("input", "Either file or text content must be provided")
         
-        # Create set
-        vocab_set = VocabService.create_user_set(user_id, set_name)
-        
-        # Add cards to set using chunked batch insert for Railway free tier
-        from app.models import Card
-        from app.database import db
-        
-        # Use chunked inserts to avoid Railway free tier timeouts
-        CHUNK_SIZE = 50
-        
-        for i in range(0, len(cards), CHUNK_SIZE):
-            chunk = cards[i:i + CHUNK_SIZE]
-            card_objects = [
+        unique_cards = ImportService._deduplicate(cards)
+
+        try:
+            vocab_set = VocabService.create_user_set(user_id, set_name, commit=False)
+            db.session.add_all([
                 Card(
                     id=str(uuid.uuid4()),
                     front=front,
                     back=back,
-                    vocab_set_id=vocab_set.id
+                    vocab_set_id=vocab_set.id,
                 )
-                for front, back in chunk
-            ]
-            db.session.add_all(card_objects)
-            db.session.commit()  # Commit each chunk to avoid long transactions
-        
+                for front, back in unique_cards
+            ])
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return vocab_set.id
 
     @staticmethod
-    def import_into_set(user_id: int, set_id: int, file: FileStorage = None, text_content: str = None,
+    def import_into_set(user_id: str, set_id: str, file: FileStorage = None, text_content: str = None,
                        card_separator: str = '\n', field_separator: str = '\t') -> int:
         """
         Import vocabulary cards into an existing set.
@@ -185,35 +183,45 @@ class ImportService:
             raise InvalidInputError("input", "Either file or text content must be provided")
         
         # Verify set access
-        vocab_set = VocabService.get_vocab_set(set_id, user_id)
-        
-        # Add cards to set using chunked batch insert for Railway free tier
-        from app.models import Card
-        from app.database import db
-        
+        vocab_set = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
+
         # Get existing fronts to check for duplicates
-        existing_fronts = {card.front for card in vocab_set.cards}
-        
+        existing_fronts = {
+            front for (front,) in db.session.query(Card.front).filter_by(vocab_set_id=vocab_set.id).all()
+        }
+
         # Filter out duplicates first
-        new_cards = [(front, back) for front, back in cards if front not in existing_fronts]
-        
-        # Use chunked inserts to avoid Railway free tier timeouts
-        CHUNK_SIZE = 50
-        total_added = 0
-        
-        for i in range(0, len(new_cards), CHUNK_SIZE):
-            chunk = new_cards[i:i + CHUNK_SIZE]
-            card_objects = [
-                Card(
-                    id=str(uuid.uuid4()),
-                    front=front,
-                    back=back,
-                    vocab_set_id=vocab_set.id
-                )
-                for front, back in chunk
-            ]
+        new_cards = ImportService._deduplicate(
+            (front, back) for front, back in cards if front not in existing_fronts
+        )
+
+        card_objects = [
+            Card(
+                id=str(uuid.uuid4()),
+                front=front,
+                back=back,
+                vocab_set_id=vocab_set.id,
+            )
+            for front, back in new_cards
+        ]
+        try:
             db.session.add_all(card_objects)
-            db.session.commit()  # Commit each chunk to avoid long transactions
-            total_added += len(card_objects)
-        
-        return total_added
+            vocab_set.updated_at = utc_now()
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
+        return len(card_objects)
+
+    @staticmethod
+    def _deduplicate(cards) -> List[Tuple[str, str]]:
+        """Keep the first occurrence of each card front while preserving order."""
+        unique_cards = []
+        seen_fronts = set()
+        for front, back in cards:
+            if front in seen_fronts:
+                continue
+            seen_fronts.add(front)
+            unique_cards.append((front, back))
+        return unique_cards

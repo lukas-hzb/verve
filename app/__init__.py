@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
+load_dotenv('.env.local', override=True)
 
 from config import config
 
@@ -51,8 +52,16 @@ def create_app(config_name: str = 'default') -> Flask:
     
     # Initialize Flask-Login
     setup_login_manager(app)
+
+    # Protect state-changing browser requests and add security headers.
+    from app.security import init_security
+    init_security(app)
+
+    # Initialize Google OpenID Connect
+    from app.oauth import init_oauth
+    init_oauth(app)
     
-    # Apply ProxyFix for correct URL generation behind reverse proxies (Railway/Heroku)
+    # Apply ProxyFix for correct URL generation behind the Vercel proxy.
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     
     # Register blueprints
@@ -121,6 +130,18 @@ def setup_login_manager(app: Flask) -> None:
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Bitte melden Sie sich an, um auf diese Seite zuzugreifen.'
     login_manager.login_message_category = 'error'
+    login_manager.session_protection = 'strong'
+
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        from flask import jsonify, request, redirect, url_for
+
+        if request.path.startswith('/api/'):
+            return jsonify({
+                'status': 'error',
+                'message': 'Authentication required',
+            }), 401
+        return redirect(url_for('auth.login', next=request.full_path))
 
     
     @login_manager.user_loader

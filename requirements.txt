@@ -6,6 +6,10 @@ Flask-SQLAlchemy==3.1.1
 
 # Authentication
 Flask-Login==0.6.3
+Flask-WTF==1.2.2
+Authlib==1.7.2
+bcrypt==5.0.0
+requests==2.32.5
 
 
 # Development tools (optional)
@@ -19,6 +23,3 @@ gunicorn==21.2.0
 
 # Image Processing
 Pillow==10.0.0
-
-# External Services
-supabase>=2.0.0

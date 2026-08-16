@@ -66,6 +66,7 @@
             {% endwith %}
 
             <form method="POST" action="{{ url_for('auth.register') }}" onsubmit="return validateForm()">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="card-input-group">
                     <label for="username" class="card-input-label">Username</label>
                     <input type="text" id="username" name="username" value="{{ username or '' }}" minlength="3"
@@ -100,6 +101,7 @@
                 </button>
             </form>
 
+            {% if config.GOOGLE_CLIENT_ID %}
             <div style="margin-top: var(--space-4); margin-bottom: var(--space-4); display: flex; align-items: center; gap: 10px;">
                 <div style="height: 1px; background-color: var(--color-border); flex: 1;"></div>
                 <span class="text-sm text-gray-500" style="color: var(--color-text-secondary);">or</span>
@@ -110,6 +112,7 @@
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width: 18px; height: 18px; margin-right: 8px;">
                 Sign up with Google
             </a>
+            {% endif %}
 
             <div
                 style="text-align: center; margin-top: var(--space-4); font-size: var(--font-size-base); color: var(--color-text-secondary);">

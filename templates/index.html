@@ -142,6 +142,7 @@
         </div>
         <div class="popup-body">
             <form id="createSetForm" onsubmit="handleCreateSet(event)">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="card-input-group">
                     <label for="setName" class="card-input-label">Set Name</label>
                     <input type="text" id="setName" name="setName" required pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+"

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Verve</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,6 +29,29 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/popups.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script>
+        // Add CSRF protection to every same-origin state-changing fetch request.
+        (() => {
+            const originalFetch = window.fetch.bind(window);
+            const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+            window.fetch = (input, init = {}) => {
+                const existingRequest = input instanceof Request ? input : null;
+                const url = new URL(existingRequest ? existingRequest.url : input, window.location.href);
+                const method = (init.method || existingRequest?.method || 'GET').toUpperCase();
+
+                if (url.origin === window.location.origin && unsafeMethods.has(method)) {
+                    const headers = new Headers(existingRequest?.headers || undefined);
+                    new Headers(init.headers || undefined).forEach((value, key) => headers.set(key, value));
+                    headers.set('X-CSRFToken', document.querySelector('meta[name="csrf-token"]').content);
+                    init = { ...init, headers };
+                }
+
+                return originalFetch(input, init);
+            };
+        })();
+    </script>
 </head>
 
 <body>

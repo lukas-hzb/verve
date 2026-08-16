@@ -25,8 +25,15 @@ def validate_set_name(set_name: str) -> str:
     Raises:
         InvalidInputError: If the set name is invalid
     """
+    if not isinstance(set_name, str):
+        raise InvalidInputError("set_name", "Set name must be text")
+
+    set_name = set_name.strip()
     if not set_name:
         raise InvalidInputError("set_name", "Set name cannot be empty")
+
+    if len(set_name) > 100:
+        raise InvalidInputError("set_name", "Set name is too long (max 100 characters)")
     
     # Prevent path traversal attacks
     if ".." in set_name or "/" in set_name or "\\" in set_name:
@@ -80,13 +87,42 @@ def validate_card_front(card_front: str) -> str:
     Raises:
         InvalidInputError: If the card front is invalid
     """
+    if not isinstance(card_front, str):
+        raise InvalidInputError("card_front", "Card front must be text")
+
+    card_front = card_front.strip()
     if not card_front:
         raise InvalidInputError("card_front", "Card front cannot be empty")
-    
-    if len(card_front) > 1000:
-        raise InvalidInputError("card_front", "Card front text is too long (max 1000 characters)")
-    
-    return card_front.strip()
+
+    if len(card_front) > 255:
+        raise InvalidInputError("card_front", "Card front text is too long (max 255 characters)")
+
+    return card_front
+
+
+def validate_card_back(card_back: str) -> str:
+    """Validate the answer side of a vocabulary card."""
+    if not isinstance(card_back, str):
+        raise InvalidInputError("card_back", "Card back must be text")
+
+    card_back = card_back.strip()
+    if not card_back:
+        raise InvalidInputError("card_back", "Card back cannot be empty")
+    if len(card_back) > 10_000:
+        raise InvalidInputError("card_back", "Card back text is too long (max 10000 characters)")
+    return card_back
+
+
+def validate_card_level(level: int) -> int:
+    """Validate a persisted learning level."""
+    try:
+        level = int(level)
+    except (TypeError, ValueError):
+        raise InvalidInputError("level", "Level must be an integer")
+
+    if level < 1 or level > 1000:
+        raise InvalidInputError("level", "Level must be between 1 and 1000")
+    return level
 
 
 def sanitize_path(base_dir: Path, filename: str) -> Path:
@@ -131,6 +167,10 @@ def validate_username(username: str) -> str:
     Raises:
         InvalidInputError: If the username is invalid
     """
+    if not isinstance(username, str):
+        raise InvalidInputError("username", "Username must be text")
+
+    username = username.strip()
     if not username:
         raise InvalidInputError("username", "Username cannot be empty")
     
@@ -147,7 +187,7 @@ def validate_username(username: str) -> str:
             "Username must contain only letters, numbers, and underscores"
         )
     
-    return username.strip()
+    return username
 
 
 def validate_email(email: str) -> str:
@@ -163,6 +203,10 @@ def validate_email(email: str) -> str:
     Raises:
         InvalidInputError: If the email is invalid
     """
+    if not isinstance(email, str):
+        raise InvalidInputError("email", "Email must be text")
+
+    email = email.strip().lower()
     if not email:
         raise InvalidInputError("email", "Email cannot be empty")
     
@@ -174,7 +218,7 @@ def validate_email(email: str) -> str:
     if len(email) > 120:
         raise InvalidInputError("email", "Email address is too long (max 120 characters)")
     
-    return email.strip().lower()
+    return email
 
 
 def validate_password(password: str) -> str:
@@ -202,7 +246,7 @@ def validate_password(password: str) -> str:
     return password
 
 
-def validate_set_ownership(user_id: int, vocab_set) -> None:
+def validate_set_ownership(user_id: str, vocab_set) -> None:
     """
     Validate that a user owns or has access to a vocabulary set.
     
@@ -218,4 +262,3 @@ def validate_set_ownership(user_id: int, vocab_set) -> None:
     # Allow access if the set is shared or if the user owns it
     if not vocab_set.is_shared and vocab_set.user_id != user_id:
         raise UnauthorizedAccessError("vocabulary set", vocab_set.id)
-
