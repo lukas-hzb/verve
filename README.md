@@ -6,7 +6,7 @@ Verve is a modern, Flask-based spaced repetition system designed to optimize voc
 
 - **Spaced Repetition (SM2)**: The core algorithm schedules reviews based on performance, maximizing long-term retention.
 - **Smart Import**: Vocabulary can be imported from CSV or text files with custom separators.
-- **Google Login**: One-click secure sign-in via Supabase OAuth.
+- **Google Login**: Optional one-click sign-in via Google OpenID Connect.
 - **Vocabulary Sets**: Words can be organized into custom sets (e.g., "Spanish Basics").
 - **Practice Mode**: Cards can be reviewed without affecting the spaced repetition schedule.
 - **Profile Customization**: Avatars and personal profile details are fully manageable.
@@ -27,7 +27,7 @@ Verve is a modern, Flask-based spaced repetition system designed to optimize voc
 
 ### Local Setup
 
-Ensure that **Python 3.11** or higher and **Git** are installed on your system. Then execute the following commands in the terminal:
+Ensure that **Python 3.12** and **Git** are installed on your system. Then execute the following commands in the terminal:
 
 ```bash
 # 1. Download the project
@@ -47,7 +47,8 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # 4. Configure environment
-# (Create a .env file as described in the Configuration section below)
+cp .env.example .env.local
+# Then replace the placeholders in .env.local.
 
 # 5. Start the application
 python devel.py
@@ -55,60 +56,79 @@ python devel.py
 
 ## Configuration
 
-Verve uses a `.env` file to securely store settings. This file is not shared in the code repository to protect secrets.
+Verve uses the committed `.env.example` as a safe template and `.env.local` for
+machine-specific secrets. `.env.local` is ignored by Git.
 
 **Step-by-Step:**
 
-1. Create a new file named `.env` in the root folder.
-2. Copy the content below and paste it into the file.
-3. Replace the placeholder values (like `[YOUR_DB_URI]`) with the actual credentials.
-
-```ini
-# .env file content
-
-# Security: Generate a random string (e.g., using 'openssl rand -hex 32')
-SECRET_KEY=the-super-secret-key-goes-here
-
-# Database: See "Database Setup" section below for how to get this URI and the password
-SQLALCHEMY_DATABASE_URI=postgresql://postgres:[PASSWORD]...
-
-# Optional: Set to 'production' only when deploying
-FLASK_CONFIG=development
-```
+1. Copy `.env.example` to `.env.local`.
+2. Generate a strong `SECRET_KEY`, for example with `openssl rand -hex 32`.
+3. Add the pooled Neon connection string as `SQLALCHEMY_DATABASE_URI`.
+4. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` only when Google login is enabled.
 
 ## Database Setup
 
-Verve is optimized for **Supabase**, a free and powerful PostgreSQL provider.
+Verve uses **Neon Postgres**. Application data and password hashes live in the
+same PostgreSQL database; passwords are never stored in plain text.
 
 **Step-by-Step:**
 
-1. Go to [supabase.com](https://supabase.com) and create a new project.
-2. Get Credentials:
-   - Click the "Connect" button at the top of the Supabase dashboard.
-   - In the modal that appears, click the "ORMs" tab.
-   - In the dropdown, select "Prisma".
-3. Copy the provided `DATABASE_URL`. It will look like this: `postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres` (Port 6543 connects to a transaction pooler (Supavisor) instead of the database directly, which is essential for managing high connection loads and preventing errors in serverless environments.)
-4. Paste this URI into your `.env` file as the `SQLALCHEMY_DATABASE_URI`. Replace `[password]` with your actual database password. (If you forgot it, click the "Connect" button again, then click the "Database Settings" link at the bottom of the modal, and scroll down to "Reset database password". It's only shown once.)
+1. Create a project at [neon.com](https://neon.com).
+2. Open **Connect** in the Neon dashboard.
+3. Enable **Connection pooling** for application/serverless traffic.
+4. Copy the connection string into `.env.local` as `SQLALCHEMY_DATABASE_URI`.
+5. Keep `sslmode=require` in the connection string.
+
+Use a direct, non-pooled connection only for schema and data migrations.
+
+After creating or importing the database, apply the idempotent constraints and
+indexes with:
+
+```bash
+python scripts/apply_neon_schema.py
+```
+
+The script automatically converts a configured pooled Neon endpoint to its
+direct migration endpoint and verifies every applied index and constraint.
+
+### Migrating an existing Supabase database
+
+Keep the old Supabase URL in `SQLALCHEMY_DATABASE_URI` temporarily, install the
+dependencies, and run:
+
+```bash
+python scripts/migrate_to_neon.py
+```
+
+Enter the direct Neon URL at the hidden prompt. The migration copies users,
+password hashes, Google identity links, vocabulary sets, and cards, then verifies
+row counts and foreign-key integrity. After it succeeds, replace the deployment
+and local `SQLALCHEMY_DATABASE_URI` with the pooled Neon URL and remove all old
+Supabase secrets.
 
 ## Deployment
 
-Deployment is straightforward. Most services automatically detect the `Dockerfile` and deploy directly from GitHub. You only need to manually configure the `FLASK_CONFIG` (needs to be `production`), `DATABASE_URL`, and `SECRET_KEY` environment variables, using the values from your local `.env` file. Note that some platforms, such as Vercel, may require specific configuration files (e.g., `vercel.json`).
+The current deployment targets Vercel through `vercel.json` and `index.py`.
+Container platforms can use the included `Dockerfile` instead. Configure these
+environment variables in the hosting platform:
 
-| Platform                               | Pros                                                   | Cons                                                    |
-| :------------------------------------- |  :----------------------------------------------------- | :------------------------------------------------------ |
-| **[Koyeb](https://www.koyeb.com/)** | User-friendly interface, simple setup, robust feature set. | Custom domains require a paid plan.                     |
-| **[Railway](https://railway.app/)** | User-friendly interface, simple setup, robust feature set. | Custom domains require a paid plan.                     |
-| **[Vercel](https://vercel.com/)**   | Includes custom domain support on the free tier.       | Less intuitive interface, very slow connection in free tier. |
+- `FLASK_CONFIG=production`
+- `SQLALCHEMY_DATABASE_URI` with the pooled Neon URL
+- `SECRET_KEY` with a long random value
+- Optional: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
+
+Schema and data migrations must use the direct Neon endpoint and should be run
+separately from application startup.
 
 ## Tech Stack
 
 | Layer              | Technology  | Version |
 | :----------------- | :---------- | :------ |
 | **Backend**  | Flask       | 2.3.3   |
-| **Language** | Python      | 3.11    |
-| **Database** | PostgreSQL  | -       |
-| **ORM**      | SQLAlchemy  | 3.1.1   |
-| **Auth**     | Flask-Login | 0.6.3   |
+| **Language** | Python      | 3.12    |
+| **Database** | Neon Postgres | -     |
+| **ORM**      | Flask-SQLAlchemy | 3.1.1 |
+| **Auth**     | Flask-Login / Authlib | 0.6.3 / 1.7.2 |
 | **Server**   | Gunicorn    | 21.2.0  |
 
 ## Credits

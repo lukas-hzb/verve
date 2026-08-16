@@ -8,9 +8,13 @@ from sqlalchemy import create_engine, text
 # Load .env from project root
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env.local', override=True)
 
 uri = os.getenv('SQLALCHEMY_DATABASE_URI')
-print(f"Loaded URI: {uri.split('@')[1] if '@' in uri else 'INVALID URI'}") # Don't print password
+if not uri:
+    raise RuntimeError('SQLALCHEMY_DATABASE_URI is not configured')
+
+print(f"Loaded endpoint: {uri.rsplit('@', 1)[-1]}")  # Never print credentials.
 
 try:
     print("Attempting to connect...")

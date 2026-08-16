@@ -138,6 +138,7 @@
 
         <div class="card-normal">
             <form id="profile-form" onsubmit="handleProfileUpdate(event)">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <h3 class="card-normal-title">Username</h3>
                 <div class="card-input-group" style="margin-bottom: var(--space-6);">
@@ -176,10 +177,15 @@
         <p class="card-attention-text" style="color: var(--color-text-muted); margin-bottom: var(--space-4);">Actions in
             this section can affect your account security.</p>
         <div class="button-group">
+            {% if current_user.password_hash %}
             <a href="{{ url_for('auth.change_password') }}" class="btn-danger-secondary"
                 style="justify-content: center; text-decoration: none;">Change Password</a>
-            <a href="{{ url_for('auth.logout') }}" class="btn-danger-secondary"
-                style="justify-content: center; text-decoration: none;">Logout</a>
+            {% endif %}
+            <form action="{{ url_for('auth.logout') }}" method="POST" style="display: contents;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-danger-secondary"
+                    style="justify-content: center;">Logout</button>
+            </form>
             <button type="button" class="btn-danger" onclick="openDeleteModal()">Delete Account</button>
         </div>
     </div>
@@ -198,6 +204,7 @@
         <div class="popup-footer">
             <button type="button" class="btn-danger-secondary" onclick="closeDeleteModal()">Cancel</button>
             <form action="{{ url_for('auth.delete_account') }}" method="POST" style="display: contents;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn-danger">Delete Account</button>
             </form>
         </div>

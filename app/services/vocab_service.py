@@ -4,46 +4,89 @@ Adapted for SQLAlchemy.
 """
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Dict, Optional
+
+from sqlalchemy import case, func
+from sqlalchemy.exc import IntegrityError
 
 from app.database import db
 from app.models import VocabSet, Card
 from app.services.sm2_algorithm import calculate_next_review, get_initial_interval_for_level
-from app.utils.validators import validate_set_name, validate_quality_score, validate_card_front, validate_set_ownership
-from app.utils.exceptions import VocabSetNotFoundError, CardNotFoundError, UnauthorizedAccessError
+from app.utils.time import utc_now
+from app.utils.validators import (
+    validate_card_back,
+    validate_card_front,
+    validate_card_level,
+    validate_quality_score,
+    validate_set_name,
+    validate_set_ownership,
+)
+from app.utils.exceptions import (
+    CardNotFoundError,
+    InvalidInputError,
+    UnauthorizedAccessError,
+    VocabSetNotFoundError,
+)
 
 class VocabService:
     
     @staticmethod
     def get_all_set_names(user_id: str) -> List[Dict]:
-        # Get user sets
-        user_sets = VocabSet.query.filter_by(user_id=user_id).all()
-        
+        """Return all sidebar sets with statistics in two queries, not N+1."""
+        user_sets = VocabSet.query.filter_by(user_id=user_id).order_by(VocabSet.created_at).all()
+        if not user_sets:
+            return []
+
+        now = utc_now()
+        set_ids = [vocab_set.id for vocab_set in user_sets]
+        statistic_rows = db.session.query(
+            Card.vocab_set_id,
+            Card.level,
+            func.count(Card.id),
+            func.sum(case((Card.next_review <= now, 1), else_=0)),
+        ).filter(Card.vocab_set_id.in_(set_ids)).group_by(
+            Card.vocab_set_id,
+            Card.level,
+        ).all()
+
+        statistics = {
+            set_id: {'card_count': 0, 'due_count': 0, 'level_counts': {}}
+            for set_id in set_ids
+        }
+        for set_id, level, card_count, due_count in statistic_rows:
+            statistics[set_id]['card_count'] += card_count
+            statistics[set_id]['due_count'] += due_count or 0
+            statistics[set_id]['level_counts'][level] = card_count
+
         result = []
-        for vset in user_sets:
-            stats = vset.get_statistics()
+        for vocab_set in user_sets:
+            stats = statistics[vocab_set.id]
             level_counts = stats['level_counts']
-            max_level = max(level_counts.items(), key=lambda x: x[1])[0] if level_counts else 1
-            
+            max_level = max(level_counts, key=level_counts.get) if level_counts else 1
             result.append({
-                'id': vset.id,
-                'name': vset.name,
-                'is_shared': vset.is_shared,
-                'card_count': stats['total_cards'],
-                'due_count': stats['due_cards'],
+                'id': vocab_set.id,
+                'name': vocab_set.name,
+                'is_shared': vocab_set.is_shared,
+                'card_count': stats['card_count'],
+                'due_count': stats['due_count'],
                 'level_counts': level_counts,
                 'max_level': max_level
             })
         return result
 
     @staticmethod
-    def get_vocab_set(set_id: str, user_id: str) -> VocabSet:
-        vset = VocabSet.query.get(set_id)
+    def get_vocab_set(set_id: str, user_id: str, *, require_owner: bool = False) -> VocabSet:
+        """Load a set and enforce either readable or owner-only access."""
+        vset = db.session.get(VocabSet, set_id)
         if not vset:
             raise VocabSetNotFoundError(f"Set ID {set_id}")
-            
-        validate_set_ownership(user_id, vset)
+
+        if require_owner:
+            if vset.user_id != user_id:
+                raise UnauthorizedAccessError("vocabulary set", set_id)
+        else:
+            validate_set_ownership(user_id, vset)
         return vset
 
     @staticmethod
@@ -66,19 +109,12 @@ class VocabService:
     def get_due_cards(set_id: str, user_id: str) -> List[Dict]:
         vset = VocabService.get_vocab_set(set_id, user_id)
         cards = vset.get_due_cards()
-        # Sort by shuffle_order if present, putting None at the end
-        cards.sort(key=lambda x: (x.shuffle_order is None, x.shuffle_order))
         return [c.to_dict() for c in cards]
 
     @staticmethod
     def get_all_cards(set_id: str, user_id: str, wrong_only: bool = False) -> List[Dict]:
         vset = VocabService.get_vocab_set(set_id, user_id)
-        cards = vset.get_all_cards()
-        if wrong_only:
-            cards = [c for c in cards if c.last_practice_wrong or c.level == 1]
-        
-        # Sort by shuffle_order if present, putting None at the end
-        cards.sort(key=lambda x: (x.shuffle_order is None, x.shuffle_order))
+        cards = vset.get_all_cards(wrong_only=wrong_only)
         return [c.to_dict() for c in cards]
 
     @staticmethod
@@ -86,7 +122,7 @@ class VocabService:
         card_front = validate_card_front(card_front)
         quality = validate_quality_score(quality)
         
-        vset = VocabService.get_vocab_set(set_id, user_id)
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
         card = vset.find_card(card_front)
         
         if not card:
@@ -100,16 +136,15 @@ class VocabService:
         )
         
         # Calculate next review time
-        next_review = datetime.utcnow() + timedelta(days=interval_days)
+        next_review = utc_now() + timedelta(days=interval_days)
         
         # Update card
         card.level = new_level
         card.next_review = next_review
         
         # Update set updated_at
-        vset.updated_at = datetime.utcnow()
-        
-        db.session.commit()
+        vset.updated_at = utc_now()
+        VocabService._commit()
         
         return {
             'status': 'success',
@@ -121,40 +156,32 @@ class VocabService:
 
     @staticmethod
     def delete_card(set_id: str, card_id: str, user_id: str) -> None:
-        vset = VocabService.get_vocab_set(set_id, user_id) # checks access
-        
-        card = Card.query.get(card_id)
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
+
+        card = Card.query.filter_by(id=card_id, vocab_set_id=set_id).first()
         if not card:
-            raise ValueError("Card not found")
-            
-        if card.vocab_set_id != set_id:
-             raise ValueError("Card not in this set")
-             
+            raise CardNotFoundError(card_id, vset.name)
+
         db.session.delete(card)
-        vset.updated_at = datetime.utcnow()
-        db.session.commit()
+        vset.updated_at = utc_now()
+        VocabService._commit()
 
     @staticmethod
     def rename_set(set_id: str, new_name: str, user_id: str) -> VocabSet:
-        vset = VocabService.get_vocab_set(set_id, user_id)
-        
-        if vset.user_id != user_id:
-            raise ValueError("Access denied")
-            
-        validate_set_name(new_name)
-        
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
+        new_name = validate_set_name(new_name)
+
         vset.name = new_name
-        vset.updated_at = datetime.utcnow()
-        db.session.commit()
+        vset.updated_at = utc_now()
+        VocabService._commit()
         return vset
 
     @staticmethod
-    def create_user_set(user_id: str, set_name: str) -> VocabSet:
+    def create_user_set(user_id: str, set_name: str, *, commit: bool = True) -> VocabSet:
         set_name = validate_set_name(set_name)
         
         # Check existing
         if VocabSet.query.filter_by(name=set_name, user_id=user_id).first():
-            from app.utils.exceptions import InvalidInputError
             raise InvalidInputError("set_name", "Set exists")
             
         vset = VocabSet(
@@ -162,21 +189,28 @@ class VocabService:
             name=set_name,
             user_id=user_id,
             is_shared=False,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=utc_now(),
+            updated_at=utc_now()
         )
         db.session.add(vset)
-        db.session.commit()
+        try:
+            if commit:
+                VocabService._commit()
+            else:
+                db.session.flush()
+        except IntegrityError:
+            db.session.rollback()
+            raise InvalidInputError("set_name", "Set exists")
         return vset
 
     @staticmethod
     def add_card(set_id: str, front: str, back: str, user_id: str) -> Card:
         front = validate_card_front(front)
-        
-        vset = VocabService.get_vocab_set(set_id, user_id)
+        back = validate_card_back(back)
+
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
         if vset.find_card(front):
-             from app.utils.exceptions import InvalidInputError
-             raise InvalidInputError("front", "Card exists")
+            raise InvalidInputError("front", "Card exists")
              
         card = Card(
             id=str(uuid.uuid4()),
@@ -184,28 +218,24 @@ class VocabService:
             front=front,
             back=back,
             level=1,
-            next_review=datetime.utcnow()
+            next_review=utc_now()
         )
         db.session.add(card)
         
-        vset.updated_at = datetime.utcnow()
-        db.session.commit()
+        vset.updated_at = utc_now()
+        VocabService._commit()
         return card
 
     @staticmethod
     def delete_set(set_id: str, user_id: str) -> Dict:
-        vset = VocabService.get_vocab_set(set_id, user_id)
-        
-        # Access check
-        if not vset.is_shared and vset.user_id != user_id:
-            raise UnauthorizedAccessError("vocabulary set", set_id)
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
         
         # Bulk delete cards first (faster than cascade for large sets)
         Card.query.filter_by(vocab_set_id=set_id).delete(synchronize_session=False)
         
         # Now delete the set
         db.session.delete(vset)
-        db.session.commit()
+        VocabService._commit()
         
         return {'status': 'success'}
 
@@ -218,16 +248,16 @@ class VocabService:
     @staticmethod
     def reset_set(set_id: str, user_id: str) -> Dict:
         """Reset all cards in a set to level 1."""
-        vset = VocabService.get_vocab_set(set_id, user_id)
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
         
         # Bulk update all cards (faster than iterating for large sets)
         count = Card.query.filter_by(vocab_set_id=set_id).update(
-            {'level': 1, 'next_review': datetime.utcnow()},
+            {'level': 1, 'next_review': utc_now()},
             synchronize_session=False
         )
         
-        vset.updated_at = datetime.utcnow()
-        db.session.commit()
+        vset.updated_at = utc_now()
+        VocabService._commit()
         
         return {'status': 'success', 'message': f'Reset {count} cards to level 1'}
 
@@ -235,39 +265,36 @@ class VocabService:
     def restore_card(set_id: str, card_front: str, level: int, next_review: str, user_id: str) -> Dict:
         """Restore a card to a previous state (for undo functionality)."""
         card_front = validate_card_front(card_front)
-        
-        vset = VocabService.get_vocab_set(set_id, user_id)
+        level = validate_card_level(level)
+
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
         card = vset.find_card(card_front)
         
         if not card:
             raise CardNotFoundError(card_front, vset.name)
         
-        # Parse next_review from ISO format or use as is
+        # Parse next_review from ISO format or use as is.
         if isinstance(next_review, str):
             try:
-                # Handle ISO format string
+                from datetime import datetime
                 next_review_date = datetime.fromisoformat(next_review.replace('Z', '+00:00'))
             except ValueError:
-                # Fallback if format is different
-                next_review_date = datetime.utcnow()
+                raise InvalidInputError('next_review', 'Invalid ISO date')
         else:
             next_review_date = next_review
 
-        # Ensure naive datetime for SQLAlchemy if needed, or stick to UTC convention
-        # We are using utcnow() everywhere, so we should convert to naive UTC or keep offset aware if DB supports it.
-        # SQLite acts weird with TZs, Postgres is better. 
-        # Safest is to strip TZ if present and assume UTC, or rely on drivers.
-        # For this implementation, I'll rely on the object logic.
-        
+        if not hasattr(next_review_date, 'tzinfo'):
+            raise InvalidInputError('next_review', 'Invalid date value')
         if next_review_date.tzinfo:
-            next_review_date = next_review_date.replace(tzinfo=None)
+            from datetime import UTC
+            next_review_date = next_review_date.astimezone(UTC).replace(tzinfo=None)
 
         
         card.level = level
         card.next_review = next_review_date
         
-        vset.updated_at = datetime.utcnow()
-        db.session.commit()
+        vset.updated_at = utc_now()
+        VocabService._commit()
         
         return {
             'status': 'success',
@@ -279,15 +306,15 @@ class VocabService:
         """Mark a card as answered incorrectly in practice mode."""
         card_front = validate_card_front(card_front)
         
-        vset = VocabService.get_vocab_set(set_id, user_id)
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
         card = vset.find_card(card_front)
         
         if not card:
             raise CardNotFoundError(card_front, vset.name)
         
         card.last_practice_wrong = True
-        vset.updated_at = datetime.utcnow()
-        db.session.commit()
+        vset.updated_at = utc_now()
+        VocabService._commit()
         
         return {
             'status': 'success',
@@ -299,15 +326,15 @@ class VocabService:
         """Mark a card as answered correctly in practice mode."""
         card_front = validate_card_front(card_front)
         
-        vset = VocabService.get_vocab_set(set_id, user_id)
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
         card = vset.find_card(card_front)
         
         if not card:
             raise CardNotFoundError(card_front, vset.name)
         
         card.last_practice_wrong = False
-        vset.updated_at = datetime.utcnow()
-        db.session.commit()
+        vset.updated_at = utc_now()
+        VocabService._commit()
         
         return {
             'status': 'success',
@@ -324,21 +351,36 @@ class VocabService:
             card_ids: List of card IDs in the desired order
             user_id: The ID of the requesting user
         """
-        vset = VocabService.get_vocab_set(set_id, user_id)
-        
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
+        if not isinstance(card_ids, list) or not all(isinstance(card_id, str) for card_id in card_ids):
+            raise InvalidInputError('card_ids', 'card_ids must be a list of IDs')
+        if len(card_ids) != len(set(card_ids)):
+            raise InvalidInputError('card_ids', 'card_ids must not contain duplicates')
+
         # Verify all cards belong to the set and update their order
         # We fetch all cards to minimize DB queries
         all_cards = {c.id: c for c in vset.get_all_cards()}
         
-        updated_count = 0
+        unknown_ids = set(card_ids) - set(all_cards)
+        if unknown_ids:
+            raise InvalidInputError('card_ids', 'One or more cards do not belong to this set')
+
         for index, card_id in enumerate(card_ids):
-            if card_id in all_cards:
-                all_cards[card_id].shuffle_order = index
-                updated_count += 1
-                
-        db.session.commit()
+            all_cards[card_id].shuffle_order = index
+
+        vset.updated_at = utc_now()
+        VocabService._commit()
         
         return {
             'status': 'success',
-            'updated_count': updated_count
+            'updated_count': len(card_ids)
         }
+
+    @staticmethod
+    def _commit() -> None:
+        """Commit one service operation and leave no failed transaction behind."""
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise

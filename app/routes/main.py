@@ -5,12 +5,17 @@ This blueprint handles the main page routes for the Verve application.
 Now with user authentication support.
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 
 from app.services import VocabService
 from app.services.import_service import ImportService
-from app.utils.exceptions import InvalidInputError
+from app.utils.exceptions import (
+    CardNotFoundError,
+    InvalidInputError,
+    UnauthorizedAccessError,
+    VocabSetNotFoundError,
+)
 
 
 main_bp = Blueprint('main', __name__)
@@ -85,8 +90,9 @@ def import_set():
         except InvalidInputError as e:
             flash(str(e), "error")
             return redirect(request.url)
-        except Exception as e:
-            flash(f"An error occurred: {str(e)}", "error")
+        except Exception:
+            current_app.logger.exception('Vocabulary set import failed')
+            flash("The import failed. Please try again.", "error")
             return redirect(request.url)
             
     sets = VocabService.get_all_set_names(current_user.id)
@@ -122,7 +128,7 @@ def learn_set(set_id: str):
             sidebar_collapsed=sidebar_collapsed,
             current_user=current_user
         )
-    except Exception as e:
+    except (VocabSetNotFoundError, UnauthorizedAccessError):
         return redirect(url_for('main.index'))
 
 
@@ -148,7 +154,7 @@ def stats(set_id: str):
             sidebar_collapsed=sidebar_collapsed,
             current_user=current_user
         )
-    except Exception as e:
+    except (VocabSetNotFoundError, UnauthorizedAccessError):
         return redirect(url_for('main.index'))
 
 
@@ -172,11 +178,7 @@ def set_overview(set_id: str):
             sidebar_collapsed=sidebar_collapsed,
             current_user=current_user,
         )
-    except Exception as e:
-        import sys
-        import traceback
-        sys.stderr.write(f"DEBUG: Error in set_overview: {str(e)}\n")
-        traceback.print_exc()
+    except (VocabSetNotFoundError, UnauthorizedAccessError):
         return redirect(url_for('main.index'))
 
 # Re-add the original add_card route
@@ -185,7 +187,9 @@ def set_overview(set_id: str):
 def add_card(set_id: str):
     """Add a new card to a vocabulary set."""
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({"error": "JSON body required"}), 400
         front = data.get("front")
         back = data.get("back")
         
@@ -200,8 +204,13 @@ def add_card(set_id: str):
         })
     except InvalidInputError as e:
         return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except (VocabSetNotFoundError, CardNotFoundError) as e:
+        return jsonify({"error": str(e)}), 404
+    except UnauthorizedAccessError as e:
+        return jsonify({"error": str(e)}), 403
+    except Exception:
+        current_app.logger.exception('Adding a card failed')
+        return jsonify({"error": "Adding the card failed"}), 500
 
 @main_bp.route("/set/<string:set_id>/delete", methods=["POST"])
 @login_required
@@ -211,8 +220,12 @@ def delete_set(set_id: str):
         VocabService.delete_set(set_id, current_user.id)
         flash("Set successfully deleted.", "success")
         return redirect(url_for('main.index'))
-    except Exception as e:
-        flash(f"Error deleting set: {str(e)}", "error")
+    except (VocabSetNotFoundError, UnauthorizedAccessError) as e:
+        flash(str(e), "error")
+        return redirect(url_for('main.index'))
+    except Exception:
+        current_app.logger.exception('Deleting a vocabulary set failed')
+        flash("Deleting the set failed. Please try again.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
@@ -229,8 +242,12 @@ def rename_set(set_id: str):
         VocabService.rename_set(set_id, new_name, current_user.id)
         flash("Set renamed successfully!", "success")
         return redirect(url_for('main.set_overview', set_id=set_id))
-    except Exception as e:
-        flash(f"Error renaming: {str(e)}", "error")
+    except (InvalidInputError, VocabSetNotFoundError, UnauthorizedAccessError) as e:
+        flash(str(e), "error")
+        return redirect(url_for('main.set_overview', set_id=set_id))
+    except Exception:
+        current_app.logger.exception('Renaming a vocabulary set failed')
+        flash("Renaming the set failed. Please try again.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
@@ -276,12 +293,12 @@ def import_into_set(set_id: str):
         
         flash(f"{count} cards imported successfully!", "success")
         return redirect(url_for('main.set_overview', set_id=set_id))
-    except Exception as e:
-        import sys
-        import traceback
-        sys.stderr.write(f"DEBUG: Error in import_into_set: {str(e)}\n")
-        traceback.print_exc()
-        flash(f"Error importing: {str(e)}", "error")
+    except (InvalidInputError, VocabSetNotFoundError, UnauthorizedAccessError) as e:
+        flash(str(e), "error")
+        return redirect(url_for('main.set_overview', set_id=set_id))
+    except Exception:
+        current_app.logger.exception('Import into vocabulary set failed')
+        flash("The import failed. Please try again.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
@@ -292,5 +309,10 @@ def delete_card(set_id: str, card_id: str):
     try:
         VocabService.delete_card(set_id, card_id, current_user.id)
         return jsonify({"message": "Card deleted successfully"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except (VocabSetNotFoundError, CardNotFoundError) as e:
+        return jsonify({"error": str(e)}), 404
+    except UnauthorizedAccessError as e:
+        return jsonify({"error": str(e)}), 403
+    except Exception:
+        current_app.logger.exception('Deleting a card failed')
+        return jsonify({"error": "Deleting the card failed"}), 500
