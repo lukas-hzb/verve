@@ -18,6 +18,7 @@ from sqlalchemy.pool import NullPool
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 load_dotenv(PROJECT_ROOT / '.env')
+load_dotenv(PROJECT_ROOT / '.env.local', override=True)
 
 from app.database import db  # noqa: E402
 from app.data.standard_sets import HAUPTSTAEDTE_DATA  # noqa: E402
@@ -190,7 +191,10 @@ def main() -> int:
 
     source_url = os.environ.get('SQLALCHEMY_DATABASE_URI')
     if not source_url:
-        raise RuntimeError('SQLALCHEMY_DATABASE_URI is missing from .env; the Supabase source is required.')
+        raise RuntimeError(
+            'SQLALCHEMY_DATABASE_URI is missing from .env or .env.local; '
+            'the Supabase source is required.'
+        )
 
     target_url = args.target_url or getpass.getpass('Neon database URL: ')
     if not target_url:
