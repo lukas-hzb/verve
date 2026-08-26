@@ -1,0 +1,74 @@
+name: Bug report
+description: Report reproducible behavior that is not working as expected.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Do not include credentials, personal data, or security vulnerabilities. Report security issues privately through the repository's Security tab.
+  - type: input
+    id: version
+    attributes:
+      label: Affected version
+      description: Name the hosted deployment, commit, or date when you observed the problem.
+      placeholder: Hosted application on 2026-08-26 or commit 0123abc
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include browser, browser version, operating system, and device type.
+      placeholder: Firefox 142 on Windows 11 desktop
+    validations:
+      required: true
+  - type: dropdown
+    id: authentication
+    attributes:
+      label: Sign-in method
+      options:
+        - Not relevant
+        - Local Verve account
+        - Google sign-in
+        - Not signed in
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem
+      description: Describe what happened and which feature is affected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Open ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Additional context
+      description: Add sanitized logs, screenshots, or sample input. Remove credentials and personal information first.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: This report does not contain a security vulnerability or sensitive data.
+          required: true
