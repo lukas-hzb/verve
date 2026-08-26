@@ -1,6 +1,6 @@
 # Verve
 
-Verve is a modern, Flask-based spaced repetition system designed to optimize vocabulary learning. It combines the scientifically proven SM2 (SuperMemo 2) algorithm with other features to create the ultimate learning companion. Experience the app at [verve.hzb.app](https://verve.hzb.app).
+Verve is a Flask-based spaced-repetition web application for vocabulary learning. It combines SM-2-style review scheduling with vocabulary sets, imports, practice sessions, and progress statistics. The hosted application is available at [verve.hzb.app](https://verve.hzb.app).
 
 ## Features
 
@@ -27,12 +27,12 @@ Verve is a modern, Flask-based spaced repetition system designed to optimize voc
 
 ### Local Setup
 
-Ensure that **Python 3.12** and **Git** are installed on your system. Then execute the following commands in the terminal:
+Install **Python 3.12** and **Git** first. The commands below use `python`; on systems where Python 3 is exposed as `python3` or `py -3.12`, use that command consistently instead.
 
 ```bash
 # 1. Download the project
 git clone https://github.com/lukas-hzb/verve.git
-cd Verve
+cd verve
 
 # 2. Create and activate virtual environment
 python -m venv .venv
@@ -44,7 +44,7 @@ python -m venv .venv
 # source .venv/bin/activate
 
 # 3. Install dependencies
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
 # 4. Configure environment
 cp .env.example .env.local
@@ -53,6 +53,15 @@ cp .env.example .env.local
 # 5. Start the application
 python devel.py
 ```
+
+The development server listens on `http://127.0.0.1:8080` by default. Change `FLASK_HOST` or `FLASK_PORT` in `.env.local` when needed.
+
+## Usage
+
+1. Register a local account or use Google sign-in when the deployment has OpenID Connect configured.
+2. Create a vocabulary set or import cards from a supported text or CSV file.
+3. Start a scheduled review to update the repetition plan, or use practice mode without changing it.
+4. Review set-level progress and statistics from the dashboard.
 
 ## Configuration
 
@@ -106,6 +115,16 @@ row counts and foreign-key integrity. After it succeeds, replace the deployment
 and local `SQLALCHEMY_DATABASE_URI` with the pooled Neon URL and remove all old
 Supabase secrets.
 
+## Tests
+
+The test suite uses an isolated temporary SQLite database and does not require Neon credentials:
+
+```bash
+python -m unittest discover -s tests
+```
+
+Run the tests after changing authentication, imports, database models, security headers, or API behavior.
+
 ## Deployment
 
 The current deployment targets Vercel through the automatically detected
@@ -120,6 +139,13 @@ environment variables in the hosting platform:
 
 Schema and data migrations must use the direct Neon endpoint and should be run
 separately from application startup.
+
+## Data and External Services
+
+- Account data, password hashes, vocabulary sets, cards, and learning progress are stored in the configured database.
+- Google OpenID Connect is optional and is contacted only when it is configured and a user chooses Google sign-in.
+- The interface loads Google-hosted fonts and the Google sign-in mark from external URLs.
+- Database credentials, session secrets, and OAuth credentials belong in `.env.local` or protected deployment secrets and must never be committed.
 
 ## Tech Stack
 
@@ -143,11 +169,11 @@ Verve is built using the following projects and resources:
 
 ## License
 
-This project is proprietary software protected by international copyright law.
+This project is proprietary source-available software protected by copyright law. Private, personal, educational, and informational use is permitted only under the conditions in [LICENSE](LICENSE); redistribution and commercial use require prior written permission.
 
 Persona Non Grata:
 Daniel Harzbecker is expressly and unconditionally excluded from any license or permission to use this software. Any access, use, or reproduction by this individual does not constitute a license and shall be deemed a willful infringement of intellectual property rights.
 
-For full legal terms, see [LICENSE](LICENSE).
+Third-party packages and resources remain subject to their respective license terms.
 
 Copyright (c) 2026 Lukas Harzbecker. All Rights Reserved.
