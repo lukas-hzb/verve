@@ -1,8 +1,12 @@
-# Verve
+<h1 align="center">Verve</h1>
 
-[![CI](https://github.com/lukas-hzb/verve/actions/workflows/ci.yml/badge.svg)](https://github.com/lukas-hzb/verve/actions/workflows/ci.yml)
+<p align="center">
+  A Flask-based spaced-repetition web app for vocabulary learning with SM-2 reviews, imports, practice, and statistics.
+</p>
 
-A Flask-based spaced-repetition web app for vocabulary learning with SM-2 reviews, imports, practice, and statistics.
+<p align="center">
+  <a href="https://github.com/lukas-hzb/verve/actions/workflows/ci.yml"><img src="https://github.com/lukas-hzb/verve/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
+</p>
 
 Verve combines adaptive review scheduling with vocabulary sets, bulk imports, schedule-independent practice sessions, and progress statistics in one hosted application. Use Verve at [verve.hzb.app](https://verve.hzb.app).
 
