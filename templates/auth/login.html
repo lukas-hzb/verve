@@ -145,7 +145,7 @@
                     <input type="password" id="password" name="password" class="card-input" required minlength="8" autocomplete="{{ 'current-password' if mode == 'login' else 'new-password' }}">
                 </div>
                 {% if mode == 'login' %}
-                <div style="text-align: right; font-size: var(--font-size-sm);">
+                <div style="text-align: center; font-size: var(--font-size-sm);">
                     <button type="button" id="forgot-password" class="auth-link">Forgot password?</button>
                 </div>
                 {% endif %}
