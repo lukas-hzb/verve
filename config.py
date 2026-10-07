@@ -29,16 +29,11 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    REMEMBER_COOKIE_DURATION = timedelta(days=30)
-    REMEMBER_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_SAMESITE = 'Lax'
-    REMEMBER_COOKIE_REFRESH_EACH_REQUEST = False
     SESSION_REFRESH_EACH_REQUEST = False
     WTF_CSRF_TIME_LIMIT = 2 * 60 * 60
 
-    # Google OpenID Connect (optional)
-    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
-    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET')
+    # Managed Neon Auth URL for the same database branch.
+    NEON_AUTH_BASE_URL = os.environ.get('NEON_AUTH_BASE_URL', '')
     
     # File upload settings
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max file size
@@ -60,7 +55,7 @@ class Config:
 class DevelopmentConfig(Config):
     """Development environment configuration."""
     
-    DEBUG = True
+    DEBUG = False
     TESTING = False
     LOG_LEVEL = "DEBUG"
 
@@ -73,7 +68,6 @@ class ProductionConfig(Config):
     
     # Secure cookies in production (HTTPS)
     SESSION_COOKIE_SECURE = True
-    REMEMBER_COOKIE_SECURE = True
     
     # SQLAlchemy engine options for serverless Postgres providers such as Neon.
     # NullPool ensures that connections are not kept open between requests,

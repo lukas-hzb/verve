@@ -50,3 +50,6 @@ build/
 NOTES.md
 LOGIC.md
 .vercel/
+
+# Browser SDK build dependencies
+node_modules/

@@ -5,165 +5,61 @@ This module provides routes for user authentication including
 registration, login, and logout functionality.
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
-from flask_login import login_user, logout_user, login_required, current_user
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, g
+from flask_login import login_required, current_user
 
 from app.services import UserService, VocabService
 from app.security import is_safe_redirect_target
-from app.utils.exceptions import UserAlreadyExistsError, InvalidCredentialsError, InvalidInputError
+from app.utils.exceptions import UserAlreadyExistsError, InvalidInputError
 
 
 # Create blueprint
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-@auth_bp.route('/register', methods=['GET', 'POST'])
-def register():
-    """User registration page."""
-    # Redirect if already logged in
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    
-    if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip()
-        password = request.form.get('password', '')
-        password_confirm = request.form.get('password_confirm', '')
-        
-        try:
-            # Validate password confirmation
-            if password != password_confirm:
-                flash('Passwords do not match.', 'error')
-                return render_template('auth/register.html', 
-                                     username=username, 
-                                     email=email)
-            
-            # Create user
-            user = UserService.create_user(username, email, password)
-
-            session.clear()
-            # Auto-login after registration
-            login_user(user, remember=True)
-            
-            flash(f'Welcome {username}! Your account was created successfully.', 'success')
-            return redirect(url_for('main.index'))
-            
-        except UserAlreadyExistsError as e:
-            flash(str(e), 'error')
-            return render_template('auth/register.html', 
-                                 username=username, 
-                                 email=email)
-        except InvalidInputError as e:
-            flash(str(e), 'error')
-            return render_template('auth/register.html', 
-                                 username=username, 
-                                 email=email)
-        except Exception:
-            current_app.logger.exception('User registration failed')
-            flash('Account creation failed. Please try again.', 'error')
-            return render_template('auth/register.html', 
-                                 username=username, 
-                                 email=email)
-    
-    return render_template('auth/register.html')
-
-
-@auth_bp.route('/login/google')
-def login_google():
-    """Start a direct Google OpenID Connect login."""
-    from app.oauth import oauth
-
-    if not current_app.config.get('GOOGLE_CLIENT_ID') or not current_app.config.get('GOOGLE_CLIENT_SECRET'):
-        flash('Google login is not configured yet.', 'error')
-        return redirect(url_for('auth.login'))
-
-    callback_url = url_for('auth.auth_callback', _external=True)
-    return oauth.google.authorize_redirect(callback_url)
-
-
-@auth_bp.route('/callback')
-def auth_callback():
-    """Validate Google's signed identity response and establish a local session."""
-    from app.oauth import oauth
-
-    if request.args.get('error'):
-        current_app.logger.warning('Google login rejected: %s', request.args.get('error'))
-        flash('Google login was cancelled or rejected.', 'error')
-        return redirect(url_for('auth.login'))
-
-    try:
-        token = oauth.google.authorize_access_token()
-        userinfo = token.get('userinfo') or {}
-
-        if not userinfo.get('email_verified') or not userinfo.get('sub') or not userinfo.get('email'):
-            raise InvalidCredentialsError()
-
-        user = UserService.get_or_create_google_user(
-            google_sub=userinfo.get('sub'),
-            email=userinfo.get('email'),
-            suggested_username=userinfo.get('name') or userinfo.get('email', '').split('@')[0],
-        )
-
-        session.clear()
-        login_user(user, remember=True)
-        flash(f'Welcome back {user.username}!', 'success')
-        return redirect(url_for('main.index'))
-    except Exception:
-        current_app.logger.exception('Google authentication callback failed')
-        flash('Google login failed. Please try again.', 'error')
-        return redirect(url_for('auth.login'))
-
-
-@auth_bp.route('/login', methods=['GET', 'POST'])
+@auth_bp.route('/login')
+@auth_bp.route('/register', endpoint='register')
+@auth_bp.route('/callback', endpoint='auth_callback')
+@auth_bp.route('/reset-password', endpoint='reset_password')
 def login():
-    """User login page."""
-    # Redirect if already logged in
-    if current_user.is_authenticated:
+    if not request.path.endswith('/reset-password') and current_user.is_authenticated:
         return redirect(url_for('main.index'))
-    
-    if request.method == 'POST':
-        username_or_email = request.form.get('username_or_email', '').strip()
-        password = request.form.get('password', '')
-        remember = request.form.get('remember', False) == 'on'
-        
-        try:
-            # Authenticate user
-            user = UserService.authenticate_user(username_or_email, password)
+    mode = 'register' if request.path.endswith('/register') else 'reset-password' if request.path.endswith('/reset-password') else 'login'
+    next_page = request.args.get('next')
+    if not is_safe_redirect_target(next_page):
+        next_page = url_for('main.index')
+    return render_template('auth/login.html', mode=mode, next_page=next_page)
 
-            session.clear()
-            # Log in user
-            login_user(user, remember=remember)
-            
-            # Redirect to next page or index
-            next_page = request.form.get('next') or request.args.get('next')
-            if is_safe_redirect_target(next_page):
-                return redirect(next_page)
-            
-            flash(f'Welcome back, {user.username}!', 'success')
-            return redirect(url_for('main.index'))
-            
-        except InvalidCredentialsError:
-            flash('Invalid username/email or password.', 'error')
-            return render_template('auth/login.html', 
-                                 username_or_email=username_or_email)
-        except Exception:
-            current_app.logger.exception('Password login failed unexpectedly')
-            flash('Login failed. Please try again.', 'error')
-            return render_template('auth/login.html', 
-                                 username_or_email=username_or_email)
-    
-    return render_template('auth/login.html')
+
+@auth_bp.route('/neon/<path:endpoint>', methods=['GET', 'POST'])
+def neon_proxy(endpoint):
+    from flask import jsonify
+    from app.neon_auth import ALLOWED_ENDPOINTS, auth_request, copy_auth_cookies
+    if ALLOWED_ENDPOINTS.get(endpoint) != request.method:
+        return jsonify({'message': 'Unsupported authentication endpoint.'}), 404
+    data = request.get_json(silent=True) if request.method == 'POST' else None
+    upstream = auth_request(endpoint, request.method, data=data, params=request.args)
+    response = current_app.response_class(
+        upstream.content, status=upstream.status_code, content_type='application/json',
+    )
+    return copy_auth_cookies(upstream, response)
 
 
 @auth_bp.route('/logout', methods=['POST'])
-@login_required
 def logout():
-    """Log out the current user."""
-    username = current_user.username
-    logout_user()
+    from app.neon_auth import auth_request, copy_auth_cookies, LOCAL_COOKIE_PREFIX
+    upstream = auth_request('sign-out', 'POST', data={})
+    if not upstream.ok:
+        flash('Logout failed. Please try again.', 'error')
+        return redirect(url_for('auth.profile'))
     session.clear()
-    flash(f'Goodbye, {username}!', 'info')
-    return redirect(url_for('auth.login'))
+    g.pop('neon_session_response', None)
+    response = redirect(url_for('auth.login'))
+    copy_auth_cookies(upstream, response)
+    for name in request.cookies:
+        if name.startswith(LOCAL_COOKIE_PREFIX + '.') or name == 'remember_token':
+            response.delete_cookie(name, path='/')
+    return response
 
 
 @auth_bp.route('/profile')
@@ -217,14 +113,14 @@ def update_profile():
                 'initials': updated_user.username[0].upper()
             })
             
-    except UserAlreadyExistsError as e:
+    except UserAlreadyExistsError:
         if request.headers.get('Accept') == 'application/json':
-            return jsonify({'success': False, 'message': str(e)}), 400
-        flash(str(e), 'error')
-    except InvalidInputError as e:
+            return jsonify({'success': False, 'message': 'Invalid profile data or username already in use'}), 400
+        flash('Invalid profile data or username already in use', 'error')
+    except InvalidInputError:
         if request.headers.get('Accept') == 'application/json':
-            return jsonify({'success': False, 'message': str(e)}), 400
-        flash(str(e), 'error')
+            return jsonify({'success': False, 'message': 'Invalid profile data or username already in use'}), 400
+        flash('Invalid profile data or username already in use', 'error')
     except Exception:
         current_app.logger.exception('Profile update failed')
         if request.headers.get('Accept') == 'application/json':
@@ -234,50 +130,26 @@ def update_profile():
     return redirect(url_for('auth.profile'))
 
 
-@auth_bp.route('/change-password', methods=['GET', 'POST'])
+@auth_bp.route('/change-password')
 @login_required
 def change_password():
-    """Change user password."""
-    if request.method == 'POST':
-        current_password = request.form.get('current_password', '')
-        new_password = request.form.get('new_password', '')
-        confirm_password = request.form.get('confirm_password', '')
-        
-        try:
-            if new_password != confirm_password:
-                flash('New passwords do not match.', 'error')
-                return render_template('auth/change_password.html')
-                
-            UserService.change_password(current_user.id, current_password, new_password)
-            flash('Password changed successfully!', 'success')
-            return redirect(url_for('auth.profile'))
-            
-        except InvalidCredentialsError as e:
-            flash(str(e), 'error')
-        except InvalidInputError as e:
-            flash(str(e), 'error')
-        except Exception:
-            current_app.logger.exception('Password change failed')
-            flash('Password change failed. Please try again.', 'error')
-            
-    return render_template('auth/change_password.html')
+    return render_template('auth/login.html', mode='change-password', next_page=url_for('auth.profile'))
 
 
 @auth_bp.route('/delete-account', methods=['POST'])
 @login_required
 def delete_account():
     """Permanently delete the current user's account and ALL associated data."""
+    from app.neon_auth import LOCAL_COOKIE_PREFIX
     try:
-        # Delete user and all data via service
         UserService.delete_user(current_user.id)
-        
-        # Log out the user
-        logout_user()
         session.clear()
-        
-        flash('Your account and all associated data have been successfully deleted.', 'success')
-        return redirect(url_for('main.index'))
-        
+        g.pop('neon_session_response', None)
+        response = redirect(url_for('auth.login'))
+        for name in request.cookies:
+            if name.startswith(LOCAL_COOKIE_PREFIX + '.') or name == 'remember_token':
+                response.delete_cookie(name, path='/')
+        return response
     except Exception:
         current_app.logger.exception('Account deletion failed')
         flash('Account deletion failed. Please try again.', 'error')

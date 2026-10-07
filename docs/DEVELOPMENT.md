@@ -79,7 +79,7 @@ Set these values in `.env.local`:
 - `SECRET_KEY`: a unique random value
 - `FLASK_CONFIG=development`
 - `SQLALCHEMY_DATABASE_URI`: a PostgreSQL connection string; use the pooled Neon endpoint for ordinary app traffic
-- Optional `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`: enable Google OpenID Connect
+- `NEON_AUTH_BASE_URL`: managed Auth URL from the same Neon branch as the database
 - Optional `FLASK_HOST` and `FLASK_PORT`: default to `127.0.0.1:8080`
 
 Never commit `.env`, `.env.local`, database dumps, or credentials.
@@ -90,7 +90,18 @@ Never commit `.env`, `.env.local`, database dumps, or credentials.
 python devel.py
 ```
 
-Open [http://127.0.0.1:8080](http://127.0.0.1:8080). The development startup creates missing application tables and seeds the built-in shared vocabulary set. Apply production constraints and indexes separately by following [DEPLOYMENT.md](DEPLOYMENT.md).
+Open [http://127.0.0.1:8080](http://127.0.0.1:8080). The local server reloads code changes with the interactive debugger disabled. The development startup creates missing application tables and seeds the built-in shared vocabulary set. Apply production constraints and indexes separately by following [DEPLOYMENT.md](DEPLOYMENT.md).
+
+## Build the Authentication Client
+
+The committed browser bundle uses the official `@neondatabase/auth` SDK. Node.js 24 is needed only when changing the client:
+
+```bash
+npm ci
+npm run build:auth
+```
+
+Commit `frontend/auth.js`, `package-lock.json`, and the rebuilt `static/js/neon-auth.js` together. No Node process runs alongside Flask.
 
 ## Run Tests
 
@@ -142,4 +153,4 @@ python scripts/test_db_connection.py
 
 ### Google sign-in is unavailable
 
-Google sign-in is available only when both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are configured. Local username and password accounts remain available without them.
+Set `NEON_AUTH_BASE_URL` and enable Google in the Neon Console. Allow the exact development origin in Auth → trusted domains; `127.0.0.1` is not covered by the default `localhost` allowance. Configure production OAuth credentials in Neon, never in Flask.

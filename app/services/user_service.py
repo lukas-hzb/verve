@@ -6,137 +6,72 @@ Adapted for SQLAlchemy.
 import re
 import uuid
 from typing import Optional
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.exc import IntegrityError
 from app.database import db
 from app.models import User, VocabSet, Card
 from app.services.avatar_service import AvatarService
 from app.utils.time import utc_now
-from app.utils.validators import validate_username, validate_email, validate_password
-from app.utils.exceptions import UserAlreadyExistsError, InvalidCredentialsError
+from app.utils.validators import validate_username, validate_email
+from app.utils.exceptions import UserAlreadyExistsError
 
 class UserService:
     """Service class for user management operations."""
     
     @staticmethod
-    def create_user(username: str, email: str, password: str) -> User:
-        """Create a local account whose credentials live in PostgreSQL."""
-        username = validate_username(username)
-        email = validate_email(email)
-        password = validate_password(password)
-
-        if User.query.filter(func.lower(User.email) == email.lower()).first():
-            raise UserAlreadyExistsError("email", email)
-        if User.query.filter(func.lower(User.username) == username.lower()).first():
-            raise UserAlreadyExistsError("username", username)
-
-        user = User(
-            id=str(uuid.uuid4()),
-            username=username,
-            email=email,
-        )
-        user.set_password(password)
-        db.session.add(user)
-
-        try:
-            db.session.flush()
-            UserService.assign_default_vocab_set(user.id)
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            UserService._raise_duplicate_user(username, email)
-            raise
-        except Exception:
-            db.session.rollback()
-            raise
-
-        return user
-    
-    @staticmethod
-    def authenticate_user(username_or_email: str, password: str) -> User:
-        """Authenticate an account without disclosing which field was incorrect."""
-        identifier = (username_or_email or '').strip()
-        if '@' not in identifier:
-            user = User.query.filter(func.lower(User.username) == identifier.lower()).first()
-        else:
-            email = identifier.lower()
-            user = User.query.filter(func.lower(User.email) == email).first()
-
-        if not user:
-            User.check_dummy_password(password or '')
-            raise InvalidCredentialsError()
-        if not user.check_password(password):
-            raise InvalidCredentialsError()
-
-        # Transparently upgrade imported Supabase bcrypt hashes to scrypt.
-        if user.has_legacy_password_hash:
-            user.set_password(password)
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
-
-        return user
-
-    @staticmethod
-    def get_or_create_google_user(google_sub: str, email: str, suggested_username: str) -> User:
-        """Resolve a verified Google identity and safely link it by email once."""
-        email = validate_email(email)
-        google_sub = str(google_sub).strip()
-        if not google_sub:
-            raise InvalidCredentialsError()
-
-        user = User.query.filter_by(google_sub=google_sub).first()
+    def resolve_neon_user(identity: dict) -> User:
+        """Bind a server-validated Neon identity without replacing application IDs."""
+        from app.utils.exceptions import InvalidCredentialsError
+        neon_id = str(uuid.UUID(identity['id']))
+        user = User.query.filter_by(neon_auth_id=neon_id).first()
         if user:
             return user
 
-        user = User.query.filter(func.lower(User.email) == email).first()
-        if user:
-            if user.google_sub and user.google_sub != google_sub:
+        email = validate_email(identity['email'])
+        # Google subject IDs are stable across OAuth clients. Read only the identity
+        # link, never Google's access/refresh tokens, from the managed schema.
+        google_sub = UserService.google_subject(neon_id)
+        if google_sub:
+            user = User.query.filter_by(google_sub=google_sub).first()
+        if not user and identity.get('emailVerified') is True:
+            user = User.query.filter(func.lower(User.email) == email.lower()).first()
+            if user and user.google_sub and user.google_sub != google_sub:
                 raise InvalidCredentialsError()
-            user.google_sub = google_sub
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                raise
-            return user
-
-        base_username = re.sub(r'[^a-zA-Z0-9_]', '', suggested_username or '')
-        if len(base_username) < 3:
-            base_username = f"user_{uuid.uuid4().hex[:8]}"
-        base_username = base_username[:50]
-
-        username = base_username
-        counter = 1
-        while User.query.filter(func.lower(User.username) == username.lower()).first():
-            suffix = f"_{counter}"
-            username = f"{base_username[:50 - len(suffix)]}{suffix}"
-            counter += 1
-
-        user = User(
-            id=str(uuid.uuid4()),
-            username=username,
-            email=email,
-            google_sub=google_sub,
-        )
-        db.session.add(user)
-
-        try:
+        if user:
+            if user.neon_auth_id and user.neon_auth_id != neon_id:
+                raise InvalidCredentialsError()
+            user.neon_auth_id = neon_id
+        else:
+            # Unverified email must never claim an existing account.
+            if User.query.filter(func.lower(User.email) == email.lower()).first():
+                raise InvalidCredentialsError('Verify your email before accessing your existing account.')
+            base = re.sub(r'[^a-zA-Z0-9_]', '', identity.get('name') or '')[:50]
+            if len(base) < 3:
+                base = f'user_{uuid.uuid4().hex[:8]}'
+            username, counter = base, 1
+            while User.query.filter(func.lower(User.username) == username.lower()).first():
+                suffix = f'_{counter}'
+                username = f'{base[:50-len(suffix)]}{suffix}'
+                counter += 1
+            user = User(id=str(uuid.uuid4()), username=username, email=email,
+                        neon_auth_id=neon_id, google_sub=google_sub)
+            db.session.add(user)
             db.session.flush()
             UserService.assign_default_vocab_set(user.id)
+        try:
             db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            UserService._raise_duplicate_user(username, email)
-            raise
         except Exception:
             db.session.rollback()
             raise
-
         return user
-    
+
+    @staticmethod
+    def google_subject(neon_id: str) -> str | None:
+        return db.session.execute(text(
+            'SELECT "accountId" FROM neon_auth.account '
+            'WHERE "userId" = CAST(:id AS uuid) AND "providerId" = \'google\''
+        ), {'id': neon_id}).scalar()
+
     @staticmethod
     def get_user_by_id(user_id: str) -> Optional[User]:
         return db.session.get(User, user_id)
@@ -202,7 +137,8 @@ class UserService:
             raise ValueError("User not found")
             
         username = validate_username(username)
-        email = validate_email(email)
+        # Email belongs to the managed identity and cannot be changed locally.
+        email = user.email
         
         # Check unique username
         existing_user = User.query.filter(func.lower(User.username) == username.lower()).first()
@@ -234,38 +170,23 @@ class UserService:
         return user
 
     @staticmethod
-    def change_password(user_id: str, current_password: str, new_password: str) -> None:
-        user = UserService.get_user_by_id(user_id)
-        if not user:
-            raise ValueError("User not found")
-
-        new_password = validate_password(new_password)
-
-        if not user.password_hash or not user.check_password(current_password):
-            raise InvalidCredentialsError("Ungültiges aktuelles Passwort")
-
-        user.set_password(new_password)
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+    def delete_managed_identity(neon_id: str) -> None:
+        # Managed sessions and provider accounts cascade from this identity.
+        # Use the same PostgreSQL transaction as the application data deletion.
+        result = db.session.execute(text(
+            'DELETE FROM neon_auth."user" WHERE id = CAST(:id AS uuid)'
+        ), {'id': str(uuid.UUID(neon_id))})
+        if result.rowcount != 1:
+            raise ValueError('Managed identity no longer exists')
 
     @staticmethod
     def delete_user(user_id: str) -> None:
-        """
-        Permanently delete a user and all associated data.
-        """
         user = UserService.get_user_by_id(user_id)
-        if not user:
-            return
-            
-        # SQLAlchemy cascade='all, delete-orphan' on User.sets handles sets and cards
-        # But we made Card relationship on VocabSet, and VocabSet relationship on User.
-        # So deleting user deletes their sets. Deleting sets deletes their cards.
-        
-        db.session.delete(user)
+        if not user or not user.neon_auth_id:
+            raise ValueError('Linked managed identity required')
         try:
+            UserService.delete_managed_identity(user.neon_auth_id)
+            db.session.delete(user)
             db.session.commit()
         except Exception:
             db.session.rollback()

@@ -37,14 +37,13 @@
 </head>
 
 <body>
-    <div class="auth-container">
+    <div class="auth-container" data-neon-auth data-mode="{{ mode }}" data-next="{{ next_page }}" data-csrf="{{ csrf_token() }}">
         <div class="card-normal" style="padding: var(--space-6);">
             <div style="text-align: center; margin-bottom: var(--space-8);">
                 <h1
                     style="font-family: var(--font-family-display); font-size: 2.5rem; color: var(--color-primary); font-weight: 700; margin-bottom: var(--space-1);">
                     Verve</h1>
-                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-text-main); margin: 0;">Welcome
-                    back!</h2>
+                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-text-main); margin: 0;">{{ 'Create your account' if mode == 'register' else 'Change password' if mode == 'change-password' else 'Reset password' if mode == 'reset-password' else 'Welcome back!' }}</h2>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -65,56 +64,69 @@
             {% endif %}
             {% endwith %}
 
-            <form method="POST" action="{{ url_for('auth.login') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                {% if request.args.get('next') %}
-                <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+            <p id="auth-message" class="alert alert-error" role="alert" hidden></p>
+            {% if config.NEON_AUTH_BASE_URL %}
+            <form id="auth-form">
+                {% if mode == 'register' %}
+                <div class="card-input-group">
+                    <label for="username" class="card-input-label">Display name</label>
+                    <input id="username" name="username" class="card-input" required autocomplete="nickname">
+                </div>
+                {% endif %}
+                {% if mode in ('login', 'register', 'reset-password') %}
+                <div class="card-input-group">
+                    <label for="email" class="card-input-label">Email</label>
+                    <input type="email" id="email" name="email" value="{{ request.args.get('email', '') }}" class="card-input" required autocomplete="email">
+                </div>
+                {% endif %}
+                {% if mode == 'reset-password' %}
+                <p>If this email has an account, a reset code has been sent.</p>
+                <div class="card-input-group">
+                    <label for="reset-code" class="card-input-label">Reset code</label>
+                    <input id="reset-code" name="otp" class="card-input" required autocomplete="one-time-code">
+                </div>
+                {% endif %}
+                {% if mode == 'change-password' %}
+                <div class="card-input-group">
+                    <label for="current-password" class="card-input-label">Current password</label>
+                    <input type="password" id="current-password" name="current_password" class="card-input" required autocomplete="current-password">
+                </div>
                 {% endif %}
                 <div class="card-input-group">
-                    <label for="username_or_email" class="card-input-label">Username or Email</label>
-                    <input type="text" id="username_or_email" name="username_or_email"
-                        value="{{ username_or_email or '' }}" class="card-input" required autofocus>
+                    <label for="password" class="card-input-label">{{ 'Password' if mode == 'login' else 'New password' }}</label>
+                    <input type="password" id="password" name="password" class="card-input" required minlength="8" autocomplete="{{ 'current-password' if mode == 'login' else 'new-password' }}">
                 </div>
-
-                <div class="card-input-group">
-                    <label for="password" class="card-input-label">Password</label>
-                    <input type="password" id="password" name="password" class="card-input" required>
-                </div>
-
-                <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: 0;">
-                    <input type="checkbox" id="remember" name="remember"
-                        style="width: 16px; height: 16px; accent-color: var(--color-primary);">
-                    <label for="remember" style="font-size: var(--font-size-sm); user-select: none;">Remember me</label>
-                </div>
-
-                <button type="submit" class="btn-primary"
-                    style="width: 100%; justify-content: center; margin-top: var(--space-4);">
-                    <span class="material-symbols-outlined">login</span>
-                    Login
+                <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:var(--space-4)">
+                    {{ 'Create account' if mode == 'register' else 'Save password' if mode in ('change-password', 'reset-password') else 'Login' }}
                 </button>
             </form>
-
-            {% if config.GOOGLE_CLIENT_ID %}
-            <div style="margin-top: var(--space-4); margin-bottom: var(--space-4); display: flex; align-items: center; gap: 10px;">
-                <div style="height: 1px; background-color: var(--color-border); flex: 1;"></div>
-                <span class="text-sm text-gray-500" style="color: var(--color-text-secondary);">or</span>
-                <div style="height: 1px; background-color: var(--color-border); flex: 1;"></div>
+            <form id="verification-form" hidden>
+                <p>Enter the verification code sent to your email to continue.</p>
+                <div class="card-input-group">
+                    <label for="verification-code" class="card-input-label">Verification code</label>
+                    <input id="verification-code" name="otp" class="card-input" autocomplete="one-time-code" required>
+                </div>
+                <button type="submit" class="btn-primary">Verify email</button>
+            </form>
+            {% if mode in ('login', 'register') %}
+            <button type="button" id="google-login" class="btn-secondary" style="width:100%;justify-content:center;margin-top:var(--space-4)">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" width="18" height="18">
+                Continue with Google
+            </button>
+            <div style="text-align:center;margin-top:var(--space-4)">
+                {% if mode == 'login' %}
+                <button type="button" id="forgot-password" class="btn-secondary">Forgot password?</button>
+                <p>New here? <a href="/auth/register">Create an account</a></p>
+                {% else %}
+                <p>Already registered? <a href="{{ url_for('auth.login') }}">Login</a></p>
+                {% endif %}
             </div>
-
-            <a href="{{ url_for('auth.login_google') }}" class="btn-secondary" style="width: 100%; justify-content: center; position: relative; margin-bottom: 0;">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width: 18px; height: 18px; margin-right: 8px;">
-                Sign in with Google
-            </a>
             {% endif %}
-
-            <div
-                style="text-align: center; margin-top: var(--space-4); font-size: var(--font-size-base); color: var(--color-text-secondary);">
-                <p>Don't have an account? <a href="{{ url_for('auth.register') }}"
-                        style="color: var(--color-primary); font-weight: 500; text-decoration: none;">Register now</a>
-                </p>
-            </div>
+            <script type="module" src="{{ url_for('static', filename='js/neon-auth.js') }}"></script>
+            {% else %}
+            <p>Authentication is temporarily unavailable. Please try again later.</p>
+            {% endif %}
         </div>
     </div>
 </body>
-
 </html>

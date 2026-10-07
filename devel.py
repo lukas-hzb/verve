@@ -36,4 +36,4 @@ if __name__ == "__main__":
         )
 
     print(f"Starting Verve on http://{host}:{port}")
-    app.run(host=host, port=port, debug=True)
+    app.run(host=host, port=port, debug=False, use_reloader=True)

@@ -39,12 +39,12 @@ def handle_api_errors(view: Callable) -> Callable:
     def wrapped(*args, **kwargs):
         try:
             return view(*args, **kwargs)
-        except (VocabSetNotFoundError, CardNotFoundError) as error:
-            return error_response(str(error), 404)
-        except UnauthorizedAccessError as error:
-            return error_response(str(error), 403)
-        except InvalidInputError as error:
-            return error_response(str(error), 400)
+        except (VocabSetNotFoundError, CardNotFoundError):
+            return error_response('Card or vocabulary set not found', 404)
+        except UnauthorizedAccessError:
+            return error_response('Access denied', 403)
+        except InvalidInputError:
+            return error_response('Invalid request data', 400)
         except Exception:
             current_app.logger.exception('Unhandled API error in %s', view.__name__)
             return error_response('An internal error occurred', 500)

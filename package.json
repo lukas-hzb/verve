@@ -1,0 +1,10 @@
+{
+  "name": "verve-auth-client",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:auth": "esbuild frontend/auth.js --bundle --minify --format=esm --target=es2022 --outfile=static/js/neon-auth.js"
+  },
+  "dependencies": { "@neondatabase/auth": "0.5.0-beta" },
+  "devDependencies": { "esbuild": "0.25.12" }
+}

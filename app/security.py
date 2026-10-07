@@ -11,7 +11,7 @@ csrf = CSRFProtect()
 
 def is_safe_redirect_target(target: str | None) -> bool:
     """Allow redirects only to HTTP(S) URLs on the current host."""
-    if not target:
+    if not target or "\\" in target or any(ord(char) < 32 for char in target):
         return False
 
     host_url = urlparse(request.host_url)

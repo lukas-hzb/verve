@@ -18,7 +18,7 @@ Verve combines adaptive review scheduling with vocabulary sets, bulk imports, sc
 - **Practice mode** — Review an entire set without changing its spaced-repetition schedule.
 - **Focused repetition** — Limit practice sessions to cards answered incorrectly during the previous session.
 - **Progress tracking** — Follow learning progress through session feedback, charts, and set statistics.
-- **Account options** — Use a local Verve account or optional Google OpenID Connect sign-in.
+- **Account options** — Sign in with Google or email through managed Neon Auth.
 - **Profile customization** — Manage profile details and a personal avatar.
 - **Responsive interface** — Use the application across common screen sizes, with the primary experience optimized for desktop browsers.
 
@@ -34,21 +34,21 @@ Verve combines adaptive review scheduling with vocabulary sets, bulk imports, sc
 
 ## Installation
 
-No installation is required for the hosted application. Open [verve.hzb.app](https://verve.hzb.app) in a modern browser and create an account or use Google sign-in when available.
+No installation is required for the hosted application. Open [verve.hzb.app](https://verve.hzb.app) in a modern browser and create an account or use Google sign-in.
 
 To run Verve locally, follow the [development guide](docs/DEVELOPMENT.md). Self-hosting, production configuration, and database operations are documented in the [deployment guide](docs/DEPLOYMENT.md).
 
 ## Usage
 
-1. Register a local account or use Google sign-in when the deployment has OpenID Connect configured.
+1. Register with email or sign in with Google.
 2. Create a vocabulary set or import cards from a supported text or CSV file.
 3. Start a scheduled review to update the repetition plan, or use practice mode without changing it.
 4. Review set-level progress and statistics from the dashboard.
 
 ## Data and External Services
 
-- Account data, password hashes, vocabulary sets, cards, and learning progress are stored in the configured database.
-- Google OpenID Connect is optional and is contacted only when configured and selected for sign-in.
+- Neon Auth manages credentials and sessions in its database schema; vocabulary sets, cards, profiles, and learning progress remain in Verve’s application tables.
+- Google is contacted when selected for sign-in; Neon validates authentication sessions.
 - The interface loads Google-hosted fonts and the Google sign-in mark from external URLs.
 - Database credentials, session secrets, and OAuth credentials belong in `.env.local` or protected deployment secrets and must never be committed.
 
@@ -59,7 +59,7 @@ To run Verve locally, follow the [development guide](docs/DEVELOPMENT.md). Self-
 | **Language** | Python 3.12 |
 | **Backend** | Flask and Gunicorn |
 | **Database** | Neon Postgres and Flask-SQLAlchemy |
-| **Authentication** | Flask-Login, bcrypt, and optional Google OpenID Connect through Authlib |
+| **Authentication** | Neon Auth, its official JavaScript SDK, and Flask-Login for route protection |
 | **Interface** | Jinja templates, CSS, and modular JavaScript |
 | **Hosting** | Vercel or another WSGI-compatible platform |
 | **Tests** | Python `unittest` with an isolated SQLite database |

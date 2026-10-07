@@ -57,9 +57,8 @@ def create_app(config_name: str = 'default') -> Flask:
     from app.security import init_security
     init_security(app)
 
-    # Initialize Google OpenID Connect
-    from app.oauth import init_oauth
-    init_oauth(app)
+    from app.neon_auth import init_neon_auth
+    init_neon_auth(app)
     
     # Apply ProxyFix for correct URL generation behind the Vercel proxy.
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
@@ -130,7 +129,17 @@ def setup_login_manager(app: Flask) -> None:
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Bitte melden Sie sich an, um auf diese Seite zuzugreifen.'
     login_manager.login_message_category = 'error'
-    login_manager.session_protection = 'strong'
+    # Identity is validated by Neon, independent of the Flask flash/CSRF session.
+    login_manager.session_protection = None
+
+    @app.before_request
+    def retire_legacy_login():
+        from flask import request, session
+        for key in ('_user_id', '_fresh', '_id', '_remember_seconds'):
+            session.pop(key, None)
+        if 'remember_token' in request.cookies:
+            # Let Flask-Login expire its old remember cookie and use the request loader.
+            session['_remember'] = 'clear'
 
     @login_manager.unauthorized_handler
     def unauthorized():
@@ -144,10 +153,24 @@ def setup_login_manager(app: Flask) -> None:
         return redirect(url_for('auth.login', next=request.full_path))
 
     
-    @login_manager.user_loader
-    def load_user(user_id):
+    @login_manager.request_loader
+    def load_user(request):
+        from app.neon_auth import get_identity
         from app.services import UserService
-        return UserService.get_user_by_id(str(user_id))
+        identity = get_identity()
+        if not identity:
+            return None
+        if identity.get('emailVerified') is not True and request.endpoint in {
+            'auth.login', 'auth.register', 'auth.auth_callback', 'auth.reset_password',
+        }:
+            # Let the SDK display email verification before claiming legacy data.
+            return None
+        from app.utils.exceptions import InvalidCredentialsError
+        from flask import abort
+        try:
+            return UserService.resolve_neon_user(identity)
+        except InvalidCredentialsError:
+            abort(409, description='Verify your email or sign in with your original account provider.')
 
 
 def register_blueprints(app: Flask) -> None:
@@ -225,7 +248,7 @@ def register_error_handlers(app: Flask) -> None:
             'base.html',
             sets=sets,
             sidebar_collapsed=sidebar_collapsed,
-            error_message=str(error)
+            error_message='An internal error occurred. Please try again.'
         ), 500
 
 

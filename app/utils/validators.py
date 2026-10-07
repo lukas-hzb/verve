@@ -221,31 +221,6 @@ def validate_email(email: str) -> str:
     return email
 
 
-def validate_password(password: str) -> str:
-    """
-    Validate a password.
-    
-    Args:
-        password: The password to validate
-        
-    Returns:
-        The validated password
-        
-    Raises:
-        InvalidInputError: If the password is invalid
-    """
-    if not password:
-        raise InvalidInputError("password", "Password cannot be empty")
-    
-    if len(password) < 8:
-        raise InvalidInputError("password", "Password must be at least 8 characters long")
-    
-    if len(password) > 128:
-        raise InvalidInputError("password", "Password is too long (max 128 characters)")
-    
-    return password
-
-
 def validate_set_ownership(user_id: str, vocab_set) -> None:
     """
     Validate that a user owns or has access to a vocabulary set.

@@ -13,7 +13,7 @@ from sqlalchemy.pool import NullPool
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-MIGRATION_FILE = PROJECT_ROOT / 'migrations' / '001_neon_hardening.sql'
+MIGRATION_FILES = sorted((PROJECT_ROOT / 'migrations').glob('*.sql'))
 
 
 def direct_database_url(database_url: str) -> str:
@@ -47,13 +47,13 @@ def main() -> int:
         raise RuntimeError('A Neon database URL is required.')
 
     database_url = direct_database_url(configured_url)
-    migration_sql = MIGRATION_FILE.read_text(encoding='utf-8')
     engine = create_engine(database_url, poolclass=NullPool, pool_pre_ping=True)
 
     print(f'Applying schema hardening to {safe_endpoint(database_url)}')
     try:
         with engine.begin() as connection:
-            connection.exec_driver_sql(migration_sql)
+            for migration_file in MIGRATION_FILES:
+                connection.exec_driver_sql(migration_file.read_text(encoding='utf-8'))
 
         with engine.connect() as connection:
             constraints = connection.execute(text("""
@@ -74,13 +74,14 @@ def main() -> int:
                     'uq_users_email_lower',
                     'ix_vocab_sets_user_id',
                     'ix_cards_set_due',
-                    'ix_cards_set_shuffle'
+                    'ix_cards_set_shuffle',
+                    'uq_users_neon_auth_id'
                   )
             """)).scalar_one()
 
-        if constraints != 3 or indexes != 5:
+        if constraints != 3 or indexes != 6:
             raise RuntimeError(
-                f'Schema verification failed: constraints={constraints}/3, indexes={indexes}/5'
+                f'Schema verification failed: constraints={constraints}/3, indexes={indexes}/6'
             )
         print('Schema hardening completed and verified.')
         return 0

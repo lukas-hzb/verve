@@ -143,12 +143,12 @@
                 <h3 class="card-normal-title">Username</h3>
                 <div class="card-input-group" style="margin-bottom: var(--space-6);">
                     <input type="text" id="username" name="username" value="{{ current_user.username }}" required
-                        class="card-input" placeholder="The username used to login...">
+                        class="card-input" placeholder="Your display name...">
                 </div>
 
                 <h3 class="card-normal-title">Email</h3>
                 <div class="card-input-group">
-                    <input type="email" id="email" name="email" value="{{ current_user.email }}" required
+                    <input type="email" id="email" name="email" value="{{ current_user.email }}" readonly
                         class="card-input" placeholder="Your email address...">
                 </div>
 
@@ -177,7 +177,7 @@
         <p class="card-attention-text" style="color: var(--color-text-muted); margin-bottom: var(--space-4);">Actions in
             this section can affect your account security.</p>
         <div class="button-group">
-            {% if current_user.password_hash %}
+            {% if not current_user.google_sub %}
             <a href="{{ url_for('auth.change_password') }}" class="btn-danger-secondary"
                 style="justify-content: center; text-decoration: none;">Change Password</a>
             {% endif %}
