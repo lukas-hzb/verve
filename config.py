@@ -11,6 +11,13 @@ from pathlib import Path
 from sqlalchemy.pool import NullPool
 
 
+def database_uri_with_driver(database_uri):
+    """Select the installed psycopg2 driver across SQLAlchemy versions."""
+    if database_uri and database_uri.startswith(('postgres://', 'postgresql://')):
+        return 'postgresql+psycopg2://' + database_uri.split('://', 1)[1]
+    return database_uri
+
+
 class Config:
     """Base configuration class with default settings."""
     
@@ -21,7 +28,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
     # Database settings
-    SQLALCHEMY_DATABASE_URI = (
+    SQLALCHEMY_DATABASE_URI = database_uri_with_driver(
         os.environ.get('SQLALCHEMY_DATABASE_URI')
         or os.environ.get('DATABASE_URL')
     )

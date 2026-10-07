@@ -330,6 +330,17 @@ class VerveTestCase(unittest.TestCase):
                 self.assertFalse(is_safe_redirect_target(target))
             self.assertTrue(is_safe_redirect_target('/auth/profile'))
 
+    def test_postgres_configuration_selects_installed_driver(self):
+        from config import database_uri_with_driver
+        from sqlalchemy import create_engine
+        from sqlalchemy.pool import NullPool
+        for scheme in ('postgres', 'postgresql'):
+            uri = database_uri_with_driver(f'{scheme}://user:password@localhost/database')
+            engine = create_engine(uri, poolclass=NullPool)
+            self.assertEqual(engine.dialect.driver, 'psycopg2')
+            engine.dispose()
+        self.assertEqual(database_uri_with_driver('sqlite:///:memory:'), 'sqlite:///:memory:')
+
     def test_security_headers_are_present(self):
         response = self.app.test_client().get('/auth/login')
         self.assertEqual(response.headers['X-Content-Type-Options'], 'nosniff')
