@@ -22,7 +22,7 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 @auth_bp.route('/callback', endpoint='auth_callback')
 @auth_bp.route('/reset-password', endpoint='reset_password')
 def login():
-    if not request.path.endswith('/reset-password') and current_user.is_authenticated:
+    if not request.args.get('neon_auth_session_verifier') and not request.path.endswith('/reset-password') and current_user.is_authenticated:
         return redirect(url_for('main.index'))
     mode = 'register' if request.path.endswith('/register') else 'reset-password' if request.path.endswith('/reset-password') else 'login'
     next_page = request.args.get('next')

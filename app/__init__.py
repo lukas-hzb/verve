@@ -141,6 +141,25 @@ def setup_login_manager(app: Flask) -> None:
             # Let Flask-Login expire its old remember cookie and use the request loader.
             session['_remember'] = 'clear'
 
+    @app.before_request
+    def route_neon_oauth_verifier():
+        from flask import request, redirect, url_for
+        from urllib.parse import urlencode
+        verifier = request.args.get('neon_auth_session_verifier')
+        if not verifier or request.endpoint in {
+            'auth.neon_proxy', 'auth.auth_callback', 'auth.login', 'auth.register',
+        }:
+            return None
+        # Neon can return to the requested page instead of the callback route.
+        # Preserve its verifier until the official browser SDK exchanges it.
+        destination_args = [(key, value) for key, value in request.args.items(multi=True)
+                            if key != 'neon_auth_session_verifier']
+        destination = request.path
+        if destination_args:
+            destination += '?' + urlencode(destination_args)
+        return redirect(url_for('auth.auth_callback',
+                                neon_auth_session_verifier=verifier, next=destination))
+
     @login_manager.unauthorized_handler
     def unauthorized():
         from flask import jsonify, request, redirect, url_for

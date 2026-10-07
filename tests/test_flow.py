@@ -341,6 +341,20 @@ class VerveTestCase(unittest.TestCase):
             engine.dispose()
         self.assertEqual(database_uri_with_driver('sqlite:///:memory:'), 'sqlite:///:memory:')
 
+    def test_oauth_verifier_survives_protected_page_redirect(self):
+        from urllib.parse import urlparse, parse_qs
+        client = self.app.test_client()
+        response = client.get('/?neon_auth_session_verifier=one-time-code&filter=due')
+        self.assertEqual(response.status_code, 302)
+        callback = urlparse(response.headers['Location'])
+        self.assertEqual(callback.path, '/auth/callback')
+        self.assertEqual(parse_qs(callback.query), {
+            'neon_auth_session_verifier': ['one-time-code'], 'next': ['/?filter=due'],
+        })
+        response = client.get(response.headers['Location'])
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('/static/js/neon-auth.js', response.get_data(as_text=True))
+
     def test_security_headers_are_present(self):
         response = self.app.test_client().get('/auth/login')
         self.assertEqual(response.headers['X-Content-Type-Options'], 'nosniff')
