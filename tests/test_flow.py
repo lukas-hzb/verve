@@ -22,6 +22,22 @@ from app.utils.exceptions import (
 )
 
 class VerveTestCase(unittest.TestCase):
+    def test_profile_keeps_password_action_visible_for_google_accounts(self):
+        client = self.authenticated_client()
+        page = client.get('/auth/profile').get_data(as_text=True)
+        self.assertIn('id="change-password-btn" href="/auth/change-password"', page)
+        self.assertIn('id="change-password-btn"', page.split('<!-- Danger Zone -->')[1])
+
+        self.user.google_sub = 'test-google-subject'
+        db.session.commit()
+        page = client.get('/auth/profile').get_data(as_text=True)
+        self.assertIn('id="change-password-btn" class="btn-danger-secondary" disabled', page)
+        self.assertIn('popovertarget="password-provider-info"', page)
+        self.assertIn('id="password-provider-info" class="study-mode-info-panel" popover', page)
+        self.assertIn('This account is linked to Google.', page)
+        self.assertIn('https://myaccount.google.com/signinoptions/password', page)
+        self.assertNotIn('href="/auth/change-password"', page)
+
     def test_wrong_filter_includes_last_wrong_answer_in_both_modes_and_undo(self):
         from datetime import timedelta
         from app.utils.time import utc_now

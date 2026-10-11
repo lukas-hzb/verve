@@ -39,7 +39,7 @@
             </a>
 
             <a href="{{ url_for('main.stats', set_id=set_id) }}" class="card-clickable card-action-secondary"
-                style="--stats-color: var(--color-accent-{{ dominant_level }}); --stats-text-color: {{ 'var(--color-text-main)' if dominant_level == 3 else 'white' }};">
+                style="--stats-color: var(--color-accent-{{ dominant_level }}); --stats-text-color: {{ 'var(--color-text-on-yellow)' if dominant_level == 3 else 'white' }};">
                 <div class="card-action-copy">
                     <div class="card-clickable-title">
                         <span class="material-symbols-rounded card-clickable-icon" aria-hidden="true">bar_chart</span>

@@ -71,6 +71,53 @@
             margin: 0;
             color: var(--color-text-muted);
         }
+        .password-action {
+            display: flex;
+            align-items: center;
+            border: var(--border-width) solid color-mix(in srgb, var(--color-accent-1) 15%, transparent);
+            border-radius: var(--radius-btn);
+            background: color-mix(in srgb, var(--color-accent-1) 3%, transparent);
+        }
+
+        .password-action .btn-danger-secondary {
+            flex: 1;
+            border: 0;
+            background: transparent;
+            color: var(--color-accent-1);
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+        .password-action .study-mode-info-button {
+            margin-right: var(--space-2);
+            width: 20px;
+            height: 20px;
+            color: var(--color-accent-1);
+            opacity: 0.6;
+        }
+
+        .account-danger-zone {
+            container-type: inline-size;
+        }
+
+        .account-danger-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .account-danger-actions > form {
+            display: flex;
+        }
+
+        .account-danger-actions > form > button {
+            width: 100%;
+        }
+
+        @container (max-width: 540px) {
+            .account-danger-actions {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
     </style>
 
     <!-- Profile Header -->
@@ -131,6 +178,18 @@
 
     <!-- Account Settings -->
     <div class="page-section">
+        <h2 class="section-heading">Appearance</h2>
+        <div class="card-normal">
+            <label for="theme-preference" class="card-input-label">Theme</label>
+            <select id="theme-preference" class="card-input" data-theme-select>
+                <option value="system">Use Device Setting</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="page-section">
         <!-- No header here as per strict template adherence, or keep section header? 
              debug.html shows Input Cards section with a wrapper H2. 
              If we strictly follow "Input Cards", it's a card-normal with titles and inputs. 
@@ -168,31 +227,46 @@
                     </button>
                 </div>
             </form>
+
         </div>
     </div>
 
     <!-- Danger Zone -->
-    <div class="card-attention">
+    <div class="card-attention account-danger-zone">
         <div class="card-attention-header">
             <span class="material-symbols-rounded card-attention-icon" aria-hidden="true">warning</span>
             <h3 class="card-attention-title">Danger Zone</h3>
         </div>
         <p class="card-attention-text" style="color: var(--color-text-muted); margin-bottom: var(--space-4);">Actions in
             this section can affect your account security.</p>
-        <div class="button-group">
-            {% if not current_user.google_sub %}
-            <a href="{{ url_for('auth.change_password') }}" class="btn-danger-secondary"
-                style="justify-content: center; text-decoration: none;">Change Password</a>
-            {% endif %}
-            <form action="{{ url_for('auth.logout') }}" method="POST" style="display: contents;">
+        <div class="button-group account-danger-actions">
+            <form action="{{ url_for('auth.logout') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn-danger-secondary"
-                    style="justify-content: center;">Logout</button>
+                <button type="submit" class="btn-danger-secondary">Logout</button>
             </form>
+            {% if current_user.google_sub %}
+            <div class="password-action">
+                <button type="button" id="change-password-btn" class="btn-danger-secondary" disabled>
+                    Change Password
+                </button>
+                <button type="button" class="btn-password-info study-mode-info-button" popovertarget="password-provider-info" aria-label="About Password Changes" title="About Password Changes">
+                    <span class="material-symbols-rounded" aria-hidden="true">info</span>
+                </button>
+            </div>
+            {% else %}
+            <a id="change-password-btn" href="{{ url_for('auth.change_password') }}" class="btn-danger-secondary">Change Password</a>
+            {% endif %}
             <button type="button" class="btn-danger" onclick="openDeleteModal()">Delete Account</button>
         </div>
     </div>
 </div>
+
+{% if current_user.google_sub %}
+<div id="password-provider-info" class="study-mode-info-panel" popover role="dialog" aria-label="About Password Changes">
+    <p>This account is linked to Google. Manage your Google password in your
+        <a href="https://myaccount.google.com/signinoptions/password" target="_blank" rel="noopener noreferrer">Google Account</a>.</p>
+</div>
+{% endif %}
 
 <!-- Delete Account Confirmation Modal -->
 <div id="delete-account-modal" class="popup-overlay">

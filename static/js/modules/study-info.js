@@ -1,7 +1,12 @@
-/** Keep the practice explanation attached to its trigger in the top layer. */
+/** Keep info popovers attached to their trigger in the top layer. */
 export function initializeStudyInfo() {
-    const panel = document.getElementById('study-mode-info');
-    const triggers = document.querySelectorAll('.study-mode-pill [popovertarget="study-mode-info"]');
+    document.querySelectorAll('.study-mode-info-panel[popover]').forEach(panel => {
+        attachInfoPopover(panel);
+    });
+}
+
+function attachInfoPopover(panel) {
+    const triggers = document.querySelectorAll(`[popovertarget="${panel.id}"]`);
     if (!panel || !triggers.length) return;
     let trigger = triggers[0];
     triggers.forEach(button => button.addEventListener('click', () => { trigger = button; }));

@@ -161,12 +161,34 @@ a:hover {
 
 /* Premium Glassmorphism Touch */
 .glass {
-    background: rgba(255, 255, 255, 0.4);
-    /* Lighter for light mode glass */
+    background: var(--color-glass);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--color-glass-border);
 }
+
+.theme-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.theme-icon-sun { display: none; }
+:root[data-theme="dark"] .theme-icon-sun { display: block; }
+:root[data-theme="dark"] .theme-icon-moon { display: none; }
+.auth-theme-toggle {
+    position: fixed;
+    top: var(--space-4);
+    right: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: var(--radius-btn);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+.auth-theme-toggle:hover { background: var(--color-bg-surface-hover); }
+.auth-theme-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+@media (max-height: 700px) { .auth-theme-toggle { position: absolute; } }
 
 /* Form Elements (Unified) */
 .form-group,

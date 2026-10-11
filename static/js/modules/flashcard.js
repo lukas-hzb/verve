@@ -74,7 +74,7 @@ export class FlashcardManager {
             5: 'var(--level-5)'
         };
 
-        this.ANIMATION_DURATION = 350; // milliseconds
+        this.ANIMATION_DURATION = 250; // Matches the outgoing card animation.
 
         this.updateModeUI();
 
@@ -265,17 +265,15 @@ export class FlashcardManager {
         if (!this.completion) return;
         this.completion.hidden = !visible || !this.isPracticeMode;
         if (this.completion.hidden) return;
+        this.completionText.textContent = '';
+        this.completionText.hidden = true;
         if (!this.isWrongAnswersMode) {
             this.continuePracticeLabel.textContent = 'Practice Again';
-            this.completionText.textContent = '';
         } else if (this.sessionStats.wrong > 0) {
             this.continuePracticeLabel.textContent = 'Review Remaining Mistakes';
-            this.completionText.textContent = 'Keep practicing the cards you still didn’t know. Cards you answered correctly leave this mode.';
         } else {
             this.continuePracticeLabel.textContent = 'Practice All Cards';
-            this.completionText.textContent = 'You knew every card in this round. Keep practicing with all cards in this set.';
         }
-        this.completionText.hidden = !this.completionText.textContent;
         const icon = this.continuePracticeBtn?.querySelector('.material-symbols-rounded');
         if (icon) icon.textContent = this.isWrongAnswersMode && this.sessionStats.wrong === 0 ? 'stacks' : 'refresh';
     }
@@ -417,7 +415,7 @@ export class FlashcardManager {
         this.cardLevels.forEach(level => {
             level.textContent = `Level ${displayLevel}`;
             level.style.backgroundColor = this.LEVEL_COLORS[displayLevel];
-            level.style.color = displayLevel === 3 ? 'var(--color-text-main)' : 'white';
+            level.style.color = displayLevel === 3 ? 'var(--color-text-on-yellow)' : 'white';
             level.style.display = 'block';
         });
     }

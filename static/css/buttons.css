@@ -311,8 +311,8 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
     --button-fill: var(--color-accent-3);
     background-color: var(--color-accent-3);
     box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-3) 25%, transparent);
-    color: var(--color-text-main);
-    /* Yellow needs dark text */
+    color: var(--color-text-on-yellow);
+    /* Yellow needs dark text in either theme. */
 }
 
 .btn-level-3:hover {

@@ -25,7 +25,7 @@
 
 /* HEADER CARD */
 .card-header {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-muted) 100%);
+    background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-primary-muted) 100%);
     border: var(--border-width) solid var(--color-border-primary);
     border-radius: var(--radius-surface);
     min-height: 180px;
@@ -572,7 +572,7 @@
 }
 
 .card-progress-bar.bg-accent-3 .card-progress-value {
-    color: var(--color-text-main);
+    color: var(--color-text-on-yellow);
 }
 
 /* GRIDS */

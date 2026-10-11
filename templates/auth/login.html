@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Verve</title>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -103,7 +104,7 @@
         }
 
         .auth-recovery {
-            text-align: right;
+            text-align: center;
             font-size: var(--font-size-caption);
         }
 
@@ -114,6 +115,7 @@
 </head>
 
 <body>
+    <button type="button" class="auth-theme-toggle btn-theme" data-theme-toggle aria-label="Switch to Dark Mode">{% include "_theme_icon.html" %}</button>
     <div class="auth-container" data-neon-auth data-mode="{{ mode }}" data-next="{{ next_page }}" data-csrf="{{ csrf_token() }}">
         <div class="card-normal auth-card">
             <div class="auth-heading">

@@ -1,10 +1,13 @@
 :root {
+  color-scheme: light;
   /* Colors - Light Mode (Default) */
   --color-bg-body: hsl(0, 0%, 98%);
   --color-bg-surface: hsl(0, 0%, 100%);
   --color-bg-surface-hover: hsl(210, 25%, 96%);
 
   --color-primary: #6c63ff;
+  --color-primary-hover: #594ee5;
+  --color-brand: #6c63ff;
   --color-learning-banner-start: #6554e0;
   --color-learning-banner-end: #7060e4;
   --color-practice-all: #8478E8;
@@ -15,6 +18,9 @@
 
   --color-text-main: rgb(20, 23, 31);
   --color-text-muted: rgb(92, 97, 107);
+  --color-text-on-yellow: rgb(20, 23, 31);
+  --color-glass: rgb(255 255 255 / 0.4);
+  --color-glass-border: rgb(255 255 255 / 0.5);
 
   /* Translucent contours blend with the surface or illustration underneath. */
   --color-border: rgb(88 116 155 / 0.18);
@@ -125,6 +131,27 @@
   --sidebar-width-closed: 56px;
   --sidebar-hover: color-mix(in srgb, var(--color-text-main) 6%, var(--color-bg-body));
   --sidebar-active: color-mix(in srgb, var(--color-text-main) 9%, var(--color-bg-body));
+}
+
+/* Shared surfaces also cover dialogs, inputs, navigation, and study states. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg-body: #14151c;
+  --color-bg-surface: #20222c;
+  --color-bg-surface-hover: #292c38;
+  --color-primary: #aaa1ff;
+  --color-primary-hover: #c6bfff;
+  --color-text-main: #f1f0f7;
+  --color-text-muted: #b0b2c1;
+  --color-border: rgb(160 174 204 / 0.2);
+  --color-border-filled: rgb(255 255 255 / 0.1);
+  --color-glass: rgb(32 34 44 / 0.7);
+  --color-glass-border: rgb(160 174 204 / 0.2);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.2);
+  --shadow-md: 0 4px 8px rgb(0 0 0 / 0.25);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.35);
+  --shadow-card: 0 10px 30px rgb(0 0 0 / 0.2);
+  --shadow-card-hover: 0 15px 40px rgb(108 99 255 / 0.12);
 }
 
 @media (max-width: 768px) {
