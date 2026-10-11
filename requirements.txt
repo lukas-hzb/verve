@@ -14,7 +14,7 @@ requests==2.34.2
 python-dotenv==1.2.4  # For environment variable management
 
 # Database drivers
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.12
 
 # Production Server
 gunicorn==26.2.0
