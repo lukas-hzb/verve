@@ -15,7 +15,6 @@ function fixture({ saved = null, dark = false, blocked = false } = {}) {
         querySelector() { return this.text; },
         addEventListener(name, listener) { on('toggle', name, listener); },
     };
-    const select = { addEventListener(name, listener) { on('select', name, listener); } };
     const system = { matches: dark, addEventListener(name, listener) { on('system', name, listener); } };
     const context = {
         localStorage: {
@@ -25,21 +24,21 @@ function fixture({ saved = null, dark = false, blocked = false } = {}) {
         window: { matchMedia: () => system, addEventListener(name, listener) { on('window', name, listener); } },
         document: {
             documentElement: root,
-            querySelectorAll: selector => selector === '[data-theme-toggle]' ? [toggle] : [select],
+            querySelectorAll: selector => selector === '[data-theme-toggle]' ? [toggle] : [],
             addEventListener(name, listener) { on('document', name, listener); },
         },
     };
     vm.runInNewContext(script, context);
     const fire = (target, name, event = {}) => listeners.get(`${target}:${name}`)(event);
-    return { root, toggle, select, system, fire, saved: () => saved, saveExternally: value => { saved = value; } };
+    return { root, toggle, system, fire, saved: () => saved, saveExternally: value => { saved = value; } };
 }
 
 test('the saved preference is applied before DOMContentLoaded', () => {
     const f = fixture({ saved: 'dark' });
     assert.equal(f.root.dataset.theme, 'dark');
     f.fire('document', 'DOMContentLoaded');
-    assert.equal(f.select.value, 'dark');
-    assert.equal(f.toggle.attributes['aria-label'], 'Switch to Light Mode');
+    assert.equal(f.root.dataset.themePreference, 'dark');
+    assert.equal(f.toggle.attributes['aria-label'], 'Dark Mode. Switch to System');
 });
 
 test('system mode follows device changes while an explicit preference does not', () => {
@@ -48,20 +47,36 @@ test('system mode follows device changes while an explicit preference does not',
     f.system.matches = true;
     f.fire('system', 'change');
     assert.equal(f.root.dataset.theme, 'dark');
-    f.select.value = 'light';
-    f.fire('select', 'change');
+    assert.equal(f.root.dataset.themePreference, 'system');
+    assert.equal(f.toggle.text.textContent, 'System');
+    assert.equal(f.toggle.title, 'System (follows device setting). Switch to Light Mode');
+    f.fire('toggle', 'click');
     f.fire('system', 'change');
     assert.equal(f.root.dataset.theme, 'light');
     assert.equal(f.saved(), 'light');
 });
 
-test('the toggle persists the new theme and updates its accessible action', () => {
-    const f = fixture();
+test('the toggle cycles light, dark and system, persisting each preference', () => {
+    const f = fixture({ saved: 'light' });
     f.fire('document', 'DOMContentLoaded');
     f.fire('toggle', 'click');
     assert.equal(f.root.dataset.theme, 'dark');
     assert.equal(f.saved(), 'dark');
-    assert.equal(f.toggle.attributes['aria-label'], 'Switch to Light Mode');
+    assert.equal(f.root.dataset.themePreference, 'dark');
+    assert.equal(f.toggle.attributes['aria-label'], 'Dark Mode. Switch to System');
+    f.fire('toggle', 'click');
+    assert.equal(f.saved(), 'system');
+    assert.equal(f.root.dataset.themePreference, 'system');
+    assert.equal(f.root.dataset.theme, 'light');
+    f.system.matches = true;
+    f.fire('system', 'change');
+    assert.equal(f.root.dataset.theme, 'dark');
+    assert.equal(f.root.dataset.themePreference, 'system');
+    f.fire('toggle', 'click');
+    assert.equal(f.saved(), 'light');
+    assert.equal(f.root.dataset.themePreference, 'light');
+    assert.equal(f.root.dataset.theme, 'light');
+    assert.equal(f.toggle.attributes['aria-label'], 'Light Mode. Switch to Dark Mode');
 });
 
 test('theme changes in another tab and restored pages stay synchronized', () => {
@@ -70,14 +85,17 @@ test('theme changes in another tab and restored pages stay synchronized', () => 
     f.saveExternally('dark');
     f.fire('window', 'storage', { key: 'verve-theme' });
     assert.equal(f.root.dataset.theme, 'dark');
+    assert.equal(f.root.dataset.themePreference, 'dark');
     f.saveExternally('light');
     f.fire('window', 'pageshow');
     assert.equal(f.root.dataset.theme, 'light');
+    assert.equal(f.root.dataset.themePreference, 'light');
 });
 
 test('unavailable storage does not break switching themes', () => {
     const f = fixture({ blocked: true });
     f.fire('document', 'DOMContentLoaded');
+    f.fire('toggle', 'click');
     f.fire('toggle', 'click');
     assert.equal(f.root.dataset.theme, 'dark');
     f.fire('window', 'pageshow');
@@ -88,5 +106,5 @@ test('an invalid stored preference falls back to the device setting', () => {
     const f = fixture({ saved: 'unknown', dark: true });
     assert.equal(f.root.dataset.theme, 'dark');
     f.fire('document', 'DOMContentLoaded');
-    assert.equal(f.select.value, 'system');
+    assert.equal(f.root.dataset.themePreference, 'system');
 });

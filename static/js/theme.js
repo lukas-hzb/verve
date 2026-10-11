@@ -2,6 +2,8 @@
 (() => {
     const storageKey = 'verve-theme';
     const choices = new Set(['light', 'dark', 'system']);
+    const nextPreference = { system: 'light', light: 'dark', dark: 'system' };
+    const labels = { light: 'Light Mode', dark: 'Dark Mode', system: 'System' };
     const system = window.matchMedia('(prefers-color-scheme: dark)');
     const readPreference = (fallback = 'system') => {
         try {
@@ -16,15 +18,14 @@
     function apply() {
         const dark = preference === 'dark' || (preference === 'system' && system.matches);
         document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.dataset.themePreference = preference;
         document.querySelectorAll('[data-theme-toggle]').forEach(button => {
-            const label = dark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+            const current = preference === 'system' ? 'System (follows device setting)' : labels[preference];
+            const label = `${current}. Switch to ${labels[nextPreference[preference]]}`;
             button.setAttribute('aria-label', label);
             button.title = label;
             const text = button.querySelector('[data-theme-label]');
-            if (text) text.textContent = dark ? 'Light Mode' : 'Dark Mode';
-        });
-        document.querySelectorAll('[data-theme-select]').forEach(select => {
-            select.value = preference;
+            if (text) text.textContent = labels[preference];
         });
     }
 
@@ -47,11 +48,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-theme-toggle]').forEach(button => {
             button.addEventListener('click', () => {
-                setPreference(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+                setPreference(nextPreference[preference]);
             });
-        });
-        document.querySelectorAll('[data-theme-select]').forEach(select => {
-            select.addEventListener('change', () => setPreference(select.value));
         });
         apply();
     });

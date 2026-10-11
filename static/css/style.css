@@ -168,9 +168,10 @@ a:hover {
 }
 
 .theme-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-.theme-icon-sun { display: none; }
-:root[data-theme="dark"] .theme-icon-sun { display: block; }
-:root[data-theme="dark"] .theme-icon-moon { display: none; }
+.theme-icon { display: none; }
+:root[data-theme-preference="light"] .theme-icon-sun,
+:root[data-theme-preference="dark"] .theme-icon-moon,
+:root[data-theme-preference="system"] .theme-icon-system { display: block; }
 .auth-theme-toggle {
     position: fixed;
     top: var(--space-4);
