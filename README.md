@@ -1,36 +1,44 @@
 <h1 align="center">Verve</h1>
 
 <p align="center">
-  A Flask-based spaced-repetition web app for vocabulary learning with SM-2 reviews, imports, practice, and statistics.
+  A Flask-based vocabulary app with spaced repetition, flashcard practice, learning statistics, and light and dark themes.
 </p>
 
 <p align="center">
   <a href="https://github.com/lukas-hzb/verve/actions/workflows/ci.yml"><img src="https://github.com/lukas-hzb/verve/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
 </p>
 
-Verve combines adaptive review scheduling with vocabulary sets, bulk imports, schedule-independent practice sessions, and progress statistics in one hosted application. Use Verve at [verve.hzb.app](https://verve.hzb.app).
+Verve combines adaptive review scheduling with vocabulary sets, bulk imports, three flashcard learning modes, and progress statistics. Switch between light and dark themes or follow your device setting. Use Verve at [verve.hzb.app](https://verve.hzb.app).
 
 ## Features
 
 - **Adaptive reviews** — SM-2-based scheduling plans the next review from each card's performance.
 - **Flexible imports** — Add vocabulary from CSV, TSV, TXT, or pasted text with configurable separators.
 - **Vocabulary sets** — Organize cards into focused collections for different languages or subjects.
-- **Practice mode** — Review an entire set without changing its spaced-repetition schedule.
-- **Focused repetition** — Limit practice sessions to cards answered incorrectly during the previous session.
+- **Flashcard modes** — Choose Learn Due Cards, Practice All Cards, or Review Mistakes from the learning menu or the mode pill on a card.
+- **Progress-free practice** — Practice all cards or revisit cards whose last answer was incorrect, whether in learning or practice, without changing card levels or review dates.
 - **Progress tracking** — Follow learning progress through session feedback, charts, and set statistics.
 - **Account options** — Sign in with Google or email through managed Neon Auth.
-- **Profile customization** — Manage profile details and a personal avatar.
-- **Responsive interface** — Use the application across common screen sizes, with the primary experience optimized for desktop browsers.
+- **Profile customization** — Manage profile details, a personal avatar, and your theme preference.
+- **Responsive interface** — Study on desktop, tablets, and phones, with light, dark, and device-based theme options.
 
 ### Screenshots
 
-| Dashboard | Add Card |
-| :-------: | :------: |
-| <img src="static/images/dashboard_preview.png" alt="Verve dashboard showing vocabulary sets and review progress" width="500" /> | <img src="static/images/add_card_dialog.png" alt="Dialog for adding a vocabulary card to Verve" width="500" /> |
+| Dashboard | Profile |
+| :-------: | :-----: |
+| <img src="static/images/dashboard_preview.png" alt="Verve dashboard showing vocabulary sets and due reviews" width="500" /> | <img src="static/images/profile.png" alt="Verve profile showing account details and settings" width="500" /> |
 
 | Study Session | Statistics |
 | :-----------: | :--------: |
-| <img src="static/images/study_session.png" alt="Verve study session displaying a vocabulary card" width="500" /> | <img src="static/images/statistics.png" alt="Verve statistics view showing learning progress" width="500" /> |
+| <img src="static/images/study_session.png" alt="Verve flashcard session showing round progress and learning controls" width="500" /> | <img src="static/images/statistics.png" alt="Verve statistics showing the distribution of cards across learning levels" width="500" /> |
+
+| Add Card | Import Cards |
+| :------: | :----------: |
+| <img src="static/images/add_card_dialog.png" alt="Dialog for adding the front and back of a vocabulary card" width="500" /> | <img src="static/images/import_cards_dialog.png" alt="Dialog for importing vocabulary with configurable separators" width="500" /> |
+
+| Dark Mode — Dashboard | Dark Mode — Profile |
+| :-------------------: | :-----------------: |
+| <img src="static/images/dashboard_dark.png" alt="Verve dashboard in dark mode" width="500" /> | <img src="static/images/profile_dark.png" alt="Verve profile and account settings in dark mode" width="500" /> |
 
 ## Installation
 
@@ -42,7 +50,7 @@ To run Verve locally, follow the [development guide](docs/DEVELOPMENT.md). Self-
 
 1. Register with email or sign in with Google.
 2. Create a vocabulary set or import cards from a supported text or CSV file.
-3. Start a scheduled review to update the repetition plan, or use practice mode without changing it.
+3. Select Learn with Flashcards, then choose Learn Due Cards to update your learning progress, Practice All Cards for an entire set, or Review Mistakes for cards whose last answer was incorrect. Both practice modes leave card levels and review dates unchanged.
 4. Review set-level progress and statistics from the dashboard.
 
 ## Data and External Services
@@ -62,7 +70,7 @@ To run Verve locally, follow the [development guide](docs/DEVELOPMENT.md). Self-
 | **Authentication** | Neon Auth, its official JavaScript SDK, and Flask-Login for route protection |
 | **Interface** | Jinja templates, CSS, and modular JavaScript |
 | **Hosting** | Vercel or another WSGI-compatible platform |
-| **Tests** | Python `unittest` with an isolated SQLite database |
+| **Tests** | Python `unittest` with an isolated SQLite database and Node.js tests for browser logic |
 
 ## Credits
 
