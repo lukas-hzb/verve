@@ -332,8 +332,8 @@ def edit_card(set_id: str, card_id: str):
     try:
         card = VocabService.edit_card(set_id, card_id, data.get('front'), data.get('back'), current_user.id)
         return jsonify({"card": card.to_dict()})
-    except InvalidInputError as exc:
-        return jsonify({"error": str(exc)}), 400
+    except InvalidInputError:
+        return jsonify({"error": "Enter valid text for both sides of the card (front: up to 255 characters; back: up to 10,000 characters)."}), 400
     except (VocabSetNotFoundError, CardNotFoundError):
         return jsonify({"error": "Card or vocabulary set not found"}), 404
     except UnauthorizedAccessError:

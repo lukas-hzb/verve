@@ -507,6 +507,11 @@ class VerveTestCase(unittest.TestCase):
 
     def test_api_errors_do_not_disclose_exception_details(self):
         client = self.authenticated_client()
+        with patch.object(VocabService, 'edit_card', side_effect=InvalidInputError('private-field', 'internal-secret')):
+            response = client.patch('/api/set/example/card/example', json={'front': 'hello', 'back': 'hallo'})
+        self.assertEqual(response.status_code, 400)
+        self.assertNotIn('internal-secret', response.get_data(as_text=True))
+        self.assertNotIn('private-field', response.get_data(as_text=True))
         with patch.object(VocabService, 'add_card', side_effect=InvalidInputError('private-field', 'internal-secret')):
             response = client.post('/set/example/add_card', json={'front': 'hello', 'back': 'hallo'})
         self.assertEqual(response.status_code, 400)
