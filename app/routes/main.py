@@ -5,6 +5,8 @@ This blueprint handles the main page routes for the Verve application.
 Now with user authentication support.
 """
 
+from random import choice
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 
@@ -33,6 +35,7 @@ def index():
     return render_template(
         "index.html",
         sets=sets,
+        welcome_scene=choice(('sunlit-library', 'warm-desk', 'garden-window')),
         sidebar_collapsed=sidebar_collapsed,
         current_user=current_user
     )
@@ -120,10 +123,15 @@ def learn_set(set_id: str):
         sets = VocabService.get_all_set_names(current_user.id)
         sidebar_collapsed = request.cookies.get('sidebar_collapsed', 'false') == 'true'
         
+        study_mode = request.args.get('mode', 'learn')
+        if study_mode not in ('learn', 'practice', 'mistakes'):
+            study_mode = 'learn'
+
         return render_template(
             "set.html",
             set_id=set_id,
             set_name=vocab_set.name,
+            study_mode=study_mode,
             sets=sets,
             sidebar_collapsed=sidebar_collapsed,
             current_user=current_user
@@ -169,11 +177,23 @@ def set_overview(set_id: str):
     try:
         vocab_set = VocabService.get_vocab_set(set_id, current_user.id)
         sets = VocabService.get_all_set_names(current_user.id)
+        set_summary = next((item for item in sets if item['id'] == set_id), None)
+        if set_summary is not None:
+            dominant_level = set_summary['max_level']
+        else:
+            # Shared sets may not be present in the user's sidebar summaries.
+            level_counts = vocab_set.get_statistics()['level_counts']
+            display_counts = {}
+            for level, count in level_counts.items():
+                display_level = max(1, min(level, 5))
+                display_counts[display_level] = display_counts.get(display_level, 0) + count
+            dominant_level = max(display_counts, key=display_counts.get) if display_counts else 1
         sidebar_collapsed = request.cookies.get('sidebar_collapsed', 'false') == 'true'
         return render_template(
             "set_overview.html",
             set_id=set_id,
             set_name=vocab_set.name,
+            dominant_level=max(1, min(dominant_level, 5)),
             sets=sets,
             sidebar_collapsed=sidebar_collapsed,
             current_user=current_user,
@@ -300,6 +320,27 @@ def import_into_set(set_id: str):
         current_app.logger.exception('Import into vocabulary set failed')
         flash("The import failed. Please try again.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
+
+
+@main_bp.route("/api/set/<string:set_id>/card/<string:card_id>", methods=["PATCH"])
+@login_required
+def edit_card(set_id: str, card_id: str):
+    """Edit both card sides without changing its learning progress."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "JSON body required"}), 400
+    try:
+        card = VocabService.edit_card(set_id, card_id, data.get('front'), data.get('back'), current_user.id)
+        return jsonify({"card": card.to_dict()})
+    except InvalidInputError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except (VocabSetNotFoundError, CardNotFoundError):
+        return jsonify({"error": "Card or vocabulary set not found"}), 404
+    except UnauthorizedAccessError:
+        return jsonify({"error": "Access denied"}), 403
+    except Exception:
+        current_app.logger.exception('Editing a card failed')
+        return jsonify({"error": "Saving the card failed. Please try again."}), 500
 
 
 @main_bp.route("/api/set/<string:set_id>/card/<string:card_id>", methods=["DELETE"])

@@ -3,36 +3,50 @@
    ======================================== */
 
 /* Base Button Component (from style.css) */
+button,
+[role="button"],
 .btn,
-button:not([class*="btn-"]):not(.card-list-delete-btn) {
+[class^="btn-"],
+[class*=" btn-"],
+.card-clickable {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.btn,
+button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):not(.popup-close-btn):not(.import-tab):not(.auth-link) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
+    min-height: var(--control-height);
+    padding: var(--control-padding) var(--control-padding-inline);
+    line-height: var(--line-height-control);
     background-color: var(--color-primary-muted);
     color: white;
     border-radius: var(--radius-btn);
-    font-weight: 500;
-    border: none;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-ui);
+    font-family: var(--font-family-base);
+    border: var(--border-width) solid var(--color-border-filled);
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
 .btn:hover,
-button:not([class*="btn-"]):not(.card-list-delete-btn):hover {
+button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):not(.popup-close-btn):not(.import-tab):not(.auth-link):hover {
     background-color: var(--color-primary-muted-hover);
     transform: translateY(-1px);
 }
 
 .btn:active,
-button:not([class*="btn-"]):not(.card-list-delete-btn):active {
+button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):not(.popup-close-btn):not(.import-tab):not(.auth-link):active {
     transform: translateY(0);
 }
 
-/* Material Icon in Buttons */
-.btn .material-symbols-outlined {
-    font-size: 20px;
+/* Consistent optical size and alignment for every button variant. */
+:is(.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-danger-secondary, .btn-success) .material-symbols-rounded {
+    font-size: var(--icon-size-ui);
 }
 
 /* ========================================
@@ -46,9 +60,10 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
     flex-wrap: wrap;
 }
 
-/* All buttons in a group have equal width, filling full space */
-.button-group>* {
-    flex: 1 1 0;
+/* Buttons wrap at their natural width and fill the available row. */
+.button-group > *,
+.button-group > form > button {
+    flex: 1 1 auto;
     min-width: 0;
     text-align: center;
     justify-content: center;
@@ -119,13 +134,15 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
+    min-height: var(--control-height);
+    padding: var(--control-padding) var(--control-padding-inline);
+    line-height: var(--line-height-control);
     background: var(--color-primary-muted);
     color: white;
     border-radius: var(--radius-btn);
-    font-weight: 500;
-    font-size: var(--font-size-base);
-    border: none;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-ui);
+    border: var(--border-width) solid var(--color-border-filled);
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-family-base);
@@ -148,20 +165,22 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
+    min-height: var(--control-height);
+    padding: var(--control-padding) var(--control-padding-inline);
+    line-height: var(--line-height-control);
     background: var(--color-bg-surface);
     color: var(--color-text-main);
-    border: 1px solid var(--color-border);
+    border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-btn);
-    font-weight: 500;
-    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-ui);
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-family-base);
 }
 
 .btn-secondary:hover {
-    border-color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) var(--border-accent-opacity), transparent);
     color: var(--color-primary);
     background-color: var(--color-bg-surface-hover);
     transform: translateY(-2px);
@@ -173,17 +192,20 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 
 /* Danger Button (filled, for attention actions) */
 .btn-danger {
+    --button-fill: var(--color-accent-1);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
+    min-height: var(--control-height);
+    padding: var(--control-padding) var(--control-padding-inline);
+    line-height: var(--line-height-control);
     background: var(--color-accent-1);
     color: white;
-    border: none;
+    border: var(--border-width) solid var(--color-border-filled);
     border-radius: var(--radius-btn);
-    font-weight: 500;
-    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-ui);
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-family-base);
@@ -206,13 +228,15 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
+    min-height: var(--control-height);
+    padding: var(--control-padding) var(--control-padding-inline);
+    line-height: var(--line-height-control);
     background: color-mix(in srgb, var(--color-accent-1) 5%, transparent);
     color: var(--color-accent-1);
-    border: 1px solid color-mix(in srgb, var(--color-accent-1) 40%, transparent);
+    border: var(--border-width) solid color-mix(in srgb, var(--color-accent-1) var(--border-accent-opacity), transparent);
     border-radius: var(--radius-btn);
-    font-weight: 500;
-    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-ui);
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-family-base);
@@ -220,7 +244,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 
 .btn-danger-secondary:hover {
     background: color-mix(in srgb, var(--color-accent-1) 10%, transparent);
-    border-color: var(--color-accent-1);
+    border-color: color-mix(in srgb, var(--color-accent-1) var(--border-accent-opacity), transparent);
     transform: translateY(-2px);
 }
 
@@ -230,17 +254,20 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 
 /* Success Button (Added for Verve) */
 .btn-success {
+    --button-fill: var(--color-accent-4);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
+    min-height: var(--control-height);
+    padding: var(--control-padding) var(--control-padding-inline);
+    line-height: var(--line-height-control);
     background: var(--color-accent-4);
     color: white;
-    border: none;
+    border: var(--border-width) solid var(--color-border-filled);
     border-radius: var(--radius-btn);
-    font-weight: 500;
-    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-ui);
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-family-base);
@@ -259,6 +286,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 
 /* LEVEL VARIANTS (for Learn Buttons) */
 .btn-level-1 {
+    --button-fill: var(--color-accent-1);
     background-color: var(--color-accent-1);
     box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-1) 25%, transparent);
 }
@@ -269,6 +297,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 }
 
 .btn-level-2 {
+    --button-fill: var(--color-accent-2);
     background-color: var(--color-accent-2);
     box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-2) 25%, transparent);
 }
@@ -279,6 +308,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 }
 
 .btn-level-3 {
+    --button-fill: var(--color-accent-3);
     background-color: var(--color-accent-3);
     box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-3) 25%, transparent);
     color: var(--color-text-main);
@@ -291,6 +321,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 }
 
 .btn-level-4 {
+    --button-fill: var(--color-accent-4);
     background-color: var(--color-accent-4);
     box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-4) 25%, transparent);
 }
@@ -301,6 +332,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
 }
 
 .btn-level-5 {
+    --button-fill: var(--color-accent-5);
     background-color: var(--color-accent-5);
     box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-5) 25%, transparent);
 }
@@ -310,12 +342,18 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):active {
     box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-5) 35%, transparent);
 }
 
-.btn-level-6 {
-    background-color: var(--color-accent-6);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-6) 25%, transparent);
+:is(.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-danger-secondary, .btn-success) {
+    max-width: 100%;
+    text-align: center;
 }
 
-.btn-level-6:hover {
-    background-color: color-mix(in srgb, var(--color-accent-6) 90%, black);
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-6) 35%, transparent);
+:is(.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-danger-secondary, .btn-success):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+}
+
+:is(.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-danger-secondary, .btn-success):disabled {
+    opacity: 0.5;
+    cursor: default;
+    transform: none;
 }

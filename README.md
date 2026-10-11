@@ -70,8 +70,8 @@ Verve is built using the following projects and resources:
 
 - **[SuperMemo 2 (SM-2)](https://www.supermemo.com/)** provides the foundation for the spaced-repetition scheduling.
 - **[Flask](https://flask.palletsprojects.com/)** provides the Python web framework.
-- **[Material Symbols](https://fonts.google.com/icons)** provides interface icons.
-- **[Inter](https://fonts.google.com/specimen/Inter)** and **[Outfit](https://fonts.google.com/specimen/Outfit)** provide the interface typography.
+- **[Google Material Symbols](https://developers.google.com/fonts/docs/material_symbols)** provides interface icons, served locally as a subsetted font.
+- **[Roboto Flex](https://fonts.google.com/specimen/Roboto+Flex)** provides the interface typography.
 
 ## Contributing
 

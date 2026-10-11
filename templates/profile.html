@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div
-    style="padding: 15px var(--space-6) var(--space-6) var(--space-6); max-width: 1400px; width: 100%; margin: 0 auto;">
+<div class="page-shell">
 
     <style>
-        /* Restored Original Profile Styles */
         .profile-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-5);
             text-align: center;
-            padding: var(--space-8);
+            padding: clamp(1.5rem, 4vw, 2rem);
             margin-bottom: var(--space-6);
         }
 
@@ -21,9 +23,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
-            font-weight: 700;
-            margin: 0 auto var(--space-6);
+            font-size: var(--font-size-stat);
+            font-weight: var(--font-weight-bold);
+            margin: 0;
+            flex-shrink: 0;
             box-shadow: var(--shadow-md);
             position: relative;
             cursor: pointer;
@@ -50,37 +53,37 @@
             opacity: 1;
         }
 
+        .profile-info {
+            display: grid;
+            gap: var(--space-1);
+            min-width: 0;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+        }
+
         .profile-info h1 {
-            margin: 0 0 var(--space-2);
-            font-size: 28px;
+            margin: 0 0 var(--space-1);
+            font-size: var(--font-size-page);
+            line-height: var(--line-height-heading);
         }
 
         .profile-info p {
-            margin: var(--space-1) 0;
+            margin: 0;
             color: var(--color-text-muted);
         }
     </style>
 
-    <!-- Profile Header (Restored Original) -->
+    <!-- Profile Header -->
     <div class="card-normal profile-card">
         <div class="profile-avatar-large" onclick="document.getElementById('avatar').click()">
-            {% if current_user.avatar_file %}
-            <img id="avatar-preview-img" src="{{ current_user.avatar_file }}" alt="Avatar"
+            <img id="avatar-preview-img" src="{{ current_user.avatar_file or url_for('static', filename='img/default-avatar.png') }}" alt="Avatar"
                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-            {% else %}
-            <div id="avatar-initials"
-                style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                {{ current_user.username[0].upper() }}
-            </div>
-            <img id="avatar-preview-img" src="" alt="Avatar"
-                style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-            {% endif %}
 
             <div class="avatar-overlay">
-                <span class="material-symbols-outlined" style="color: white; font-size: 24px;">photo_camera</span>
+                <span class="material-symbols-rounded"  aria-hidden="true">photo_camera</span>
                 {% if current_user.avatar_file %}
-                <span class="material-symbols-outlined" onclick="event.stopPropagation(); resetAvatar();"
-                    style="color: white; margin-left: 10px; cursor: pointer;" title="Remove">close</span>
+                <span class="material-symbols-rounded" onclick="event.stopPropagation(); resetAvatar();"
+                    style="color: white; margin-left: var(--space-2); cursor: pointer;" title="Remove" aria-hidden="true">close</span>
                 {% endif %}
             </div>
         </div>
@@ -88,16 +91,16 @@
         <div class="profile-info">
             <h1>{{ current_user.username }}</h1>
             <p>{{ current_user.email }}</p>
-            <p style="font-size: var(--font-size-sm);">Member since {{ current_user.created_at.strftime('%d.%m.%Y') }}
+            <p style="font-size: var(--font-size-caption);">Member Since {{ current_user.created_at.strftime('%d.%m.%Y') }}
             </p>
         </div>
     </div>
 
     <!-- Stats Overview -->
-    <div class="card-grid-3" style="margin-bottom: var(--space-8);">
+    <div class="card-grid-3 page-section">
         <div class="card-stat" style="--icon-color: var(--color-primary-muted);">
             <div class="card-icon-wrapper" style="--icon-color: var(--color-primary-muted);">
-                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">folder</span>
+                <span class="material-symbols-rounded" aria-hidden="true">folder</span>
             </div>
             <div class="card-stat-content">
                 <p class="card-stat-value">{{ sets|length }}</p>
@@ -107,7 +110,7 @@
 
         <div class="card-stat" style="--icon-color: var(--color-accent-4);">
             <div class="card-icon-wrapper" style="--icon-color: var(--color-accent-4);">
-                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">check_circle</span>
+                <span class="material-symbols-rounded" aria-hidden="true">check_circle</span>
             </div>
             <div class="card-stat-content">
                 <p class="card-stat-value">{{ total_cards }}</p>
@@ -117,7 +120,7 @@
 
         <div class="card-stat" style="--icon-color: var(--color-accent-2);">
             <div class="card-icon-wrapper" style="--icon-color: var(--color-accent-2);">
-                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">schedule</span>
+                <span class="material-symbols-rounded" aria-hidden="true">schedule</span>
             </div>
             <div class="card-stat-content">
                 <p class="card-stat-value">{{ due_cards }}</p>
@@ -127,29 +130,29 @@
     </div>
 
     <!-- Account Settings -->
-    <div style="margin-bottom: var(--space-8);">
+    <div class="page-section">
         <!-- No header here as per strict template adherence, or keep section header? 
              debug.html shows Input Cards section with a wrapper H2. 
              If we strictly follow "Input Cards", it's a card-normal with titles and inputs. 
              We can keep the outer section header "Account Settings" or remove it if user wants STRICT adherence.
              But a page usually needs section headers. "Account Settings" h2 seems consistent with "Stats Cards" h2 in debug.
         -->
-        <h2 style="margin-bottom: var(--space-4);">Account Settings</h2>
+        <h2 class="section-heading">Account Settings</h2>
 
         <div class="card-normal">
             <form id="profile-form" onsubmit="handleProfileUpdate(event)">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                <h3 class="card-normal-title">Username</h3>
+                <label for="username" class="card-input-label">Username</label>
                 <div class="card-input-group" style="margin-bottom: var(--space-6);">
                     <input type="text" id="username" name="username" value="{{ current_user.username }}" required
-                        class="card-input" placeholder="Your display name...">
+                        class="card-input" placeholder="Your Display Name...">
                 </div>
 
-                <h3 class="card-normal-title">Email</h3>
+                <label for="email" class="card-input-label">Email</label>
                 <div class="card-input-group">
                     <input type="email" id="email" name="email" value="{{ current_user.email }}" readonly
-                        class="card-input" placeholder="Your email address...">
+                        class="card-input" placeholder="Your Email Address...">
                 </div>
 
                 <div style="display: none;">
@@ -160,7 +163,7 @@
 
                 <div class="button-group" style="margin-top: var(--space-6);">
                     <button type="submit" id="save-profile-btn" class="btn-secondary" disabled>
-                        <span class="material-symbols-outlined">save</span>
+                        <span class="material-symbols-rounded" aria-hidden="true">save</span>
                         Save Changes
                     </button>
                 </div>
@@ -171,7 +174,7 @@
     <!-- Danger Zone -->
     <div class="card-attention">
         <div class="card-attention-header">
-            <span class="material-symbols-outlined card-attention-icon">warning</span>
+            <span class="material-symbols-rounded card-attention-icon" aria-hidden="true">warning</span>
             <h3 class="card-attention-title">Danger Zone</h3>
         </div>
         <p class="card-attention-text" style="color: var(--color-text-muted); margin-bottom: var(--space-4);">Actions in
@@ -290,7 +293,7 @@
         const originalOverlayContent = overlay.innerHTML;
 
         // Show loading state in overlay
-        overlay.innerHTML = '<span class="material-symbols-outlined" style="color: white; animation: spin 1s linear infinite;">sync</span>';
+        overlay.innerHTML = '<span class="material-symbols-rounded" style="color: white; animation: spin 1s linear infinite;" aria-hidden="true">refresh</span>';
         overlay.style.opacity = '1'; // Force show overlay
 
         const formData = new FormData();
@@ -334,11 +337,12 @@
         const sidebarPlaceholder = document.querySelector('.sidebar-icon-placeholder');
         if (!sidebarPlaceholder) return;
 
-        if (data.avatar_url) {
-            sidebarPlaceholder.innerHTML = `<img src="${data.avatar_url}" alt="Avatar" class="sidebar-avatar">`;
-        } else {
-            sidebarPlaceholder.innerHTML = `<div class="sidebar-avatar-text">${data.initials}</div>`;
-        }
+        const avatar = document.createElement('img');
+        avatar.src = data.avatar_url || {{ url_for('static', filename='img/default-avatar.png') | tojson }};
+        avatar.alt = 'Avatar';
+        avatar.className = 'sidebar-avatar';
+        avatar.draggable = false;
+        sidebarPlaceholder.replaceChildren(avatar);
     }
 
     function showSuccessMessage(msg) {
@@ -349,9 +353,9 @@
         const alertDiv = document.createElement('div');
         alertDiv.className = 'alert alert-success';
         alertDiv.innerHTML = `
-            <span class="material-symbols-outlined alert-icon">check_circle</span>
+            <span class="material-symbols-rounded alert-icon" aria-hidden="true">check_circle</span>
             <span class="alert-message">${msg}</span>
-            <span class="material-symbols-outlined alert-close" onclick="this.parentElement.remove()">close</span>
+            <span class="material-symbols-rounded alert-close" onclick="this.parentElement.remove()" aria-hidden="true">close</span>
         `;
         container.insertBefore(alertDiv, document.querySelector('.profile-card'));
         setTimeout(() => {
@@ -370,7 +374,7 @@
         const originalText = saveBtn.innerHTML;
 
         saveBtn.disabled = true;
-        saveBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Saving...';
+        saveBtn.innerHTML = '<span class="material-symbols-rounded" style="animation: spin 1s linear infinite;" aria-hidden="true">refresh</span> Saving...';
 
         try {
             const response = await fetch("{{ url_for('auth.update_profile') }}", {
@@ -385,7 +389,7 @@
                 window.originalValues.username = document.getElementById('username').value;
                 window.originalValues.email = document.getElementById('email').value;
                 showSuccessMessage(data.message);
-                updateSidebar(data); // Sync sidebar in case initials changed due to username change
+                updateSidebar(data);
                 window.checkFormChanges();
             } else {
                 alert('Error: ' + data.message);

@@ -36,6 +36,8 @@ class Card(db.Model):
             'level': self.level,
             'next_review': self.next_review.isoformat() if self.next_review else None,
             'last_practice_wrong': self.last_practice_wrong,
+            # The existing DB column now remembers the last answer in either mode.
+            'last_answer_wrong': self.last_practice_wrong,
             'shuffle_order': self.shuffle_order
         }
 

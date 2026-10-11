@@ -11,32 +11,32 @@
 .card-attention,
 .card-header-secondary {
     background-color: var(--color-bg-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-xl);
-    padding: var(--space-6);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-surface);
+    padding: var(--card-padding);
     box-shadow: var(--shadow-card);
     transition: all var(--transition-normal);
 }
 
 .card-list {
-    padding: var(--space-2) 0;
-    overflow: hidden;
+    padding: 0;
+    overflow: clip;
 }
 
 /* HEADER CARD */
 .card-header {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-muted) 100%);
-    border: none;
-    border-radius: var(--radius-xl);
-    min-height: 200px;
+    border: var(--border-width) solid var(--color-border-primary);
+    border-radius: var(--radius-surface);
+    min-height: 180px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 27.5px var(--space-8) var(--space-8) var(--space-8);
+    padding: clamp(1.5rem, 3vw, 2rem);
     gap: var(--card-title-spacing);
     box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
     position: relative;
-    overflow: hidden;
+    overflow: clip;
 }
 
 .card-header::before {
@@ -53,6 +53,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-4);
 }
 
 /* TYPOGRAPHY */
@@ -64,29 +66,37 @@
 .card-attention-title,
 .card-list-item-title {
     font-family: var(--font-family-display);
-    font-weight: 700;
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text-main);
     margin: 0;
 }
 
 .card-header-title {
-    font-size: var(--font-size-4xl);
-    font-weight: 800;
+    font-size: var(--font-size-display);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    font-weight: var(--font-weight-bold);
     color: white;
     position: relative;
     z-index: 1;
 }
 
 .card-header-secondary-title {
-    font-size: var(--font-size-3xl);
-    font-weight: 800;
+    font-size: var(--font-size-page);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    flex: 1 1 16rem;
+    min-width: 0;
+    font-weight: var(--font-weight-bold);
     color: var(--color-text-main);
 }
 
 .card-normal-title,
 .card-clickable-title,
 .card-attention-title {
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-title);
+    line-height: var(--line-height-compact);
+    letter-spacing: normal;
     margin-bottom: var(--card-title-spacing);
 }
 
@@ -102,8 +112,8 @@
 }
 
 .card-header-subtitle {
-    font-size: var(--font-size-lg);
-    font-weight: 500;
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-normal);
     color: rgba(255, 255, 255, 0.9);
     position: relative;
     z-index: 1;
@@ -112,13 +122,14 @@
 .card-normal-text,
 .card-clickable-text,
 .card-attention-text {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-body);
     color: var(--color-text-muted);
-    line-height: 1.6;
+    line-height: var(--line-height-body);
 }
 
 .card-clickable-text {
-    padding-right: 35px;
+    padding-right: var(--space-10);
+    font-size: var(--font-size-caption);
 }
 
 /* CLICKABLE LOGIC */
@@ -141,22 +152,22 @@
 }
 
 .card-clickable:hover {
-    border-color: var(--color-primary-muted-hover);
+    border-color: color-mix(in srgb, var(--color-primary-muted-hover) var(--border-accent-opacity), transparent);
     box-shadow: var(--shadow-card-hover);
 }
 
 .card-stat-clickable:hover {
-    border-color: var(--icon-color, var(--color-primary-muted));
+    border-color: color-mix(in srgb, var(--icon-color, var(--color-primary-muted)) var(--border-accent-opacity), transparent);
 }
 
 .card-clickable-title {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
 }
 
 .card-clickable-icon {
-    font-size: 28px;
+    font-size: var(--icon-size-feature);
     color: var(--color-primary-muted);
     transition: color var(--transition-normal);
 }
@@ -168,9 +179,9 @@
 .card-clickable-arrow {
     position: absolute;
     top: 50%;
-    right: var(--space-6);
+    right: var(--card-padding);
     transform: translateY(-50%);
-    font-size: 24px;
+    font-size: var(--icon-size-feature);
     color: var(--color-primary-muted);
     transition: all var(--transition-normal);
 }
@@ -180,10 +191,144 @@
     transform: translateY(-50%) translateX(4px);
 }
 
+/* Overview actions use transparent illustrations over shared CSS gradients. */
+.card-action-primary,
+.card-action-secondary {
+    --action-art-width: 168px;
+    --action-border-color: var(--color-border-filled);
+    min-height: 88px;
+}
+
+.card-action-primary {
+    --action-art-width: 168px;
+    --action-glow-color: var(--color-primary);
+    --action-border-color: var(--color-border-primary);
+    padding-right: calc(var(--action-art-width) + var(--space-4));
+    overflow: visible;
+    background: linear-gradient(135deg, var(--color-learning-banner-start), var(--color-learning-banner-end));
+    border-color: transparent;
+}
+
+.card-action-primary:hover {
+    background: linear-gradient(135deg, var(--color-learning-banner-start), var(--color-learning-banner-end));
+    border-color: transparent;
+}
+
+.card-action-primary .card-clickable-text {
+    color: var(--color-text-main);
+}
+
+.card-action-secondary {
+    --action-glow-color: var(--stats-color);
+    padding-right: calc(var(--action-art-width) + var(--space-4));
+    background: linear-gradient(115deg, color-mix(in srgb, var(--stats-color) 90%, white), var(--stats-color) 60%, color-mix(in srgb, var(--stats-color) 96%, black));
+    border-color: transparent;
+}
+
+.card-action-secondary:hover {
+    background: linear-gradient(115deg, color-mix(in srgb, var(--stats-color) 90%, white), var(--stats-color) 60%, color-mix(in srgb, var(--stats-color) 96%, black));
+    border-color: transparent;
+}
+
+/* Keep the chosen practice color as the darkest gradient stop. */
+.card-action-secondary.card-action-practice,
+.card-action-secondary.card-action-practice:hover {
+    background: linear-gradient(115deg, color-mix(in srgb, var(--stats-color) 90%, white), var(--stats-color) 60%);
+}
+
+.card-action-primary::after,
+.card-action-secondary::after {
+    content: '';
+    position: absolute;
+    inset: calc(-1 * var(--border-width));
+    z-index: 2;
+    border: var(--border-width) solid var(--action-border-color);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Colored ambient light echoes the home statistics icons. */
+.card-action-primary,
+.card-action-secondary {
+    box-shadow: 0 6px 24px color-mix(in srgb, var(--action-glow-color) 20%, transparent), var(--shadow-card);
+}
+
+.card-action-primary:hover,
+.card-action-secondary:hover {
+    box-shadow: 0 8px 30px color-mix(in srgb, var(--action-glow-color) 30%, transparent), var(--shadow-card-hover);
+}
+
+.card-action-copy {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+}
+
+.card-action-copy .card-clickable-title,
+.card-action-copy .card-clickable-text {
+    padding-right: 0;
+}
+
+.card-action-copy .card-clickable-icon,
+.card-action-primary:hover .card-clickable-icon,
+.card-action-secondary:hover .card-clickable-icon,
+.card-action-primary .card-clickable-arrow,
+.card-action-primary:hover .card-clickable-arrow,
+.card-action-secondary .card-clickable-arrow,
+.card-action-secondary:hover .card-clickable-arrow,
+.card-action-secondary .card-clickable-text {
+    color: var(--color-text-main);
+}
+
+.card-action-secondary :is(.card-clickable-title, .card-clickable-text, .card-clickable-icon, .card-clickable-arrow),
+.card-action-secondary:hover :is(.card-clickable-title, .card-clickable-text, .card-clickable-icon, .card-clickable-arrow) {
+    color: var(--stats-text-color, white);
+}
+
+.card-action-primary :is(.card-clickable-title, .card-clickable-text, .card-clickable-icon, .card-clickable-arrow),
+.card-action-primary:hover :is(.card-clickable-title, .card-clickable-text, .card-clickable-icon, .card-clickable-arrow) {
+    color: white;
+}
+
+.card-action-scenery {
+    position: absolute;
+    inset: calc(-1 * var(--border-width));
+    overflow: clip;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.card-action-illustration {
+    position: absolute;
+    right: var(--space-1);
+    top: 50%;
+    width: var(--action-art-width);
+    height: calc(100% - var(--space-3));
+    transform: translateY(-50%);
+    object-fit: contain;
+    object-position: right center;
+    pointer-events: none;
+    user-select: none;
+}
+
+.card-action-primary .card-action-illustration {
+    right: 0;
+    object-fit: cover;
+    object-position: center;
+}
+.card-action-flashcards .card-action-illustration { object-fit: contain; }
+
+.card-action-primary:focus-visible,
+.card-action-secondary:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+}
+
 /* STAT CARD */
 .card-stat {
     display: flex;
     align-items: center;
+    padding: var(--card-padding-compact);
     gap: var(--space-4);
 }
 
@@ -192,21 +337,23 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 0.45rem;
+    gap: var(--space-1);
+    min-width: 0;
 }
 
 .card-stat-value {
-    font-size: var(--font-size-3xl);
-    line-height: 1;
+    font-size: var(--font-size-stat);
+    line-height: var(--line-height-heading);
+    font-variant-numeric: tabular-nums;
 }
 
 .card-stat-label {
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--color-text-muted);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-medium);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    line-height: var(--line-height-compact);
 }
 
 /* ATTENTION CARD */
@@ -214,19 +361,19 @@
     background-color: color-mix(in srgb, var(--color-accent-1) 5%, transparent);
     border: 2px solid var(--color-accent-1);
     box-shadow: 0 10px 30px color-mix(in srgb, var(--color-accent-1) 10%, transparent);
-    overflow: hidden;
+    overflow: clip;
     position: relative;
 }
 
 .card-attention-header {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
     margin-bottom: var(--card-title-spacing);
 }
 
 .card-attention-icon {
-    font-size: 28px;
+    font-size: var(--icon-size-feature);
     color: var(--color-accent-1);
 }
 
@@ -243,11 +390,12 @@
 }
 
 .card-icon-wrapper {
-    width: 60px;
-    height: 60px;
-    padding: 12px;
-    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
     background: var(--icon-color, var(--color-primary-muted));
+    border: var(--border-width) solid var(--color-border-filled);
     box-shadow: 0 0 25px var(--icon-color, rgba(154, 150, 255, 0.4));
     display: flex;
     align-items: center;
@@ -255,9 +403,20 @@
     flex-shrink: 0;
 }
 
-.card-icon-wrapper .material-symbols-outlined {
-    font-size: 32px;
+.card-icon-wrapper .material-symbols-rounded {
+    font-size: var(--icon-size-feature);
     color: white;
+}
+
+.card-stat .card-icon-wrapper {
+    width: 4rem;
+    min-height: 4rem;
+    height: auto;
+    align-self: stretch;
+}
+
+.card-stat .card-icon-wrapper .material-symbols-rounded {
+    font-size: var(--icon-size-stat);
 }
 
 .card-content-wrapper {
@@ -265,7 +424,8 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 60px;
+    min-height: 48px;
+    min-width: 0;
 }
 
 /* LIST CARD ITEMS */
@@ -273,48 +433,101 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-4) var(--space-6);
-    border-bottom: 1px solid var(--color-border);
+    padding: var(--control-padding) var(--card-padding);
+    gap: var(--space-3);
+    border: var(--border-width) solid transparent;
+    border-bottom-color: var(--color-border);
     transition: background-color var(--transition-fast);
 }
 
 .card-list-item:last-child {
-    border-bottom: none;
+    border-bottom-color: transparent;
+}
+
+.card-list-item:first-child {
+    border-top-left-radius: calc(var(--radius-surface) - 1px);
+    border-top-right-radius: calc(var(--radius-surface) - 1px);
+}
+
+.card-list-item:last-child {
+    border-bottom-left-radius: calc(var(--radius-surface) - 1px);
+    border-bottom-right-radius: calc(var(--radius-surface) - 1px);
+}
+
+.card-list-item-wrong {
+    background-color: color-mix(in srgb, var(--color-accent-1) 7%, var(--color-bg-surface));
 }
 
 .card-list-item:hover {
     background-color: var(--color-bg-surface-hover);
 }
 
-.card-list-item-info {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
+.card-list-item-wrong:hover {
+    background-color: color-mix(in srgb, var(--color-accent-1) 11%, var(--color-bg-surface));
 }
 
+.card-list-item-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    flex: 1;
+    overflow-wrap: anywhere;
+}
+
+.card-list-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-shrink: 0;
+}
+
+.card-list-edit-btn,
 .card-list-delete-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    width: var(--space-8);
+    height: var(--space-8);
+    flex-shrink: 0;
+    border-radius: var(--radius-btn);
     border: none;
     cursor: pointer;
-    background: color-mix(in srgb, var(--color-accent-1) 10%, transparent);
-    color: var(--color-accent-1);
+    background: transparent;
+    color: var(--color-text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all var(--transition-fast);
 }
 
+.card-list-edit-btn:hover,
 .card-list-delete-btn:hover {
-    background: var(--color-accent-1);
-    color: white;
-    transform: scale(1.05);
+    background: color-mix(in srgb, var(--color-bg-surface-hover) 92%, var(--color-text-muted));
+    color: var(--color-accent-1);
+}
+
+.card-list-edit-btn:hover {
+    color: var(--color-primary);
+}
+
+.card-list-item-wrong .card-list-edit-btn:hover,
+.card-list-item-wrong .card-list-delete-btn:hover {
+    background: color-mix(in srgb, var(--color-accent-1) 18%, var(--color-bg-surface));
+}
+
+.card-list-edit-btn:focus-visible,
+.card-list-delete-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+.card-edit-error {
+    color: var(--color-accent-1);
+    margin-bottom: var(--space-3);
 }
 
 /* PROGRESS CARD */
 .card-progress-item {
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
 }
 
 .card-progress-item:last-child {
@@ -322,24 +535,28 @@
 }
 
 .card-progress-label {
-    font-weight: 500;
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-compact);
+    font-weight: var(--font-weight-medium);
     color: var(--color-text-main);
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-1);
     display: block;
 }
 
 .card-progress-bar-container {
-    height: 32px;
-    background: #f1f3f5;
-    border-radius: 12px;
-    overflow: hidden;
+    height: calc(var(--space-6) + var(--space-1));
+    background: var(--color-bg-surface-hover);
+    border-radius: var(--radius-md);
+    overflow: visible;
     display: flex;
     align-items: center;
 }
 
 .card-progress-bar {
     height: 100%;
-    border-radius: 12px;
+    border: var(--border-width) solid var(--color-border-filled);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--accent-color) 28%, transparent);
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -348,10 +565,14 @@
 }
 
 .card-progress-value {
-    font-size: var(--font-size-sm);
-    font-weight: 700;
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-semibold);
     color: white;
     z-index: 1;
+}
+
+.card-progress-bar.bg-accent-3 .card-progress-value {
+    color: var(--color-text-main);
 }
 
 /* GRIDS */
@@ -359,28 +580,28 @@
 .card-grid-2,
 .card-grid-3 {
     display: grid;
-    gap: var(--space-6);
+    gap: var(--space-5);
 }
 
 .card-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
 }
 
 .card-grid-2 {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .card-grid-3 {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-@media (max-width: 1024px) {
+@container (max-width: 900px) {
     .card-grid-3 {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 768px) {
+@container (max-width: 580px) {
 
     .card-grid-2,
     .card-grid-3 {
@@ -390,27 +611,28 @@
 
 /* ACCENT BACKGROUNDS */
 .bg-accent-1 {
+    --accent-color: var(--color-accent-1);
     background-color: var(--color-accent-1);
 }
 
 .bg-accent-2 {
+    --accent-color: var(--color-accent-2);
     background-color: var(--color-accent-2);
 }
 
 .bg-accent-3 {
+    --accent-color: var(--color-accent-3);
     background-color: var(--color-accent-3);
 }
 
 .bg-accent-4 {
+    --accent-color: var(--color-accent-4);
     background-color: var(--color-accent-4);
 }
 
 .bg-accent-5 {
+    --accent-color: var(--color-accent-5);
     background-color: var(--color-accent-5);
-}
-
-.bg-accent-6 {
-    background-color: var(--color-accent-6);
 }
 
 /* INPUT CARDS */
@@ -424,19 +646,201 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 200px;
+    min-height: 180px;
     /* IMPORTANT: transition specific properties to avoid 'all' causing wobbles on display changes */
     transition: transform var(--transition-normal), border-color var(--transition-normal), background-color var(--transition-normal);
 }
 
 .create-new-card:hover {
-    border-color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) var(--border-accent-opacity), transparent);
     background-color: var(--color-bg-surface-hover);
     transform: translateY(-2px);
+}
+
+/* Compact dashboard cards share the existing surfaces and typography. */
+.set-card,
+.set-card-create {
+    padding: var(--card-padding-compact);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    height: 100%;
+}
+
+.set-card {
+    cursor: pointer;
+}
+
+.set-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.set-card-header .card-normal-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+}
+
+.set-card-delete-btn {
+    width: var(--space-10);
+    height: var(--space-10);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-btn);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.set-card-delete-btn:hover {
+    background-color: var(--color-bg-surface-hover);
+    color: var(--color-accent-1);
+}
+
+.set-card-delete-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.set-card-delete-btn .material-symbols-rounded {
+    font-size: var(--icon-size-ui);
+}
+
+.set-card-learn {
+    width: 100%;
+    margin-top: auto;
+}
+
+.set-card-create {
+    min-height: 0;
+}
+
+.set-card-create-icon {
+    background-color: var(--color-primary-muted);
+    border: var(--border-width) solid var(--color-border-filled);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
 }
 
 /* UTILITY CLASSES */
 .text-urgent {
     color: var(--color-accent-2) !important;
-    font-weight: 600 !important;
+    font-weight: var(--font-weight-medium) !important;
+}
+
+.card-grid > *, .card-grid-2 > *, .card-grid-3 > * {
+    min-width: 0;
+}
+
+.card-clickable-title {
+    padding-right: var(--space-10);
+}
+
+.card-list-item-title {
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-body);
+}
+
+.card-list-item-subtitle {
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-text-muted);
+    line-height: var(--line-height-body);
+}
+
+.card-list-edit-btn .material-symbols-rounded,
+.card-list-delete-btn .material-symbols-rounded {
+    font-size: var(--icon-size-ui);
+}
+
+@container (max-width: 580px) {
+    .card-action-primary,
+    .card-action-secondary {
+        --action-art-width: 144px;
+    }
+
+    .card-list-item-info {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-1);
+    }
+
+    .card-list-edit-btn,
+    .card-list-delete-btn {
+        width: var(--space-10);
+        height: var(--space-10);
+    }
+
+    .card-header {
+        min-height: 160px;
+    }
+
+    .card-header-subtitle {
+        font-size: var(--font-size-body);
+    }
+
+    .card-header-secondary .button-group {
+        width: 100%;
+    }
+}
+
+/* Keep illustration banners readable before the compact layout gets crowded. */
+@container (max-width: 900px) {
+    .card-action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-action-primary,
+    .card-action-secondary {
+        --action-art-width: 220px;
+        min-height: 120px;
+    }
+}
+
+/* On phones, give copy a full row and compose the illustration below it. */
+@container (max-width: 440px) {
+    .card-action-primary,
+    .card-action-secondary {
+        --action-art-width: min(240px, 72cqw);
+        padding-right: var(--card-padding);
+        padding-bottom: 128px;
+        min-height: 208px;
+    }
+
+    .card-action-illustration {
+        top: auto;
+        bottom: var(--space-2);
+        height: 112px;
+        transform: none;
+    }
+
+    .card-action-primary .card-action-illustration {
+        width: min(320px, 92cqw);
+        bottom: 0;
+        height: min(128px, 36.8cqw);
+        object-fit: cover;
+        object-position: right bottom;
+    }
+    .card-action-flashcards { padding-bottom: 160px; min-height: 240px; }
+    .card-action-flashcards .card-action-illustration {
+        width: 220px;
+        height: 140px;
+        right: var(--space-2);
+        bottom: var(--space-2);
+        object-fit: contain;
+    }
 }

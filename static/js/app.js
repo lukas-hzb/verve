@@ -8,6 +8,9 @@
 import { SidebarManager } from './modules/sidebar.js';
 import { FlashcardManager } from './modules/flashcard.js';
 import { StatsManager } from './modules/stats.js';
+import { initializeWelcomeMascot } from './modules/mascot.js';
+import { initializeStudyInfo } from './modules/study-info.js';
+import { initializeStudyModePicker } from './modules/study-mode-picker.js';
 
 
 /**
@@ -16,11 +19,14 @@ import { StatsManager } from './modules/stats.js';
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize sidebar on all pages
     new SidebarManager();
+    initializeWelcomeMascot();
+    initializeStudyInfo();
+    initializeStudyModePicker();
 
     // Determine current page and initialize appropriate module
     const currentPath = window.location.pathname;
 
-    if (currentPath.startsWith("/set/")) {
+    if (/^\/set\/[^/]+\/?$/.test(currentPath)) {
         initializeLearningPage(currentPath);
     } else if (currentPath.startsWith("/stats/")) {
         initializeStatsPage(currentPath);

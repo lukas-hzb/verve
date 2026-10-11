@@ -63,7 +63,11 @@ class VocabService:
         for vocab_set in user_sets:
             stats = statistics[vocab_set.id]
             level_counts = stats['level_counts']
-            max_level = max(level_counts, key=level_counts.get) if level_counts else 1
+            display_counts = {}
+            for level, count in level_counts.items():
+                display_level = max(1, min(level, 5))
+                display_counts[display_level] = display_counts.get(display_level, 0) + count
+            max_level = max(display_counts, key=display_counts.get) if display_counts else 1
             result.append({
                 'id': vocab_set.id,
                 'name': vocab_set.name,
@@ -112,9 +116,9 @@ class VocabService:
         return [c.to_dict() for c in cards]
 
     @staticmethod
-    def get_all_cards(set_id: str, user_id: str, wrong_only: bool = False) -> List[Dict]:
+    def get_all_cards(set_id: str, user_id: str, wrong_only: bool = False, last_wrong_only: bool = False) -> List[Dict]:
         vset = VocabService.get_vocab_set(set_id, user_id)
-        cards = vset.get_all_cards(wrong_only=wrong_only)
+        cards = vset.get_all_cards(wrong_only=wrong_only, last_wrong_only=last_wrong_only)
         return [c.to_dict() for c in cards]
 
     @staticmethod
@@ -141,6 +145,7 @@ class VocabService:
         # Update card
         card.level = new_level
         card.next_review = next_review
+        card.last_practice_wrong = quality < 3
         
         # Update set updated_at
         vset.updated_at = utc_now()
@@ -153,6 +158,25 @@ class VocabService:
             'new_level': new_level,
             'interval_days': interval_days
         }
+
+    @staticmethod
+    def edit_card(set_id: str, card_id: str, front: str, back: str, user_id: str) -> Card:
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
+        card = Card.query.filter_by(id=card_id, vocab_set_id=set_id).first()
+        if not card:
+            raise CardNotFoundError(card_id, vset.name)
+
+        front = validate_card_front(front)
+        back = validate_card_back(back)
+        duplicate = Card.query.filter_by(vocab_set_id=set_id, front=front).filter(Card.id != card_id).first()
+        if duplicate:
+            raise InvalidInputError("front", "Another card already uses this front")
+
+        card.front = front
+        card.back = back
+        vset.updated_at = utc_now()
+        VocabService._commit()
+        return card
 
     @staticmethod
     def delete_card(set_id: str, card_id: str, user_id: str) -> None:
@@ -243,7 +267,13 @@ class VocabService:
     def get_statistics(set_id: str, user_id: str) -> Dict:
         """Get statistics for a vocabulary set."""
         vset = VocabService.get_vocab_set(set_id, user_id)
-        return vset.get_statistics()
+        stats = vset.get_statistics()
+        display_counts = {}
+        for level, count in stats['level_counts'].items():
+            display_level = max(1, min(level, 5))
+            display_counts[display_level] = display_counts.get(display_level, 0) + count
+        stats['level_counts'] = display_counts
+        return stats
 
     @staticmethod
     def reset_set(set_id: str, user_id: str) -> Dict:
@@ -262,10 +292,12 @@ class VocabService:
         return {'status': 'success', 'message': f'Reset {count} cards to level 1'}
 
     @staticmethod
-    def restore_card(set_id: str, card_front: str, level: int, next_review: str, user_id: str) -> Dict:
+    def restore_card(set_id: str, card_front: str, level: int, next_review: str, user_id: str, last_answer_wrong: Optional[bool] = None) -> Dict:
         """Restore a card to a previous state (for undo functionality)."""
         card_front = validate_card_front(card_front)
         level = validate_card_level(level)
+        if last_answer_wrong is not None and not isinstance(last_answer_wrong, bool):
+            raise InvalidInputError('last_answer_wrong', 'Must be a boolean')
 
         vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
         card = vset.find_card(card_front)
@@ -292,6 +324,8 @@ class VocabService:
         
         card.level = level
         card.next_review = next_review_date
+        if last_answer_wrong is not None:
+            card.last_practice_wrong = last_answer_wrong
         
         vset.updated_at = utc_now()
         VocabService._commit()

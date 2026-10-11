@@ -91,7 +91,7 @@ export class StatsManager {
         const accentClass = `bg-accent-${level}`;
 
         progressItem.innerHTML = `
-            <span class="card-progress-label">Level ${level} (${count} cards)</span>
+            <span class="card-progress-label">Level ${level} (${count} ${count === 1 ? 'Card' : 'Cards'})</span>
             <div class="card-progress-bar-container">
                 <div class="card-progress-bar ${accentClass}" style="width: ${percentage}%;">
                     <span class="card-progress-value">${Math.round(percentage)}%</span>

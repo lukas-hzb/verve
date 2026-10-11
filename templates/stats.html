@@ -1,38 +1,35 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div
-    style="padding: 15px var(--space-6) var(--space-6) var(--space-6); max-width: 1400px; width: 100%; margin: 0 auto;">
+<div class="page-shell">
 
     <!-- Secondary Header for Stats -->
-    <div style="margin-bottom: var(--space-6);">
+    <div class="page-section">
         <div class="card-header-secondary">
             <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') | title }} Stats</h1>
             <div class="button-group">
                 <a href="{{ url_for('main.set_overview', set_id=set_id) }}" class="btn-secondary"
                     style="text-decoration: none;">
-                    <span class="material-symbols-outlined">arrow_back</span> Back to Overview
+                    <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Back to Overview
                 </a>
             </div>
         </div>
     </div>
 
     <!-- Stats Grid -->
-    <div class="card-grid-3" style="margin-bottom: var(--space-8);">
+    <div class="card-grid-3 page-section">
         <div class="card-stat" style="--icon-color: var(--color-primary-muted);">
             <div class="card-icon-wrapper" style="--icon-color: var(--color-primary-muted);">
-                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">style</span>
+                <span class="material-symbols-rounded" aria-hidden="true">stacks</span>
             </div>
             <div class="card-stat-content">
                 <p class="card-stat-value" id="total-cards">-</p>
                 <p class="card-stat-label">Total Cards</p>
             </div>
         </div>
-        <!-- Placeholders for potential future stats to maintain grid look, or just one? User said "Overview ist kein bisheriger Stil (nutze stats card)". -->
-        <!-- I'll add placeholders like in index.html to make it look good -->
         <div class="card-stat" style="--icon-color: var(--color-accent-5);">
             <div class="card-icon-wrapper" id="mastery-stat-icon-wrapper" style="--icon-color: var(--color-accent-5);">
-                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">check_circle</span>
+                <span class="material-symbols-rounded" aria-hidden="true">check_circle</span>
             </div>
             <div class="card-stat-content">
                 <p class="card-stat-value" id="mastery-stat-value">0%</p>
@@ -41,7 +38,7 @@
         </div>
         <div class="card-stat" style="--icon-color: var(--color-accent-2);">
             <div class="card-icon-wrapper" style="--icon-color: var(--color-accent-2);">
-                <span class="material-symbols-outlined" style="color: white; font-size: 28px;">schedule</span>
+                <span class="material-symbols-rounded" aria-hidden="true">schedule</span>
             </div>
             <div class="card-stat-content">
                 <p class="card-stat-value">0</p>
@@ -51,17 +48,19 @@
     </div>
 
     <!-- Progress by Level -->
-    <div style="margin-bottom: var(--space-8);">
-        <h2 style="margin-bottom: var(--space-4);">Progress by Level</h2>
+    <div class="page-section">
+        <h2 class="section-heading">Progress by Level</h2>
         <div id="level-progress" class="card-progress">
-            <span class="text-muted">Loading chart...</span>
+            <span class="text-muted">Loading Chart...</span>
         </div>
     </div>
 
-    <div class="card-normal card-attention">
-        <h3 class="card-normal-title" style="color: var(--color-accent-1); margin-bottom: var(--space-2);">Danger Zone
-        </h3>
-        <p style="margin-bottom: var(--space-4);">Resetting the set will move all cards back to Level 1. This action
+    <div class="card-attention">
+        <div class="card-attention-header">
+            <span class="material-symbols-rounded card-attention-icon" aria-hidden="true">warning</span>
+            <h3 class="card-attention-title">Danger Zone</h3>
+        </div>
+        <p class="card-attention-text" style="margin-bottom: var(--space-3);">Resetting the set will move all cards back to Level 1. This action
             cannot be undone.</p>
         <button class="btn-danger" id="reset-set-btn">Reset Set</button>
     </div>

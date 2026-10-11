@@ -87,7 +87,8 @@ def get_next_card(set_id: str):
 @handle_api_errors
 def get_all_cards(set_id: str):
     wrong_only = request.args.get('wrong_only', 'false').lower() == 'true'
-    cards = VocabService.get_all_cards(set_id, current_user.id, wrong_only=wrong_only)
+    last_wrong_only = request.args.get('last_wrong_only', 'false').lower() == 'true'
+    cards = VocabService.get_all_cards(set_id, current_user.id, wrong_only=wrong_only, last_wrong_only=last_wrong_only)
     return jsonify({'cards': cards})
 
 
@@ -141,6 +142,7 @@ def restore_card():
         data['level'],
         data['next_review'],
         current_user.id,
+        last_answer_wrong=data.get('last_answer_wrong'),
     )
     return jsonify(success_response(result))
 

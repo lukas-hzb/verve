@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="padding: 7px var(--space-6) var(--space-6) var(--space-6); max-width: 800px; width: 100%; margin: 0 auto;">
+<div class="page-shell page-shell-narrow">
 
     <div class="card-normal">
         <div style="margin-bottom: var(--space-6);">
@@ -29,15 +29,14 @@
             <div id="file-section" class="import-section">
                 <div class="card-input-group">
                     <label for="file" class="card-input-label">Select File (CSV, TSV, TXT)</label>
-                    <div style="height: 100px; border: 2px dashed var(--color-border); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;"
+                    <div class="import-file-area"
                         onclick="document.getElementById('file').click()">
-                        <span class="material-symbols-outlined"
-                            style="font-size: 32px; color: var(--color-text-muted);">upload_file</span>
-                        <span style="color: var(--color-text-muted); margin-top: var(--space-2);">Click to upload
-                            file</span>
+                        <span class="material-symbols-rounded import-file-icon" aria-hidden="true">upload_file</span>
+                        <span class="import-file-text">Click to Upload
+                            File</span>
                         <input type="file" id="file" name="file" accept=".csv,.tsv,.txt" style="display: none;"
                             onchange="updateFileName(this)">
-                        <span id="file-name" style="margin-top: var(--space-2); font-weight: 500;"></span>
+                        <span id="file-name" class="import-file-name"></span>
                     </div>
                 </div>
             </div>
@@ -50,12 +49,11 @@
                 </div>
             </div>
 
-            <div
-                style="background-color: var(--color-bg-surface-hover); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
-                <h3 class="card-normal-title" style="margin-bottom: var(--space-3); font-size: var(--font-size-lg);">
+            <div class="import-box">
+                <h3 class="card-normal-title" style="margin-bottom: var(--space-3);">
                     Settings</h3>
-                <div style="display: flex; gap: var(--space-4);">
-                    <div style="flex: 1;">
+                <div class="import-settings-grid">
+                    <div class="preview-column">
                         <label for="field_separator" class="card-input-label">Separator (Front/Back)</label>
                         <select id="field_separator" name="field_separator" class="card-input"
                             onchange="toggleCustom('field'); updatePreview()">
@@ -69,7 +67,7 @@
                             class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
                             placeholder="e.g. - or \t" oninput="updatePreview()">
                     </div>
-                    <div style="flex: 1;">
+                    <div class="preview-column">
                         <label for="card_separator" class="card-input-label">Separator (Cards)</label>
                         <select id="card_separator" name="card_separator" class="card-input"
                             onchange="toggleCustom('card'); updatePreview()">
@@ -88,31 +86,31 @@
             <div id="preview-section" class="preview-section"
                 style="display: none; background-color: var(--color-bg-body); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: var(--space-6);">
                 <h4 style="margin-bottom: var(--space-2);">Preview (First Card)</h4>
-                <div style="display: flex; gap: var(--space-4); align-items: center;">
-                    <div style="flex: 1;">
+                <div class="preview-grid">
+                    <div class="preview-column">
                         <strong
-                            style="display: block; font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase;">Front</strong>
+                            class="preview-label-compact">Front</strong>
                         <div id="preview-front"
-                            style="font-family: monospace; background: var(--color-bg-surface); padding: var(--space-2); border-radius: var(--radius-sm);">
+                            class="preview-content">
                         </div>
                     </div>
-                    <div style="width: 1px; height: 40px; background-color: var(--color-border);"></div>
-                    <div style="flex: 1;">
+                    <div class="preview-separator"></div>
+                    <div class="preview-column">
                         <strong
-                            style="display: block; font-size: var(--font-size-xs); color: var(--color-text-muted); text-transform: uppercase;">Back</strong>
+                            class="preview-label-compact">Back</strong>
                         <div id="preview-back"
-                            style="font-family: monospace; background: var(--color-bg-surface); padding: var(--space-2); border-radius: var(--radius-sm);">
+                            class="preview-content">
                         </div>
                     </div>
                 </div>
                 <p id="preview-note"
-                    style="margin-top: var(--space-2); font-style: italic; font-size: var(--font-size-sm); color: var(--color-text-muted);">
+                    style="margin-top: var(--space-2); font-style: italic; font-size: var(--font-size-caption); color: var(--color-text-muted);">
                 </p>
             </div>
 
-            <div style="display: flex; gap: var(--space-4);">
+            <div class="button-group">
                 <button type="submit" class="btn-primary">
-                    <span class="material-symbols-outlined">upload</span> Import
+                    <span class="material-symbols-rounded" aria-hidden="true">upload</span> Import
                 </button>
                 <a href="{{ url_for('main.index') }}" class="btn-secondary">Cancel</a>
             </div>
@@ -124,7 +122,7 @@
             <p style="color: var(--color-text-muted); margin-bottom: var(--space-4);">By default, Front and Back are
                 expected to be separated by a <strong>Tab</strong> and each card on a <strong>new line</strong>.</p>
             <div
-                style="background-color: var(--color-bg-surface-hover); padding: var(--space-4); border-radius: var(--radius-md); font-family: monospace;">
+                style="background-color: var(--color-bg-surface-hover); padding: var(--space-4); border-radius: var(--radius-md); font-family: var(--font-family-mono); font-size: var(--font-size-caption);">
                 <p style="margin-bottom: var(--space-2); color: var(--color-text-muted);">Example (Comma as separator):
                 </p>
                 Hund, Dog<br>

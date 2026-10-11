@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 
 <head>
     <meta charset="UTF-8">
@@ -10,25 +10,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap"
         rel="stylesheet">
 
     <!-- Favicon -->
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/x-icon">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
 
-    <!-- Material Symbols -->
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-
     <!-- Design System CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/popups.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mascot.css') }}">
 
     <script>
         // Add CSRF protection to every same-origin state-changing fetch request.
@@ -55,80 +53,91 @@
 </head>
 
 <body>
-    <div class="sidebar {% if sidebar_collapsed %}close{% endif %}">
+    <header class="mobile-header">
+        <button type="button" class="sidebar-control btn-sidebar-toggle" id="mobile-sidebar-toggle" aria-label="Open Navigation"
+            aria-controls="primary-sidebar" aria-expanded="false">
+            <span class="material-symbols-rounded" aria-hidden="true">menu</span>
+        </button>
+        <a class="mobile-brand" href="{{ url_for('main.index') }}">Verve</a>
+    </header>
+    <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
+    <aside id="primary-sidebar" aria-label="Navigation" class="sidebar {% if sidebar_collapsed %}close{% endif %}">
         <div class="logo-details">
-            <span class="material-symbols-outlined" id="sidebar-toggle" style="cursor: pointer;">{% if sidebar_collapsed
-                %}menu{% else %}menu_open{% endif %}</span>
-            <span class="logo_name">Verve</span>
+            <a class="logo_name" href="{{ url_for('main.index') }}" tabindex="{{ '-1' if sidebar_collapsed else '0' }}">Verve</a>
+            <button type="button" class="sidebar-control btn-sidebar-toggle" id="sidebar-toggle" aria-controls="primary-sidebar"
+                aria-label="{{ 'Expand Sidebar' if sidebar_collapsed else 'Collapse Sidebar' }}"
+                aria-expanded="{{ 'false' if sidebar_collapsed else 'true' }}">
+                <span class="material-symbols-rounded" aria-hidden="true">dock_to_left</span>
+            </button>
         </div>
 
+        <nav class="sidebar-navigation" aria-label="Main Navigation">
         <ul class="nav-links">
             <li>
-                <a href="{{ url_for('main.index') }}">
-                    <span class="material-symbols-outlined">dashboard</span>
+                <a href="{{ url_for('main.index') }}" title="Home" {% if request.endpoint == 'main.index' %}aria-current="page"{% endif %}>
+                    <span class="material-symbols-rounded" aria-hidden="true">home</span>
                     <span class="link_name">Home</span>
                 </a>
             </li>
 
-            <div style="height: 1px; background-color: var(--color-border); margin: 4px 20px;"></div>
+            <li class="sidebar-divider" aria-hidden="true"></li>
 
             {% for set in sets %}
             <li>
-                <a href="{{ url_for('main.set_overview', set_id=set.id) }}">
-                    <span class="material-symbols-outlined">inventory_2</span>
+                <a href="{{ url_for('main.set_overview', set_id=set.id) }}" title="{{ set.name.replace('_', ' ') | title }}"
+                    {% if set_id == set.id %}class="sidebar-current-set"{% if request.endpoint != 'main.set_overview' %} aria-current="location"{% endif %}{% endif %}
+                    {% if request.endpoint == 'main.set_overview' and set_id == set.id %}aria-current="page"{% endif %}>
+                    <span class="material-symbols-rounded" aria-hidden="true">inventory_2</span>
                     <span class="link_name">{{ set.name.replace('_', ' ') | title }}</span>
                 </a>
             </li>
             {% endfor %}
 
             {% if set_id %}
-            <div style="height: 1px; background-color: var(--color-border); margin: 4px 20px;"></div>
+            <li class="sidebar-divider" aria-hidden="true"></li>
             <li>
-                <a href="{{ url_for('main.learn_set', set_id=set_id) }}">
-                    <span class="material-symbols-outlined">menu_book</span>
-                    <span class="link_name">Learn</span>
+                <a href="{{ url_for('main.learn_set', set_id=set_id) }}" title="Learn with Flashcards" data-study-mode-picker aria-haspopup="dialog" aria-controls="study-mode-picker" {% if request.endpoint == 'main.learn_set' %}aria-current="page"{% endif %}>
+                    <span class="material-symbols-rounded" aria-hidden="true">menu_book</span>
+                    <span class="link_name">Learn with Flashcards</span>
                 </a>
             </li>
             <li>
-                <a href="{{ url_for('main.stats', set_id=set_id) }}">
-                    <span class="material-symbols-outlined">monitoring</span>
+                <a href="{{ url_for('main.stats', set_id=set_id) }}" title="Stats" {% if request.endpoint == 'main.stats' %}aria-current="page"{% endif %}>
+                    <span class="material-symbols-rounded" aria-hidden="true">bar_chart</span>
                     <span class="link_name">Stats</span>
                 </a>
             </li>
             {% endif %}
+        </ul>
+        </nav>
 
             {% if current_user.is_authenticated %}
-            <li class="sidebar-profile-item">
-                <a href="{{ url_for('auth.profile') }}">
+            <div class="sidebar-profile-item">
+                <a href="{{ url_for('auth.profile') }}" title="Profile" {% if request.endpoint == 'auth.profile' %}aria-current="page"{% endif %}>
                     <div class="sidebar-icon-placeholder">
-                        {% if current_user.avatar_file %}
-                        <img src="{{ current_user.avatar_file }}" alt="Avatar" class="sidebar-avatar">
-                        {% else %}
-                        <div class="sidebar-avatar-text">{{ current_user.username[0].upper() }}</div>
-                        {% endif %}
+                        <img src="{{ current_user.avatar_file or url_for('static', filename='img/default-avatar.png') }}"
+                            alt="Avatar" class="sidebar-avatar" draggable="false">
                     </div>
                     <span class="link_name">Profile</span>
                 </a>
-            </li>
+            </div>
             {% endif %}
-        </ul>
-    </div>
+    </aside>
 
-    <div class="home-section">
+    <main class="home-section" id="main-content">
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div id="flash-container"
-            style="max-width: 1400px; margin: 0 auto; padding: 15px var(--space-6) 0 var(--space-6);">
+        <div id="flash-container">
             {% for category, message in messages %}
-            <div class="alert alert-{{ category }}"
-                onclick="this.remove(); if(!document.querySelector('#flash-container .alert')) document.getElementById('flash-container').remove();">
-                <span class="material-symbols-outlined alert-icon">
-                    {% if category == 'success' %}check_circle{% elif category == 'error' %}error{% else %}info{% endif
-                    %}
-                </span>
+            <div class="alert alert-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
+                <span class="material-symbols-rounded alert-icon" aria-hidden="true">{% if category == 'success' %}check_circle{% elif category == 'error' %}error{% else %}info{% endif
+                    %}</span>
                 <span class="alert-message">{{ message }}</span>
-                <span class="material-symbols-outlined alert-close">close</span>
+                <button type="button" class="btn-alert-close alert-close" aria-label="Dismiss Notification"
+                    onclick="const container = this.closest('#flash-container'); this.closest('.alert').remove(); if (!container.querySelector('.alert')) container.remove();">
+                    <span class="material-symbols-rounded" aria-hidden="true">close</span>
+                </button>
             </div>
             {% endfor %}
         </div>
@@ -136,8 +145,10 @@
         {% endwith %}
 
         {% block content %}{% endblock %}
-    </div>
+    </main>
 
+
+    {% include "_study_mode_picker.html" %}
 
     <!-- Generic Confirmation Modal -->
     <div id="confirmationModal" class="popup-overlay">

@@ -1,0 +1,33 @@
+/* Google Material Symbols, subsetted and served locally. */
+@font-face {
+  font-family: "Material Symbols Rounded";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("../fonts/material-symbols-rounded.woff2?v=20261009-rounded")
+    format("woff2");
+}
+.material-symbols-rounded {
+  -webkit-user-select: none;
+  user-select: none;
+  font-family: "Material Symbols Rounded";
+  font-weight: var(--icon-weight);
+  font-style: normal;
+  font-size: var(--icon-size-feature);
+  color: inherit;
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  vertical-align: middle;
+}

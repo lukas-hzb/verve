@@ -1,0 +1,54 @@
+{% if set_id %}
+<dialog id="study-mode-picker" class="popup-content study-mode-picker" aria-labelledby="study-mode-picker-title">
+    <div class="popup-header">
+        <h2 id="study-mode-picker-title" class="popup-title">Learn with Flashcards</h2>
+        <button type="button" class="popup-close-btn" data-close-study-picker aria-label="Close Mode Selection"><span class="material-symbols-rounded" aria-hidden="true">close</span></button>
+    </div>
+    <div class="study-mode-options">
+            <a href="{{ url_for('main.learn_set', set_id=set_id) }}" class="card-clickable card-action-primary">
+                <div class="card-action-copy">
+                    <div class="card-clickable-title">
+                        <span class="material-symbols-rounded card-clickable-icon" aria-hidden="true">menu_book</span>
+                        Learn Due Cards
+                    </div>
+                    <p class="card-clickable-text">Review the cards due today. Your answers update their levels and schedule the next review.</p>
+                </div>
+                <div class="card-action-scenery" aria-hidden="true">
+                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/mascot/learning-banner-transparent.png') }}"
+                        alt="" draggable="false">
+                </div>
+            </a>
+
+            <a href="{{ url_for('main.learn_set', set_id=set_id, mode='practice') }}" class="card-clickable card-action-secondary card-action-practice"
+                style="--stats-color: var(--color-practice-all); --stats-text-color: var(--color-practice-all-ink); --action-border-color: var(--color-border-primary);">
+                <div class="card-action-copy">
+                    <div class="card-clickable-title">
+                        <span class="material-symbols-rounded card-clickable-icon" aria-hidden="true">stacks</span>
+                        Practice All Cards
+                    </div>
+                    <p class="card-clickable-text">Practice every card in this set, regardless of its level or review date. Your learning progress stays unchanged.</p>
+                </div>
+                <div class="card-action-scenery" aria-hidden="true">
+                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/mascot/practice-all-banner-v2-transparent.png') }}"
+                        alt="" draggable="false">
+                </div>
+            </a>
+
+            <a href="{{ url_for('main.learn_set', set_id=set_id, mode='mistakes') }}" class="card-clickable card-action-secondary"
+                style="--stats-color: var(--color-practice-mistakes); --action-border-color: var(--color-border-primary);">
+                <div class="card-action-copy">
+                    <div class="card-clickable-title">
+                        <svg class="card-clickable-icon study-mistakes-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 5 14 14M19 5 5 19" /></svg>
+                        Review Mistakes
+                    </div>
+                    <p class="card-clickable-text">Revisit cards you last answered incorrectly, in learning or practice. Your learning progress stays unchanged.</p>
+                </div>
+                <div class="card-action-scenery" aria-hidden="true">
+                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/mascot/repeat-mistakes-banner-v2-transparent.png') }}"
+                        alt="" draggable="false">
+                </div>
+            </a>
+
+    </div>
+</dialog>
+{% endif %}

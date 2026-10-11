@@ -14,8 +14,9 @@ export class FlashcardManager {
         this.undoHistory = [];
         
         // Mode
-        this.isPracticeMode = false;
-        this.isWrongAnswersMode = false;
+        this.studyMode = document.querySelector('.study-page')?.dataset.studyMode || 'learn';
+        this.isPracticeMode = this.studyMode !== 'learn';
+        this.isWrongAnswersMode = this.studyMode === 'mistakes';
         
         // Storage keys for session persistence (separate for each mode)
         this.learningStorageKey = `flashcardSession_LEARNING_${this.setId}`;
@@ -34,6 +35,7 @@ export class FlashcardManager {
         this.flashcard = document.getElementById("flashcard");
         this.cardContainer = document.getElementById('flashcard-wrapper') || document.querySelector('.card-container');
         this.cardLevel = document.getElementById("card-level");
+        this.cardLevels = [this.cardLevel, document.getElementById("card-level-back")].filter(Boolean);
         this.flipBtn = document.getElementById("flip-btn");
         this.feedbackBtns = document.getElementById("feedback-btns");
         this.knownBtn = document.getElementById("known-btn");
@@ -41,8 +43,11 @@ export class FlashcardManager {
         this.prevCardBtn = document.getElementById("back-btn");
         this.shuffleBtn = document.getElementById("shuffle-btn");
         this.restartBtn = document.getElementById("restart-btn");
-        this.practiceModeCheckbox = document.getElementById("practice-mode-checkbox");
-        this.wrongAnswersCheckbox = document.getElementById("wrong-answers-checkbox");
+        this.completion = document.getElementById('study-completion');
+        this.emptyAction = document.getElementById('study-empty-action');
+        this.completionText = document.getElementById('study-completion-text');
+        this.continuePracticeBtn = document.getElementById('continue-practice-btn');
+        this.continuePracticeLabel = document.getElementById('continue-practice-label');
         
         // Progress Elements
         this.progressText = document.getElementById("progress-text");
@@ -50,6 +55,15 @@ export class FlashcardManager {
         this.progressWrong = document.getElementById("progress-wrong");
         this.progressRemaining = document.getElementById("progress-remaining");
         this.progressContainer = document.getElementById("progress-container");
+        this.progressTrack = document.getElementById('round-progress');
+        this.roundLabel = document.getElementById('round-label');
+        this.mascot = document.querySelector('[data-study-mascot]');
+        this.mascotReacting = false;
+        this.mascotNextPose = null;
+        this.mascot?.addEventListener('animationend', (event) => {
+            if (event.target === this.mascot && event.animationName === 'mascot-cheer')
+                this.finishMascotReaction();
+        });
 
         // Constants
         this.LEVEL_COLORS = {
@@ -62,15 +76,7 @@ export class FlashcardManager {
 
         this.ANIMATION_DURATION = 350; // milliseconds
 
-        // Initialize Wrong Answers Mode from local storage
-        const savedWrongMode = localStorage.getItem('wrongAnswersMode') === 'true';
-        if (savedWrongMode) {
-             this.isWrongAnswersMode = true;
-             if (this.wrongAnswersCheckbox) {
-                 this.wrongAnswersCheckbox.checked = true;
-             }
-             this.cardContainer.classList.add('wrong-mode-active');
-        }
+        this.updateModeUI();
 
         this.init();
     }
@@ -78,18 +84,54 @@ export class FlashcardManager {
     async init() {
         this.attachEventListeners();
         this.attachKeyboardListeners();
+        this.disableControls();
+        try {
         
         // Try loading session first
         if (!this.loadSession()) {
              await this.fetchAndLoadCards();
         } else {
              console.log("Session restored from local storage.");
+             this.updateBackButtonState();
              this.updateUI();
+        }
+        } finally {
+            this.enableControls();
         }
     }
 
     getStorageKey() {
-        return this.isPracticeMode ? this.practiceStorageKey : this.learningStorageKey;
+        const mode = this.isPracticeMode ? this.practiceStorageKey : this.learningStorageKey;
+        return `${mode}_${this.isWrongAnswersMode ? 'MISTAKES' : 'ALL'}`;
+    }
+
+    updateModeUI() {
+        this.cardContainer.classList.toggle('wrong-mode-active', this.isWrongAnswersMode);
+        if (this.roundLabel) this.roundLabel.textContent = this.isPracticeMode ? 'Practice Progress' : 'Round Progress';
+    }
+
+    setMascotPose(pose, react = false) {
+        if (!this.mascot) return;
+
+        // Preserve the running motion; apply the latest resting pose afterward.
+        if (this.mascot.classList.contains('mascot-reacting')) {
+            this.mascotNextPose = react ? 'peek' : pose;
+            return;
+        }
+
+        this.mascot.dataset.pose = pose;
+
+        if (react && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            this.mascotReacting = true;
+            this.mascot.classList.add('mascot-reacting');
+        }
+    }
+
+    finishMascotReaction() {
+        this.mascotReacting = false;
+        this.mascot.classList.remove('mascot-reacting');
+        this.mascot.dataset.pose = this.mascotNextPose || 'peek';
+        this.mascotNextPose = null;
     }
 
     saveSession() {
@@ -107,11 +149,15 @@ export class FlashcardManager {
     }
 
     loadSession() {
-        const saved = localStorage.getItem(this.getStorageKey());
+        const legacyKey = this.isPracticeMode ? this.practiceStorageKey : this.learningStorageKey;
+        const currentSaved = localStorage.getItem(this.getStorageKey());
+        if (!currentSaved && this.isWrongAnswersMode) return false; // Do not restore the old Level 1 filter.
+        const saved = currentSaved || localStorage.getItem(legacyKey);
         if (!saved) return false;
 
         try {
             const data = JSON.parse(saved);
+            if (Boolean(data.isWrongAnswersMode) !== this.isWrongAnswersMode) return false;
             // Optional: Expiry check (e.g. 24 hours)? For now, keep it simple.
             
             this.cards = data.cards || [];
@@ -119,10 +165,7 @@ export class FlashcardManager {
             this.undoHistory = data.undoHistory || [];
             this.sessionStats = data.paddingStats || { correct: 0, wrong: 0, total: this.cards.length };
             // Mode is determined by checkbox state, not saved data
-            this.isWrongAnswersMode = data.isWrongAnswersMode || false;
-            
-            // Restore UI toggles
-            if(this.wrongAnswersCheckbox) this.wrongAnswersCheckbox.checked = this.isWrongAnswersMode;
+            this.updateModeUI();
             
             return true;
         } catch (e) {
@@ -133,29 +176,33 @@ export class FlashcardManager {
 
     clearSession() {
         localStorage.removeItem(this.getStorageKey());
+        // A completed migration must not resurrect an old round on Restart.
+        const legacyKey = this.isPracticeMode ? this.practiceStorageKey : this.learningStorageKey;
+        localStorage.removeItem(legacyKey);
     }
     
     updateProgress() {
          // Calculate for both modes
          const total = this.sessionStats.total; // Use fixed total from session start
-         if (total === 0) {
-              if (this.progressText) this.progressText.textContent = "0 / 0";
-              return;
-         }
          
          // Calculate reviewed based on stats
          const reviewed = this.sessionStats.correct + this.sessionStats.wrong;
-         const remaining = total - reviewed;
+         const remaining = Math.max(0, total - reviewed);
          
          // Update Text
          if (this.progressText) {
-             this.progressText.textContent = `${reviewed} / ${total}`;
+             this.progressText.textContent = total > 0 && remaining === 0
+                 ? `${reviewed} / ${total} · Complete`
+                 : `${reviewed} / ${total}`;
          }
          
          // Update Bars (percentage based on initial due cards count)
-         if (this.progressCorrect) this.progressCorrect.style.width = `${(this.sessionStats.correct / total) * 100}%`;
-         if (this.progressWrong) this.progressWrong.style.width = `${(this.sessionStats.wrong / total) * 100}%`;
-         if (this.progressRemaining) this.progressRemaining.style.width = `${(remaining / total) * 100}%`;
+         if (this.progressCorrect) this.progressCorrect.style.width = `${total ? (this.sessionStats.correct / total) * 100 : 0}%`;
+         if (this.progressWrong) this.progressWrong.style.width = `${total ? (this.sessionStats.wrong / total) * 100 : 0}%`;
+         if (this.progressRemaining) this.progressRemaining.style.width = `${total ? (remaining / total) * 100 : 100}%`;
+         this.progressTrack?.setAttribute('aria-valuemax', total);
+         this.progressTrack?.setAttribute('aria-valuenow', reviewed);
+         this.progressTrack?.setAttribute('aria-valuetext', `${reviewed} of ${total} answered; ${this.sessionStats.correct} knew it, ${this.sessionStats.wrong} didn't know, ${remaining} remaining`);
     }
     
     updateProgressBarVisibility() {
@@ -187,30 +234,77 @@ export class FlashcardManager {
             this.shuffleCards();
             this.shuffleBtn.blur();
         });
-        this.restartBtn?.addEventListener("click", () => {
-             // Explicit restart clears session and refetches
-             this.showLoading();
-             this.clearSession();
-             this.fetchAndLoadCards();
+        this.restartBtn?.addEventListener("click", async () => {
+             await this.restartRound();
              this.restartBtn.blur();
         });
-        this.practiceModeCheckbox?.addEventListener("change", (e) => this.togglePracticeMode(e.target.checked));
-        this.wrongAnswersCheckbox?.addEventListener("change", (e) => this.toggleWrongAnswersMode(e.target.checked));
+        this.continuePracticeBtn?.addEventListener('click', async () => {
+            if (this.areControlsDisabled) return;
+            if (this.isWrongAnswersMode && this.sessionStats.wrong === 0) {
+                await this.processSyncQueue();
+                window.location.assign(`/set/${this.setId}?mode=practice`);
+                return;
+            }
+            await this.restartRound();
+        });
+    }
+
+    async restartRound() {
+        if (this.areControlsDisabled) return;
+        this.disableControls();
+        this.showLoading();
+        try {
+            // The mistakes query must see the final answers from this round.
+            await this.processSyncQueue();
+            await this.fetchAndLoadCards();
+        } finally { this.enableControls(); }
+    }
+
+    updateCompletionAction(visible = false) {
+        if (this.emptyAction) this.emptyAction.hidden = true;
+        if (!this.completion) return;
+        this.completion.hidden = !visible || !this.isPracticeMode;
+        if (this.completion.hidden) return;
+        if (!this.isWrongAnswersMode) {
+            this.continuePracticeLabel.textContent = 'Practice Again';
+            this.completionText.textContent = '';
+        } else if (this.sessionStats.wrong > 0) {
+            this.continuePracticeLabel.textContent = 'Review Remaining Mistakes';
+            this.completionText.textContent = 'Keep practicing the cards you still didn’t know. Cards you answered correctly leave this mode.';
+        } else {
+            this.continuePracticeLabel.textContent = 'Practice All Cards';
+            this.completionText.textContent = 'You knew every card in this round. Keep practicing with all cards in this set.';
+        }
+        this.completionText.hidden = !this.completionText.textContent;
+        const icon = this.continuePracticeBtn?.querySelector('.material-symbols-rounded');
+        if (icon) icon.textContent = this.isWrongAnswersMode && this.sessionStats.wrong === 0 ? 'stacks' : 'refresh';
     }
 
     attachKeyboardListeners() {
         document.addEventListener('keydown', (event) => {
-            // Ignore if user is typing
-            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'BUTTON') {
-                return;
+            if (document.querySelector('dialog[open], [popover]:popover-open')) return;
+            // Keep typing and modified shortcuts native, but let study shortcuts
+            // take priority over a button left focused by a previous click.
+            const activeElement = document.activeElement;
+            if (activeElement?.matches('input, textarea, select') || activeElement?.isContentEditable) return;
+            if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+            // Cancel native Space activation even on the answer side or while
+            // controls are busy, so it cannot re-click the focused button.
+            if (event.code === 'Space') {
+                event.preventDefault();
+                // Space is a card shortcut here, not keyboard interaction with
+                // the previously clicked button. Release that stale focus so
+                // the browser does not reveal its focus-visible outline.
+                if (activeElement?.matches('button, [role="button"]')) activeElement.blur();
             }
+            if (event.repeat) return;
 
             if (this.areControlsDisabled) return;
 
             const isFlipped = this.flashcard.classList.contains("flipped");
 
             if (event.code === 'Space' && !isFlipped && this.flipBtn.style.display !== 'none') {
-                event.preventDefault();
                 this.flipCard();
             } else if (isFlipped) {
                 if (event.code === 'KeyA') { 
@@ -229,10 +323,10 @@ export class FlashcardManager {
         this.clearSession();
         
         let url;
-        if (this.isPracticeMode) {
+        if (this.isPracticeMode || this.isWrongAnswersMode) {
             url = `/api/set/${this.setId}/cards`;
             if (this.isWrongAnswersMode) {
-                url += '?wrong_only=true'; // Server-side filter for practice mode
+                url += '?last_wrong_only=true'; // Only cards whose last answer was incorrect.
             }
         } else {
             url = `/api/set/${this.setId}/due_cards`;
@@ -240,14 +334,10 @@ export class FlashcardManager {
 
         try {
             const response = await fetch(url);
+            if (!response.ok) throw new Error('Could not load cards');
             const data = await response.json();
             let loadedCards = data.cards || [];
             
-            // Client-side filter for learning mode + wrong only
-            if (this.isWrongAnswersMode && !this.isPracticeMode) {
-                 loadedCards = loadedCards.filter(c => c.level === 1);
-            }
-
             this.cards = loadedCards;
             this.undoHistory = [];
             this.updateBackButtonState();
@@ -285,16 +375,20 @@ export class FlashcardManager {
     }
 
     showEmptyMessage() {
+        this.updateCompletionAction();
+        if (this.emptyAction) this.emptyAction.hidden = !this.isWrongAnswersMode;
+        this.setMascotPose(this.isPracticeMode ? 'peek' : 'celebrate');
         this.cardFront.textContent = this.isWrongAnswersMode 
-            ? "No wrong cards to review! Great job."
-            : (this.isPracticeMode ? "This set is empty." : "No cards due for review!");
+            ? "No Previous Mistakes to Review."
+            : (this.isPracticeMode ? "This Set Is Empty." : "No Cards Due for Review!");
         this.cardBack.textContent = "";
         this.flipBtn.style.display = "none";
         this.feedbackBtns.style.display = "none";
-        this.cardLevel.style.display = "none";
+        this.cardLevels.forEach(level => { level.style.display = "none"; });
     }
 
     showLoading() {
+        this.updateCompletionAction();
         this.cardFront.textContent = "Loading...";
         this.cardBack.textContent = "";
         this.frameRequest = requestAnimationFrame(() => {
@@ -303,27 +397,35 @@ export class FlashcardManager {
         });
         this.flipBtn.style.display = "none";
         this.feedbackBtns.style.display = "none";
-        this.cardLevel.style.display = "none";
+        this.cardLevels.forEach(level => { level.style.display = "none"; });
     }
 
     showErrorMessage(message) {
+        this.updateCompletionAction();
         this.cardFront.textContent = message;
         this.cardBack.textContent = "";
         this.flipBtn.style.display = "none";
         this.feedbackBtns.style.display = "none";
-        this.cardLevel.style.display = "none";
+        this.cardLevels.forEach(level => { level.style.display = "none"; });
     }
 
     updateCardContent(card) {
+        this.updateCompletionAction();
         this.cardFront.textContent = card.front;
         this.cardBack.textContent = card.back; // Ensure Back is set
-        this.cardLevel.textContent = `Level ${card.level}`;
-        this.cardLevel.style.backgroundColor = this.LEVEL_COLORS[card.level] || '#ccc';
-        this.cardLevel.style.display = this.isPracticeMode ? 'none' : 'block';
+        const displayLevel = Math.max(1, Math.min(card.level, 5));
+        this.cardLevels.forEach(level => {
+            level.textContent = `Level ${displayLevel}`;
+            level.style.backgroundColor = this.LEVEL_COLORS[displayLevel];
+            level.style.color = displayLevel === 3 ? 'var(--color-text-main)' : 'white';
+            level.style.display = 'block';
+        });
     }
 
     loadCard(index, isFirstLoad = false) {
         if (index < 0 || index >= this.cards.length) return;
+
+        if (!this.mascotReacting) this.setMascotPose('peek');
 
         this.currentCardIndex = index;
         const card = this.cards[this.currentCardIndex];
@@ -351,6 +453,7 @@ export class FlashcardManager {
 
     flipCard() {
         if (this.flipBtn.style.display !== 'none') {
+            this.setMascotPose('peek', true);
             this.flashcard.classList.add("flipped");
             this.flipBtn.style.display = "none";
             this.feedbackBtns.style.display = "flex";
@@ -359,6 +462,8 @@ export class FlashcardManager {
 
     async handleFeedback(quality) {
         if (this.areControlsDisabled) return;
+
+        this.setMascotPose(quality === 5 ? 'celebrate' : 'peek', true);
         
         // Double-tap prevention is handled by disableControls()
 
@@ -425,14 +530,16 @@ export class FlashcardManager {
     }
 
     showCompletionMessage() {
+        this.setMascotPose('celebrate');
         this.cardContainer.classList.remove('animate-swipe-right', 'animate-swipe-left');
         this.flashcard.classList.remove("flipped");
-        this.cardFront.textContent = "All cards reviewed!";
+        this.cardFront.textContent = "All Cards Reviewed!";
+        this.updateCompletionAction(true);
         this.cardBack.textContent = "";
         this.feedbackBtns.style.display = "none";
-        this.cardLevel.style.display = "none";
+        this.cardLevels.forEach(level => { level.style.display = "none"; });
         this.flipBtn.style.display = 'none';
-        this.progressText.textContent = "Complete";
+        this.updateProgress();
 
         void this.cardContainer.offsetHeight;
         this.cardContainer.classList.add('load-in');
@@ -443,6 +550,8 @@ export class FlashcardManager {
 
     async undoLastCard() {
         if (this.undoHistory.length === 0) return;
+        this.disableControls();
+        try {
 
         const historyItem = this.undoHistory.pop();
         const cardToRestore = historyItem.card;
@@ -469,7 +578,8 @@ export class FlashcardManager {
             // 2. Cancel Sync
             this.cancelPendingSync(cardToRestore.front);
 
-            // 3. Server Restore (only learning mode)
+            // Let in-flight feedback finish before restoring its original state.
+            await this.processSyncQueue();
             if (!this.isPracticeMode) {
                 try {
                     await fetch("/api/restore_card", {
@@ -479,13 +589,20 @@ export class FlashcardManager {
                             set_id: this.setId,
                             card_front: cardToRestore.front,
                             level: cardToRestore.level,
-                            next_review: cardToRestore.next_review
+                            next_review: cardToRestore.next_review,
+                            last_answer_wrong: cardToRestore.last_answer_wrong ?? cardToRestore.last_practice_wrong ?? false
                         })
                     });
                 } catch (error) {
                     console.error("Error restoring card:", error);
                 }
+            } else {
+                const wasWrong = cardToRestore.last_answer_wrong ?? cardToRestore.last_practice_wrong ?? false;
+                this.queuePracticeSync({cardFront: cardToRestore.front, endpoint: wasWrong ? 'mark_wrong' : 'mark_correct', retries: 0});
             }
+        }
+        } finally {
+            this.enableControls();
         }
     }
 
@@ -530,7 +647,7 @@ export class FlashcardManager {
         
         // Save new order to server
         const ids = this.cards.map(c => c.id);
-        fetch(`/api/set/${this.setId}/shuffle`, {
+        if (!this.isPracticeMode) fetch(`/api/set/${this.setId}/shuffle`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ card_ids: ids })
@@ -539,152 +656,6 @@ export class FlashcardManager {
         this.saveSession();
         // Reload current card (which might be new now)
         this.loadCard(this.currentCardIndex);
-    }
-
-    async togglePracticeMode(enabled) {
-        // Only show popup when ENABLING
-        if (enabled) {
-            this.showInfoPopup(
-                "Practice Mode", 
-                "In Practice Mode, you can review all cards freely without affecting your statistics or card levels. Perfect for cramming!",
-                // onCancel
-                () => {
-                    this.practiceModeCheckbox.checked = false;
-                },
-                // onConfirm
-                async () => {
-                    this.showLoading();
-                    this.isPracticeMode = true;
-                    this.clearSession();
-                    await this.fetchAndLoadCards();
-                    // New session -> Shuffle immediately to persist random order
-                    this.shuffleCards();
-                }
-            );
-        } else {
-            // Disabling (returning to learning mode)
-            this.showLoading();
-            this.isPracticeMode = false;
-            this.clearSession();
-            await this.fetchAndLoadCards();
-        }
-    }
-    
-    toggleWrongAnswersMode(enabled) {
-        // Only show popup when ENABLING
-        if (enabled) {
-            const message = this.isPracticeMode 
-                ? "Showing only cards you answered incorrectly during practice sessions."
-                : "Focusing exclusively on cards at Level 1 (new or recently answered incorrectly).";
-            
-            this.showInfoPopup(
-                "Wrong Answers Only", 
-                message,
-                // onCancel
-                () => {
-                    this.wrongAnswersCheckbox.checked = false;
-                },
-                // onConfirm
-                () => {
-                    this.showLoading();
-                    this.isWrongAnswersMode = true;
-                    this.cardContainer.classList.add('wrong-mode-active');
-                    localStorage.setItem('wrongAnswersMode', 'true');
-                    this.clearSession();
-                    this.fetchAndLoadCards();
-                }
-            );
-        } else {
-            // Disabling
-            this.showLoading();
-            this.isWrongAnswersMode = false;
-            this.cardContainer.classList.remove('wrong-mode-active');
-            localStorage.setItem('wrongAnswersMode', 'false');
-            this.clearSession();
-            this.fetchAndLoadCards();
-        }
-    }
-    
-    showInfoPopup(title, message, onCancel = null, onConfirm = null) {
-        // Remove existing if any
-        const existing = document.getElementById('dynamic-info-popup');
-        if (existing) existing.remove();
-
-        const overlay = document.createElement('div');
-        overlay.id = 'dynamic-info-popup';
-        overlay.className = 'popup-overlay active';
-        overlay.style.zIndex = '3000'; // Ensure it's on top
-
-        const content = document.createElement('div');
-        content.className = 'popup-content';
-        
-        // Header
-        const header = document.createElement('div');
-        header.className = 'popup-header';
-        
-        const titleEl = document.createElement('h3');
-        titleEl.className = 'popup-title';
-        titleEl.textContent = title;
-        
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'popup-close-btn';
-        closeBtn.innerHTML = '<span class="material-symbols-outlined">close</span>';
-        closeBtn.onclick = () => {
-            if (onCancel) onCancel();
-            overlay.remove();
-        };
-        
-        header.appendChild(titleEl);
-        header.appendChild(closeBtn);
-        
-        // Body
-        const body = document.createElement('div');
-        body.className = 'popup-body';
-        const p = document.createElement('p');
-        p.textContent = message;
-        body.appendChild(p);
-        
-        // Footer
-        const footer = document.createElement('div');
-        footer.className = 'popup-footer';
-        
-        // Add Cancel button if onCancel callback is provided
-        if (onCancel) {
-            const cancelBtn = document.createElement('button');
-            cancelBtn.className = 'btn-secondary';
-            cancelBtn.textContent = 'Cancel';
-            cancelBtn.onclick = () => {
-                onCancel();
-                overlay.remove();
-            };
-            footer.appendChild(cancelBtn);
-        }
-        
-        const okBtn = document.createElement('button');
-        okBtn.className = 'btn-primary';
-        okBtn.textContent = 'Got it';
-        okBtn.onclick = () => {
-            if (onConfirm) onConfirm();
-            overlay.remove();
-        };
-        
-        footer.appendChild(okBtn);
-        
-        // Assemble
-        content.appendChild(header);
-        content.appendChild(body);
-        content.appendChild(footer);
-        overlay.appendChild(content);
-        
-        document.body.appendChild(overlay);
-        
-        // Close on outside click (triggers cancel if provided)
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                if (onCancel) onCancel();
-                overlay.remove();
-            }
-        });
     }
 
     /**
@@ -710,7 +681,8 @@ export class FlashcardManager {
         if (this.notKnownBtn) this.notKnownBtn.disabled = true;
         if (this.prevCardBtn) this.prevCardBtn.disabled = true;
         if (this.shuffleBtn) this.shuffleBtn.disabled = true;
-        if (this.practiceModeCheckbox) this.practiceModeCheckbox.disabled = true;
+        if (this.restartBtn) this.restartBtn.disabled = true;
+        if (this.continuePracticeBtn) this.continuePracticeBtn.disabled = true;
     }
 
     enableControls() {
@@ -720,7 +692,8 @@ export class FlashcardManager {
         if (this.notKnownBtn) this.notKnownBtn.disabled = false;
         this.updateBackButtonState();
         if (this.shuffleBtn) this.shuffleBtn.disabled = false;
-        if (this.practiceModeCheckbox) this.practiceModeCheckbox.disabled = false;
+        if (this.restartBtn) this.restartBtn.disabled = false;
+        if (this.continuePracticeBtn) this.continuePracticeBtn.disabled = false;
     }
 
     queueSync(syncItem) {
@@ -728,84 +701,45 @@ export class FlashcardManager {
         this.processSyncQueue();
     }
 
-    async processSyncQueue() {
-        if (this.isSyncProcessing || this.syncQueue.length === 0) return;
+    processSyncQueue() {
+        if (this.syncPromise) return this.syncPromise;
+        this.syncPromise = this.flushSyncQueue().finally(() => { this.syncPromise = null; });
+        return this.syncPromise;
+    }
 
-        this.isSyncProcessing = true;
-
+    async flushSyncQueue() {
         while (this.syncQueue.length > 0) {
             const syncItem = this.syncQueue[0];
-
+            const endpoint = syncItem.endpoint || 'rate';
             try {
-                await fetch(`/api/set/${this.setId}/rate`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                const response = await fetch(`/api/set/${this.setId}/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         card_front: syncItem.cardFront,
-                        quality: syncItem.quality
+                        ...(endpoint === 'rate' ? { quality: syncItem.quality } : {})
                     })
                 });
-
-                this.syncQueue.shift();
+                if (!response.ok) throw new Error('Could not save the answer');
+                // Undo may have canceled this item while the request was running.
+                if (this.syncQueue[0] === syncItem) this.syncQueue.shift();
             } catch (error) {
-                console.error("Error syncing card:", error);
-
                 syncItem.retries++;
                 if (syncItem.retries >= 3) {
-                    console.error(`Failed to sync card after 3 retries:`, syncItem.cardFront);
-                    this.syncQueue.shift(); 
+                    console.error('Failed to save answer:', error);
+                    if (this.syncQueue[0] === syncItem) this.syncQueue.shift();
                 } else {
-                    const delay = Math.pow(2, syncItem.retries - 1) * 1000;
-                    await new Promise(resolve => setTimeout(resolve, delay));
+                    await new Promise(resolve => setTimeout(resolve, 1000 * syncItem.retries));
                 }
             }
         }
-
-        this.isSyncProcessing = false;
     }
 
     queuePracticeSync(syncItem) {
-        this.syncQueue.push(syncItem);
-        this.processPracticeSyncQueue();
-    }
-
-    async processPracticeSyncQueue() {
-        if (this.isSyncProcessing || this.syncQueue.length === 0) return;
-
-        this.isSyncProcessing = true;
-
-        while (this.syncQueue.length > 0) {
-            const syncItem = this.syncQueue[0];
-
-            try {
-                await fetch(`/api/set/${this.setId}/${syncItem.endpoint}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        card_front: syncItem.cardFront
-                    })
-                });
-
-                this.syncQueue.shift();
-            } catch (error) {
-                console.error("Error syncing practice card:", error);
-
-                syncItem.retries++;
-                if (syncItem.retries >= 3) {
-                    console.error(`Failed to sync practice card after 3 retries:`, syncItem.cardFront);
-                    this.syncQueue.shift(); 
-                } else {
-                    const delay = Math.pow(2, syncItem.retries - 1) * 1000;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
-        }
-
-        this.isSyncProcessing = false;
+        this.queueSync(syncItem);
     }
 
     cancelPendingSync(cardFront) {
         this.syncQueue = this.syncQueue.filter(item => item.cardFront !== cardFront);
     }
 }
-

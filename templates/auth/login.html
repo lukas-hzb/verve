@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 
 <head>
     <meta charset="UTF-8">
@@ -8,11 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap"
         rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
-        rel="stylesheet">
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -41,10 +39,10 @@
         .auth-divider {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: var(--space-4) 0;
-            color: var(--color-text-secondary);
-            font-size: var(--font-size-sm);
+            gap: var(--space-3);
+            margin: var(--space-6) 0;
+            color: var(--color-text-muted);
+            font-size: var(--font-size-caption);
         }
 
         .auth-divider::before,
@@ -56,15 +54,15 @@
 
         .auth-footer {
             text-align: center;
-            margin-top: var(--space-4);
-            font-size: var(--font-size-base);
-            color: var(--color-text-secondary);
+            margin-top: var(--space-6);
+            font-size: var(--font-size-caption);
+            color: var(--color-text-muted);
         }
 
         .auth-link {
             color: var(--color-primary);
             font: inherit;
-            font-weight: 500;
+            font-weight: var(--font-weight-medium);
             text-decoration: none;
         }
 
@@ -81,17 +79,48 @@
         .auth-link:hover {
             text-decoration: underline;
         }
+
+        .auth-card {
+            padding: clamp(1.5rem, 5vw, 2rem);
+        }
+
+        .auth-heading {
+            text-align: center;
+            margin-bottom: var(--space-8);
+        }
+
+        .auth-logo {
+            font-size: var(--font-size-display);
+            color: var(--color-primary);
+            margin-bottom: var(--space-3);
+        }
+
+        .auth-title {
+            font-size: var(--font-size-section);
+            font-weight: var(--font-weight-semibold);
+            margin: 0;
+            line-height: var(--line-height-heading);
+        }
+
+        .auth-recovery {
+            text-align: right;
+            font-size: var(--font-size-caption);
+        }
+
+        #verification-form > p {
+            margin-bottom: var(--space-5);
+        }
     </style>
 </head>
 
 <body>
     <div class="auth-container" data-neon-auth data-mode="{{ mode }}" data-next="{{ next_page }}" data-csrf="{{ csrf_token() }}">
-        <div class="card-normal" style="padding: var(--space-6);">
-            <div style="text-align: center; margin-bottom: var(--space-8);">
+        <div class="card-normal auth-card">
+            <div class="auth-heading">
                 <h1
-                    style="font-family: var(--font-family-display); font-size: 2.5rem; color: var(--color-primary); font-weight: 700; margin-bottom: var(--space-1);">
+                    class="auth-logo">
                     Verve</h1>
-                <h2 style="font-size: 1.125rem; font-weight: 700; color: var(--color-text-main); margin: 0;">{{ 'Create your account' if mode == 'register' else 'Change password' if mode == 'change-password' else 'Reset password' if mode == 'reset-password' else 'Welcome back!' }}</h2>
+                <h2 class="auth-title">{{ 'Create Your Account' if mode == 'register' else 'Change Password' if mode == 'change-password' else 'Reset Password' if mode == 'reset-password' else 'Welcome Back!' }}</h2>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -100,12 +129,10 @@
                 {% for category, message in messages %}
                 <div class="alert alert-{{ category }}"
                     onclick="this.remove(); if(!this.parentElement.querySelector('.alert')) this.parentElement.remove();">
-                    <span class="material-symbols-outlined alert-icon">
-                        {% if category == 'success' %}check_circle{% elif category == 'error' %}error{% else %}info{%
-                        endif %}
-                    </span>
+                    <span class="material-symbols-rounded alert-icon" aria-hidden="true">{% if category == 'success' %}check_circle{% elif category == 'error' %}error{% else %}info{%
+                        endif %}</span>
                     <span class="alert-message">{{ message }}</span>
-                    <span class="material-symbols-outlined alert-close">close</span>
+                    <span class="material-symbols-rounded alert-close" aria-hidden="true">close</span>
                 </div>
                 {% endfor %}
             </div>
@@ -117,7 +144,7 @@
             <form id="auth-form">
                 {% if mode == 'register' %}
                 <div class="card-input-group">
-                    <label for="username" class="card-input-label">Display name</label>
+                    <label for="username" class="card-input-label">Display Name</label>
                     <input id="username" name="username" class="card-input" required autocomplete="nickname">
                 </div>
                 {% endif %}
@@ -130,37 +157,37 @@
                 {% if mode == 'reset-password' %}
                 <p>If this email has an account, a reset code has been sent.</p>
                 <div class="card-input-group">
-                    <label for="reset-code" class="card-input-label">Reset code</label>
+                    <label for="reset-code" class="card-input-label">Reset Code</label>
                     <input id="reset-code" name="otp" class="card-input" required autocomplete="one-time-code">
                 </div>
                 {% endif %}
                 {% if mode == 'change-password' %}
                 <div class="card-input-group">
-                    <label for="current-password" class="card-input-label">Current password</label>
+                    <label for="current-password" class="card-input-label">Current Password</label>
                     <input type="password" id="current-password" name="current_password" class="card-input" required autocomplete="current-password">
                 </div>
                 {% endif %}
                 <div class="card-input-group">
-                    <label for="password" class="card-input-label">{{ 'Password' if mode == 'login' else 'New password' }}</label>
+                    <label for="password" class="card-input-label">{{ 'Password' if mode == 'login' else 'New Password' }}</label>
                     <input type="password" id="password" name="password" class="card-input" required minlength="8" autocomplete="{{ 'current-password' if mode == 'login' else 'new-password' }}">
                 </div>
                 {% if mode == 'login' %}
-                <div style="text-align: center; font-size: var(--font-size-sm);">
-                    <button type="button" id="forgot-password" class="auth-link">Forgot password?</button>
+                <div class="auth-recovery">
+                    <button type="button" id="forgot-password" class="auth-link">Forgot Password?</button>
                 </div>
                 {% endif %}
-                <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:var(--space-4)">
-                    <span class="material-symbols-outlined" aria-hidden="true">{{ 'login' if mode == 'login' else 'person_add' if mode == 'register' else 'lock' }}</span>
-                    {{ 'Create account' if mode == 'register' else 'Save password' if mode in ('change-password', 'reset-password') else 'Login' }}
+                <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:var(--space-6)">
+                    <span class="material-symbols-rounded" aria-hidden="true">{{ 'person_add' if mode == 'register' else 'lock' if mode in ('change-password', 'reset-password') else 'login' }}</span>
+                    {{ 'Create Account' if mode == 'register' else 'Save Password' if mode in ('change-password', 'reset-password') else 'Login' }}
                 </button>
             </form>
             <form id="verification-form" hidden>
                 <p>Enter the verification code sent to your email to continue.</p>
                 <div class="card-input-group">
-                    <label for="verification-code" class="card-input-label">Verification code</label>
+                    <label for="verification-code" class="card-input-label">Verification Code</label>
                     <input id="verification-code" name="otp" class="card-input" autocomplete="one-time-code" required>
                 </div>
-                <button type="submit" class="btn-primary">Verify email</button>
+                <button type="submit" class="btn-primary">Verify Email</button>
             </form>
             {% if mode in ('login', 'register') %}
             <div class="auth-divider">or</div>
@@ -170,7 +197,7 @@
             </button>
             <div class="auth-footer">
                 {% if mode == 'login' %}
-                <p>Don't have an account? <a class="auth-link" href="{{ url_for('auth.register') }}">Register now</a></p>
+                <p>Don't have an account? <a class="auth-link" href="{{ url_for('auth.register') }}">Register Now</a></p>
                 {% else %}
                 <p>Already registered? <a class="auth-link" href="{{ url_for('auth.login') }}">Login</a></p>
                 {% endif %}

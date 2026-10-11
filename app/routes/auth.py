@@ -109,7 +109,7 @@ def update_profile():
                 'message': 'Profile updated successfully!',
                 'username': updated_user.username,
                 'email': updated_user.email,
-                'avatar_url': updated_user.avatar_file,
+                'avatar_url': updated_user.avatar_file or url_for('static', filename='img/default-avatar.png'),
                 'initials': updated_user.username[0].upper()
             })
             

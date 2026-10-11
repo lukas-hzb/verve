@@ -22,6 +22,73 @@ from app.utils.exceptions import (
 )
 
 class VerveTestCase(unittest.TestCase):
+    def test_wrong_filter_includes_last_wrong_answer_in_both_modes_and_undo(self):
+        from datetime import timedelta
+        from app.utils.time import utc_now
+        client = self.authenticated_client()
+        vocab_set = VocabService.create_user_set(self.user.id, 'Wrong_Filter')
+        future = utc_now() + timedelta(days=8)
+        card = Card(vocab_set_id=vocab_set.id, front='known', back='answer', level=4,
+                    next_review=future, last_practice_wrong=True)
+        new_card = Card(vocab_set_id=vocab_set.id, front='new', back='new answer', level=1,
+                        next_review=future)
+        db.session.add_all([card, new_card])
+        db.session.commit()
+        url = f'/api/set/{vocab_set.id}'
+        self.assertEqual({c['front'] for c in client.get(url + '/cards?wrong_only=true').get_json()['cards']}, {'known', 'new'})
+        response = client.post(url + '/rate', json={'card_front': 'known', 'quality': 5})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(card.last_practice_wrong)
+        self.assertEqual([c['front'] for c in client.get(url + '/cards?wrong_only=true').get_json()['cards']], ['new'])
+        self.assertEqual(client.post('/api/restore_card', json={'set_id': vocab_set.id,
+            'card_front': 'known', 'level': 4, 'next_review': future.isoformat(),
+            'last_answer_wrong': True}).status_code, 200)
+        self.assertTrue(card.last_practice_wrong)
+        self.assertEqual(card.level, 4)
+        self.assertEqual(card.next_review, future)
+        self.assertEqual(client.post(url + '/mark_correct', json={'card_front': 'known'}).status_code, 200)
+        self.assertFalse(card.last_practice_wrong)
+        self.assertEqual((card.level, card.next_review), (4, future))
+        self.assertEqual(client.post(url + '/rate', json={'card_front': 'known', 'quality': 2}).status_code, 200)
+        self.assertTrue(card.last_practice_wrong)
+        self.assertTrue(card.to_dict()['last_answer_wrong'])
+
+    def test_overview_practice_modes_do_not_change_learning_progress(self):
+        from datetime import timedelta
+        from app.utils.time import utc_now
+        client = self.authenticated_client()
+        vocab_set = VocabService.create_user_set(self.user.id, 'Practice_Modes')
+        future = utc_now() + timedelta(days=8)
+        cards = [Card(vocab_set_id=vocab_set.id, front=front, back='answer', level=level,
+                      next_review=future, last_practice_wrong=wrong)
+                 for front, level, wrong in [('new', 1, False), ('mistake', 4, True), ('known', 3, False)]]
+        db.session.add_all(cards); db.session.commit()
+        path = f'/set/{vocab_set.id}'
+        overview = client.get(path + '/overview').get_data(as_text=True)
+        self.assertIn('mode=practice', overview)
+        self.assertIn('mode=mistakes', overview)
+        self.assertIn('id="study-mode-picker"', overview)
+        self.assertIn('Learn with Flashcards', overview)
+        self.assertNotIn('mode=practice', overview.split('<dialog')[0])
+        self.assertNotIn('mode=mistakes', overview.split('<dialog')[0])
+        for mode in ('learn', 'practice', 'mistakes'):
+            page = client.get(path + '?mode=' + mode).get_data(as_text=True)
+            self.assertIn(f'data-study-mode="{mode}"', page)
+            self.assertIn('aria-label="Change Learning Mode"', page)
+            self.assertNotIn('practice-mode-checkbox', page)
+            self.assertNotIn('wrong-answers-checkbox', page)
+        self.assertIn('data-study-mode="learn"', client.get(path + '?mode=invalid').get_data(as_text=True))
+        api = f'/api/set/{vocab_set.id}'
+        self.assertEqual([c['front'] for c in client.get(api + '/cards?last_wrong_only=true').get_json()['cards']], ['mistake'])
+        baseline = VocabService.get_statistics(vocab_set.id, self.user.id)
+        for card in cards:
+            state = (card.level, card.next_review)
+            for endpoint in ('mark_wrong', 'mark_correct'):
+                self.assertEqual(client.post(api + '/' + endpoint, json={'card_front':card.front}).status_code, 200)
+                self.assertEqual((card.level, card.next_review), state)
+        self.assertEqual(VocabService.get_statistics(vocab_set.id, self.user.id), baseline)
+        self.assertEqual(client.get(api + '/cards?last_wrong_only=true').get_json()['cards'], [])
+
     def setUp(self):
         self.app = create_app('testing')
         self.app_context = self.app.app_context()
@@ -116,7 +183,38 @@ class VerveTestCase(unittest.TestCase):
                 'email': 'new@example.com', 'name': 'testuser', 'emailVerified': True})
         self.assertEqual(user.username, 'testuser_1')
         self.assertIsNone(user.password_hash)
-        self.assertTrue(VocabService.get_all_set_names(user.id))
+        self.assert_default_capitals(user)
+
+    def assert_default_capitals(self, user):
+        from app.data.standard_sets import HAUPTSTAEDTE_DATA
+        from app.utils.time import utc_now
+        sets = VocabSet.query.filter_by(user_id=user.id, name='Hauptstädte', is_shared=False).all()
+        self.assertEqual(len(sets), 1)
+        self.assertEqual({(card.front, card.back) for card in sets[0].cards},
+                         {(item['front'], item['back']) for item in HAUPTSTAEDTE_DATA})
+        self.assertTrue(all(card.level == 1 and card.next_review < utc_now()
+                            for card in sets[0].cards))
+
+    def test_new_account_gets_capitals_without_database_seed(self):
+        template = VocabSet.query.filter_by(name='Hauptstädte', is_shared=True).one()
+        db.session.delete(template)
+        db.session.commit()
+        with patch.object(UserService, 'google_subject', return_value=None):
+            user = UserService.resolve_neon_user({'id': str(uuid.uuid4()),
+                'email': 'unseeded@example.com', 'name': 'Unseeded'})
+        self.assert_default_capitals(user)
+
+    def test_default_assignment_preserves_existing_learning_progress(self):
+        UserService.assign_default_vocab_set(self.user.id)
+        db.session.commit()
+        capitals = VocabSet.query.filter_by(user_id=self.user.id, name='Hauptstädte').one()
+        card = capitals.cards[0]
+        card.level = 4
+        db.session.commit()
+        UserService.assign_default_vocab_set(self.user.id)
+        db.session.commit()
+        self.assertEqual(VocabSet.query.filter_by(user_id=self.user.id, name='Hauptstädte').count(), 1)
+        self.assertEqual(db.session.get(Card, card.id).level, 4)
 
     def test_managed_session_revocation_removes_protected_access(self):
         client = self.app.test_client()
@@ -156,6 +254,37 @@ class VerveTestCase(unittest.TestCase):
         sets = VocabService.get_all_set_names(self.user.id)
         self.assertTrue(any(s['name'] == 'My_Test_Set' for s in sets))
 
+    def test_overview_statistics_color_matches_dominant_home_level(self):
+        client = self.authenticated_client()
+        for levels in ([], [1, 4, 4], [2, 2, 5], [6, 6, 1], [4, 4, 4, 5, 5, 6, 6]):
+            with self.subTest(levels=levels):
+                vs = VocabService.create_user_set(self.user.id, 'Color_' + uuid.uuid4().hex)
+                db.session.add_all([
+                    Card(vocab_set_id=vs.id, front=f'word_{index}', back='answer', level=level)
+                    for index, level in enumerate(levels)
+                ])
+                db.session.commit()
+                summary = next(item for item in VocabService.get_all_set_names(self.user.id) if item['id'] == vs.id)
+                response = client.get(f'/set/{vs.id}/overview')
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(f'--stats-color: var(--color-accent-{summary["max_level"]})', response.get_data(as_text=True))
+
+    def test_shared_overview_statistics_color_uses_shared_card_levels(self):
+        vs = VocabSet(id=str(uuid.uuid4()), name='Shared_Color', is_shared=True)
+        db.session.add(vs)
+        db.session.flush()
+        db.session.add_all([
+            Card(vocab_set_id=vs.id, front=f'word_{index}', back='answer', level=level)
+            for index, level in enumerate((4, 4, 4, 5, 5, 6, 6))
+        ])
+        db.session.commit()
+        response = self.authenticated_client().get(f'/set/{vs.id}/overview')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('--stats-color: var(--color-accent-5)', response.get_data(as_text=True))
+        stats = VocabService.get_statistics(vs.id, self.user.id)
+        self.assertEqual(stats['level_counts'], {4: 3, 5: 4})
+        self.assertEqual(stats['total_cards'], 7)
+
     def test_card_operations(self):
         vs = VocabService.create_user_set(self.user.id, 'Card_Test_Set')
         
@@ -173,6 +302,45 @@ class VerveTestCase(unittest.TestCase):
         result = VocabService.update_card_performance(vs.id, 'Hello', 5, self.user.id)
         self.assertEqual(result['status'], 'success')
         self.assertGreater(result['new_level'], 1)
+
+    def test_edit_card_preserves_progress_and_validates_input(self):
+        vs = VocabService.create_user_set(self.user.id, 'Edit_Cards')
+        card = VocabService.add_card(vs.id, 'old front', 'old back', self.user.id)
+        VocabService.add_card(vs.id, 'duplicate', 'another back', self.user.id)
+        card.level = 4
+        card.last_practice_wrong = True
+        card.shuffle_order = 7
+        db.session.commit()
+        progress = (card.level, card.next_review, card.last_practice_wrong, card.shuffle_order)
+        client = self.authenticated_client()
+        path = f'/api/set/{vs.id}/card/{card.id}'
+        response = client.patch(path, json={'front': ' <b>edited</b> ', 'back': 'first line\nsecond line'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()['card']['front'], '<b>edited</b>')
+        self.assertEqual(card.back, 'first line\nsecond line')
+        self.assertEqual((card.level, card.next_review, card.last_practice_wrong, card.shuffle_order), progress)
+        for payload in [{'front': 'duplicate', 'back': 'changed'},
+                        {'front': 'valid', 'back': '  '},
+                        {'front': 'x' * 256, 'back': 'valid'},
+                        {'front': 12, 'back': 'valid'}, []]:
+            self.assertEqual(client.patch(path, json=payload).status_code, 400)
+            self.assertEqual((card.front, card.back), ('<b>edited</b>', 'first line\nsecond line'))
+        other_set = VocabService.create_user_set(self.user.id, 'Other_Cards')
+        self.assertEqual(client.patch(f'/api/set/{other_set.id}/card/{card.id}',
+                                     json={'front': 'x', 'back': 'y'}).status_code, 404)
+
+    def test_edit_card_requires_ownership(self):
+        other_user = self.create_user('cardowner', 'cardowner@example.com')
+        other_set = VocabService.create_user_set(other_user.id, 'Private_Edit')
+        card = VocabService.add_card(other_set.id, 'front', 'back', other_user.id)
+        client = self.authenticated_client()
+        path = f'/api/set/{other_set.id}/card/{card.id}'
+        self.assertEqual(client.patch(path, json={'front': 'changed', 'back': 'changed'}).status_code, 403)
+        self.assertEqual((card.front, card.back), ('front', 'back'))
+        shared = VocabSet.query.filter_by(is_shared=True).first()
+        shared_card = Card.query.filter_by(vocab_set_id=shared.id).first()
+        self.assertEqual(client.patch(f'/api/set/{shared.id}/card/{shared_card.id}',
+                                     json={'front': 'changed', 'back': 'changed'}).status_code, 403)
 
     def test_delete_set(self):
         vs = VocabService.create_user_set(self.user.id, 'Delete_Me')
@@ -297,6 +465,23 @@ class VerveTestCase(unittest.TestCase):
     def test_profile_email_cannot_diverge_from_managed_identity(self):
         UserService.update_user_profile(self.user.id, 'updated', 'attacker@example.com')
         self.assertEqual(self.user.email, 'test@example.com')
+
+    def test_profile_avatar_fallback_and_custom_image(self):
+        client = self.authenticated_client()
+        response = client.get('/auth/profile')
+        self.assertIn('id="avatar-preview-img" src="/static/img/default-avatar.png"', response.get_data(as_text=True))
+        self.user.avatar_file = 'https://example.test/custom-avatar.png'
+        db.session.commit()
+        response = client.get('/auth/profile')
+        self.assertIn('id="avatar-preview-img" src="https://example.test/custom-avatar.png"', response.get_data(as_text=True))
+        response = client.post('/auth/profile/update', data={
+            'username': self.user.username,
+            'email': self.user.email,
+            'remove_avatar': 'true',
+        }, headers={'Accept': 'application/json'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()['avatar_url'], '/static/img/default-avatar.png')
+        self.assertIsNone(self.user.avatar_file)
 
     def test_import_errors_redirect_to_local_route_even_with_untrusted_host(self):
         client = self.authenticated_client()

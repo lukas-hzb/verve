@@ -1,66 +1,74 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div
-    style="padding: 15px var(--space-6) var(--space-6) var(--space-6); max-width: 1400px; width: 100%; margin: 0 auto;">
+<div class="page-shell">
 
     <!-- Secondary Header -->
-    <div style="margin-bottom: var(--space-6);">
+    <div class="page-section">
         <div class="card-header-secondary">
             <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') | title }} Overview</h1>
             <div class="button-group">
                 <button class="btn-secondary" onclick="openRenameModal()" style="white-space: nowrap;">
-                    <span class="material-symbols-outlined">edit</span> Rename
+                    <span class="material-symbols-rounded" aria-hidden="true">edit</span> Rename
                 </button>
                 <button class="btn-secondary" onclick="openAddCardModal()" style="white-space: nowrap;">
-                    <span class="material-symbols-outlined">add</span> Add Card
+                    <span class="material-symbols-rounded" aria-hidden="true">add</span> Add Card
                 </button>
                 <button class="btn-secondary" onclick="openImportModal()" style="white-space: nowrap;">
-                    <span class="material-symbols-outlined">upload_file</span> Import
+                    <span class="material-symbols-rounded" aria-hidden="true">upload_file</span> Import
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions Cards -->
-    <div style="margin-bottom: var(--space-8);">
-        <div class="card-grid-2">
-            <a href="{{ url_for('main.learn_set', set_id=set_id) }}" class="card-clickable">
-                <div class="card-clickable-title">
-                    <span class="material-symbols-outlined card-clickable-icon">menu_book</span>
-                    Learn
+    <!-- One entry point opens the flashcard mode selection. -->
+    <div class="page-section">
+        <div class="card-grid-2 card-action-grid" aria-label="Learning Modes and Statistics">
+            <a href="{{ url_for('main.learn_set', set_id=set_id) }}" class="card-clickable card-action-primary card-action-flashcards" data-study-mode-picker aria-haspopup="dialog" aria-controls="study-mode-picker">
+                <div class="card-action-copy">
+                    <div class="card-clickable-title">
+                        <span class="material-symbols-rounded card-clickable-icon" aria-hidden="true">menu_book</span>
+                        Learn with Flashcards
+                    </div>
+                    <p class="card-clickable-text">Choose How You Want to Practice</p>
                 </div>
-                <p class="card-clickable-text">Start learning session</p>
-                <span class="material-symbols-outlined card-clickable-arrow">arrow_forward</span>
+                <div class="card-action-scenery" aria-hidden="true">
+                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/mascot/flashcard-learning-transparent.png') }}"
+                        alt="" draggable="false">
+                </div>
             </a>
 
-            <a href="{{ url_for('main.stats', set_id=set_id) }}" class="card-clickable">
-                <div class="card-clickable-title">
-                    <span class="material-symbols-outlined card-clickable-icon">bar_chart</span>
-                    Statistics
+            <a href="{{ url_for('main.stats', set_id=set_id) }}" class="card-clickable card-action-secondary"
+                style="--stats-color: var(--color-accent-{{ dominant_level }}); --stats-text-color: {{ 'var(--color-text-main)' if dominant_level == 3 else 'white' }};">
+                <div class="card-action-copy">
+                    <div class="card-clickable-title">
+                        <span class="material-symbols-rounded card-clickable-icon" aria-hidden="true">bar_chart</span>
+                        Statistics
+                    </div>
+                    <p class="card-clickable-text">See Your Learning Progress</p>
                 </div>
-                <p class="card-clickable-text">View progress and stats</p>
-                <span class="material-symbols-outlined card-clickable-arrow">arrow_forward</span>
+                <div class="card-action-scenery" aria-hidden="true">
+                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/statistics/level-' ~ dominant_level ~ ('-v2-transparent.png' if dominant_level == 5 else '-v3-transparent.png')) }}"
+                        alt="" draggable="false">
+                </div>
             </a>
         </div>
     </div>
 
     <!-- Cards List -->
-    <div style="margin-bottom: var(--space-8);">
-        <h2 style="margin-bottom: var(--space-4);">Cards</h2>
-
-        <!-- Search Bar -->
-        <div class="card-normal" style="margin-bottom: var(--space-6);">
-            <div class="card-input-group">
-                <span class="material-symbols-outlined card-input-icon">search</span>
+    <div class="page-section">
+        <div class="section-header">
+            <h2 class="section-heading">Cards</h2>
+            <div class="card-input-group section-search">
+                <span class="material-symbols-rounded card-input-icon" aria-hidden="true">search</span>
                 <input type="text" id="cardSearchInput" class="card-input card-input-with-icon"
-                    placeholder="Search cards..." autocomplete="off" onkeyup="filterCards()">
+                    placeholder="Search Cards..." aria-label="Search Cards" autocomplete="off" onkeyup="filterCards()">
             </div>
         </div>
 
-        <div id="cards-list" class="card-list" style="padding: 0;">
+        <div id="cards-list" class="card-list">
             <!-- Cards will be loaded via JS and appended as card-list-item -->
-            <div style="text-align: center; padding: var(--space-6); color: var(--color-text-muted);"
+            <div style="text-align: center; padding: var(--card-padding); color: var(--color-text-muted);"
                 id="loading-indicator">Loading...</div>
         </div>
     </div>
@@ -68,13 +76,13 @@
     <!-- Danger Zone -->
     <div class="card-attention">
         <div class="card-attention-header">
-            <span class="material-symbols-outlined card-attention-icon">warning</span>
+            <span class="material-symbols-rounded card-attention-icon" aria-hidden="true">warning</span>
             <h3 class="card-attention-title">Danger Zone</h3>
         </div>
-        <p class="card-attention-text" style="margin-bottom: var(--space-4);">Deleting a set is permanent and cannot be
+        <p class="card-attention-text" style="margin-bottom: var(--space-3);">Deleting a set is permanent and cannot be
             undone.</p>
         <button class="btn-danger" onclick="confirmDeleteSet()">
-            <span class="material-symbols-outlined">delete_forever</span>
+            <span class="material-symbols-rounded" aria-hidden="true">delete</span>
             Delete Set
         </button>
         <form id="deleteSetForm" action="/set/{{ set_id }}/delete" method="POST" style="display: none;">
@@ -88,8 +96,8 @@
     <div class="popup-content">
         <div class="popup-header">
             <h3 class="popup-title">Rename Set</h3>
-            <button class="popup-close-btn" onclick="closeRenameModal()">
-                <span class="material-symbols-outlined">close</span>
+            <button class="popup-close-btn" aria-label="Close Dialog" onclick="closeRenameModal()">
+                <span class="material-symbols-rounded" aria-hidden="true">close</span>
             </button>
         </div>
         <div class="popup-body">
@@ -116,8 +124,8 @@
     <div class="popup-content">
         <div class="popup-header">
             <h3 class="popup-title">Add New Card</h3>
-            <button class="popup-close-btn" onclick="closeAddCardModal()">
-                <span class="material-symbols-outlined">close</span>
+            <button class="popup-close-btn" aria-label="Close Dialog" onclick="closeAddCardModal()">
+                <span class="material-symbols-rounded" aria-hidden="true">close</span>
             </button>
         </div>
         <div class="popup-body">
@@ -126,16 +134,45 @@
                 <div class="card-input-group">
                     <label for="front" class="card-input-label">Front</label>
                     <input type="text" id="front" name="front" required class="card-input" placeholder="rogare" />
-                    <div class="card-input-description">Shown first</div>
+                    <div class="card-input-description">Shown First</div>
                 </div>
                 <div class="card-input-group">
                     <label for="back" class="card-input-label">Back</label>
                     <input type="text" id="back" name="back" required class="card-input" placeholder="to ask" />
-                    <div class="card-input-description">The answer you want to learn</div>
+                    <div class="card-input-description">The Answer You Want to Learn</div>
                 </div>
                 <div class="popup-footer">
                     <button type="button" class="btn-secondary" onclick="closeAddCardModal()">Cancel</button>
                     <button type="submit" class="btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Card Modal -->
+<div id="editCardModal" class="popup-overlay">
+    <div class="popup-content" role="dialog" aria-modal="true" aria-labelledby="editCardTitle">
+        <div class="popup-header">
+            <h3 id="editCardTitle" class="popup-title">Edit Card</h3>
+            <button type="button" class="popup-close-btn" aria-label="Close Dialog" onclick="closeEditCardModal()">
+                <span class="material-symbols-rounded" aria-hidden="true">close</span>
+            </button>
+        </div>
+        <div class="popup-body">
+            <form id="editCardForm" onsubmit="handleEditCard(event)">
+                <div class="card-input-group">
+                    <label for="editFront" class="card-input-label">Front</label>
+                    <input id="editFront" name="front" type="text" required maxlength="255" class="card-input">
+                </div>
+                <div class="card-input-group">
+                    <label for="editBack" class="card-input-label">Back</label>
+                    <textarea id="editBack" name="back" required maxlength="10000" class="card-input"></textarea>
+                </div>
+                <p id="editCardError" role="alert" class="card-edit-error" hidden></p>
+                <div class="popup-footer">
+                    <button type="button" class="btn-secondary" onclick="closeEditCardModal()">Cancel</button>
+                    <button id="editCardSave" type="submit" class="btn-primary">Save</button>
                 </div>
             </form>
         </div>
@@ -147,8 +184,8 @@
     <div class="popup-content" style="max-width: 600px;">
         <div class="popup-header">
             <h3 class="popup-title">Import Cards</h3>
-            <button class="popup-close-btn" onclick="closeImportModal()">
-                <span class="material-symbols-outlined">close</span>
+            <button class="popup-close-btn" aria-label="Close Dialog" onclick="closeImportModal()">
+                <span class="material-symbols-rounded" aria-hidden="true">close</span>
             </button>
         </div>
         <div class="popup-body">
@@ -167,9 +204,9 @@
                     <div class="card-input-group">
                         <label class="card-input-label">Select File (CSV, TSV, TXT)</label>
                         <div class="import-file-area" onclick="document.getElementById('import-file').click()">
-                            <span class="material-symbols-outlined import-file-icon">upload_file</span>
+                            <span class="material-symbols-rounded import-file-icon" aria-hidden="true">upload_file</span>
                             <span class="import-file-text">Click to
-                                upload file</span>
+                                Upload File</span>
                             <input type="file" id="import-file" name="file" accept=".csv,.tsv,.txt"
                                 style="display: none;" onchange="updateFileName(this)">
                             <span id="file-name" class="import-file-name"></span>
@@ -188,8 +225,8 @@
                 <div class="import-box">
                     <div class="card-input-label" style="margin-bottom: var(--space-3);">Settings
                     </div>
-                    <div style="display: flex; gap: var(--space-4);">
-                        <div style="flex: 1;">
+                    <div class="import-settings-grid">
+                        <div class="preview-column">
                             <select id="field_separator" name="field_separator" class="card-input"
                                 onchange="toggleCustom('field'); updatePreview()">
                                 <option value="\t">Tab (\t)</option>
@@ -203,7 +240,7 @@
                                 placeholder="e.g. - or \t" oninput="updatePreview()">
                             <div class="card-input-description">Field Separator</div>
                         </div>
-                        <div style="flex: 1;">
+                        <div class="preview-column">
                             <select id="card_separator" name="card_separator" class="card-input"
                                 onchange="toggleCustom('card'); updatePreview()">
                                 <option value="\n">Newline (\n)</option>
@@ -258,95 +295,127 @@
         // But need to be careful if we want to keep headers. The container IS the list.
         container.innerHTML = '';
         
-        // Add style for wrong items dynamically
-        if (!document.getElementById('wrong-card-style')) {
-             const style = document.createElement('style');
-             style.id = 'wrong-card-style';
-             style.textContent = `
-                .card-list-item-wrong {
-                    border: 1px solid var(--color-accent-1) !important;
-                    z-index: 1;
-                    position: relative; /* Needed for z-index */
-                }
-                /* Prevent double borders */
-                .card-list-item-wrong + .card-list-item-wrong {
-                    border-top: none !important;
-                }
-                
-                /* Ensure radius on first/last items */
-                .card-list-item:first-child.card-list-item-wrong {
-                    border-top-left-radius: var(--radius-xl) !important;
-                    border-top-right-radius: var(--radius-xl) !important;
-                }
-                .card-list-item:last-child.card-list-item-wrong {
-                    border-bottom-left-radius: var(--radius-xl) !important;
-                    border-bottom-right-radius: var(--radius-xl) !important;
-                    border-bottom: 1px solid var(--color-accent-1) !important;
-                }
-             `;
-             document.head.appendChild(style);
-        }
-
         if (data.cards.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--color-text-muted); padding: var(--space-4);">No cards in this set yet.</p>';
+            container.innerHTML = '<p style="text-align: center; color: var(--color-text-muted); padding: var(--space-4);">No Cards in This Set Yet.</p>';
             return;
         }
 
         data.cards.forEach(card => {
             const div = document.createElement('div');
             div.className = 'card-list-item';
-            
-            if (card.last_practice_wrong) {
-                div.style.border = '1px solid var(--color-accent-1)';
-                // Ensure border radius is respected if it's the first or last item
-                // The CSS controls border-radius on first/last-child, but our inline style overrides the border property.
-                // We should add a class instead or handle it carefully.
-                // Since inline border overrides CSS border, we need to ensure we don't break the rounded corners
-                // of the container by making square corners on the item.
-                // But card-list-item usually has square corners except first/last.
-                // Best approach: Use a specific class 'card-list-item-wrong' and handle it in CSS?
-                // Or just set border-radius in JS if needed?
-                // Actually, card-list-item logic in CSS might be:
-                // .card-list-item:first-child { border-top-left-radius: ... }
-                // So adding a border shouldn't change the radius unless we change 'overflow'.
-                // If the issue is that the border *looks* weird because it's square on a rounded container:
-                // Let's try adding a class and rely on CSS, but since I can't edit CSS easily without seeing it...
-                // Let's assume the user means it looks bad because it doesn't follow the container's rounding.
-                // I will add a class and style it inline with specific attention to potential first/last child issues.
-                
-                // Let's try this:
-                // Check if it is first or last child? No, we are building the list.
-                // Simple fix: rely on CSS class.
-            }
-            // Actually, let's use a class to be cleaner and handle :first-child/:last-child in CSS if possible.
-            // But I cannot edit the main CSS file easily? Wait, I can edit <style> in base or here.
-            // But this is set_overview.html. 
-            // Let's stick to inline style but be smarter.
-            // If I just add 'border-color: red', it might fallback to default border width/style.
-            // card-list-item usually has border-bottom.
-            // If I set 'border', it sets all 4 sides. 
-            // The user said "because the top and bottom element of this list are not rectangles".
-            // This implies the list container has rounded corners, and the items need to match.
-            // The user said "because the top and bottom element of this list are not rectangles".
-            // This implies the list container has rounded corners, and the items need to match.
-            // We can just add 'overflow: hidden' to the container? Or ensure items have radius.
-            
             if (card.last_practice_wrong || card.level === 1) {
-                 div.classList.add('card-list-item-wrong');
+                div.classList.add('card-list-item-wrong');
             }
-            
-            div.innerHTML = `
-                <div class="card-list-item-info">
-                    <span class="card-list-item-title">${card.front}</span>
-                    <span class="card-list-item-subtitle">${card.back}</span>
-                </div>
-                <button class="card-list-delete-btn" onclick="deleteCard('${card.id}')" title="Delete Card">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
-            `;
+
+            const info = document.createElement('div');
+            info.className = 'card-list-item-info';
+            for (const [className, text] of [['card-list-item-title', card.front], ['card-list-item-subtitle', card.back]]) {
+                const span = document.createElement('span');
+                span.className = className;
+                span.textContent = text;
+                info.appendChild(span);
+            }
+            const actions = document.createElement('div');
+            actions.className = 'card-list-actions';
+            for (const [action, iconName] of [['Edit', 'edit'], ['Delete', 'delete']]) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = action === 'Edit' ? 'card-list-edit-btn' : 'card-list-delete-btn';
+                button.dataset.cardId = card.id;
+                button.title = `${action} Card`;
+                button.setAttribute('aria-label', `${action} Card: ${card.front}`);
+                const icon = document.createElement('span');
+                icon.className = 'material-symbols-rounded';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.textContent = iconName;
+                button.appendChild(icon);
+                button.addEventListener('click', () => action === 'Edit' ? openEditCardModal(card, button) : deleteCard(card.id));
+                actions.appendChild(button);
+            }
+            div.append(info, actions);
             container.appendChild(div);
         });
+        filterCards();
     }
+
+    let editingCardId = null;
+    let editTrigger = null;
+    let editSaving = false;
+
+    function openEditCardModal(card, trigger) {
+        editingCardId = card.id;
+        editTrigger = trigger;
+        document.getElementById('editFront').value = card.front;
+        document.getElementById('editBack').value = card.back;
+        document.getElementById('editCardError').hidden = true;
+        document.getElementById('editCardModal').classList.add('active');
+        document.getElementById('editFront').focus();
+    }
+
+    function closeEditCardModal() {
+        if (editSaving) return;
+        document.getElementById('editCardModal').classList.remove('active');
+        if (editTrigger?.isConnected) editTrigger.focus();
+    }
+
+    async function handleEditCard(event) {
+        event.preventDefault();
+        if (editSaving) return;
+        const error = document.getElementById('editCardError');
+        const save = document.getElementById('editCardSave');
+        const front = document.getElementById('editFront');
+        const back = document.getElementById('editBack');
+        error.hidden = true;
+        editSaving = true;
+        save.disabled = true;
+        save.textContent = 'Saving…';
+        front.readOnly = back.readOnly = true;
+        let saved = false;
+        try {
+            const response = await fetch(`/api/set/${window.setId}/card/${editingCardId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ front: front.value, back: back.value })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Saving the card failed.');
+            saved = true;
+        } catch (failure) {
+            error.textContent = failure.message || 'Saving the card failed. Please try again.';
+            error.hidden = false;
+        } finally {
+            editSaving = false;
+            save.disabled = false;
+            save.textContent = 'Save';
+            front.readOnly = back.readOnly = false;
+        }
+        if (saved) {
+            closeEditCardModal();
+            await fetchCards();
+            const trigger = [...document.querySelectorAll('.card-list-edit-btn')].find(button => button.dataset.cardId === editingCardId);
+            trigger?.focus();
+        }
+    }
+
+    document.addEventListener('keydown', event => {
+        const modal = document.getElementById('editCardModal');
+        if (!modal.classList.contains('active')) return;
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeEditCardModal();
+        } else if (event.key === 'Tab') {
+            const controls = [...modal.querySelectorAll('button:not(:disabled), input, textarea')];
+            const first = controls[0];
+            const last = controls[controls.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    });
 
     // ... (Remainder of functions: openAddCardModal, closeAddCardModal, openImportModal, etc.)
     // Keeping logic consistent with previous version but ensuring new HTML elements are targeted correctly.
@@ -427,6 +496,10 @@
 
     window.onclick = function (event) {
         if (event.target.classList.contains('popup-overlay')) {
+            if (event.target.id === 'editCardModal') {
+                closeEditCardModal();
+                return;
+            }
             event.target.classList.remove('active');
         }
     }
@@ -514,7 +587,7 @@
             }
 
             // Reset styles
-            cards[i].style.borderBottom = "";
+            cards[i].style.borderBottomColor = "";
 
             if (match) {
                 cards[i].style.display = ""; // Restore default display
@@ -524,9 +597,10 @@
             }
         }
 
-        // Remove border from the last visible card
+        // Hide the last separator in the filtered list.
         if (visibleCards.length > 0) {
-            visibleCards[visibleCards.length - 1].style.borderBottom = "none";
+            const lastVisibleCard = visibleCards[visibleCards.length - 1];
+            lastVisibleCard.style.borderBottomColor = "transparent";
         }
     }
 

@@ -1,0 +1,245 @@
+.mascot-image {
+    display: block;
+    height: auto;
+    user-select: none;
+    pointer-events: none;
+}
+
+.welcome-banner {
+    --mascot-size: 180px;
+    --mascot-inset: var(--space-6);
+    --welcome-mascot-shift: 0px;
+    --welcome-art-width: calc(var(--mascot-size) * 2.4);
+    --welcome-art-inset: calc(var(--mascot-inset) * 0.5);
+    --welcome-art-center: calc(var(--welcome-art-inset) + var(--welcome-art-width) / 2);
+    --welcome-scene-mask: radial-gradient(ellipse 100% 150% at 100% 65%, black 48%, rgb(0 0 0 / 0.85) 62%, rgb(0 0 0 / 0.35) 82%, transparent 100%);
+    overflow: visible;
+    isolation: isolate;
+    border-color: transparent;
+    padding-right: calc(var(--welcome-art-width) + var(--welcome-art-inset));
+}
+
+.welcome-banner[data-welcome-scene="sunlit-library"] {
+    --welcome-mascot-shift: calc(var(--mascot-size) * 0.24);
+    --welcome-scene-scale: 1.5;
+    --welcome-scene-position: 62%;
+}
+
+.welcome-banner[data-welcome-scene="warm-desk"] {
+    --welcome-mascot-shift: calc(var(--mascot-size) * 0.34);
+    --welcome-scene-scale: 1.42;
+    --welcome-scene-position: 55%;
+}
+
+.welcome-banner[data-welcome-scene="garden-window"] {
+    --welcome-scene-scale: 1.38;
+    --welcome-scene-position: 48%;
+}
+
+/* The illustrated room and animated character remain separate layers. */
+.welcome-banner::before {
+    content: '';
+    inset: calc(-1 * var(--border-width));
+    width: auto;
+    height: auto;
+    z-index: 1;
+    border: var(--border-width) solid var(--color-border-primary);
+    border-radius: inherit;
+    background: none;
+    pointer-events: none;
+}
+
+.welcome-scenery {
+    position: absolute;
+    inset: calc(-1 * var(--border-width));
+    overflow: clip;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.welcome-scenery-image {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: calc(var(--welcome-art-width) * var(--welcome-scene-scale, 1.4));
+    max-width: none;
+    height: min(100%, calc(var(--mascot-size) * 1.4));
+    object-fit: cover;
+    object-position: right var(--welcome-scene-position, 55%);
+    mask-image: var(--welcome-scene-mask);
+    -webkit-mask-image: var(--welcome-scene-mask);
+    user-select: none;
+}
+
+/* Contact shadow where the character rests on the banner's edge. */
+.welcome-banner::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    right: calc(var(--welcome-art-center) - var(--mascot-size) * 0.34 - var(--space-4) + var(--welcome-mascot-shift));
+    bottom: -4px;
+    width: calc(var(--mascot-size) * 0.68);
+    height: 10px;
+    border-radius: 50%;
+    background: rgb(31 20 83 / 0.24);
+    filter: blur(4px);
+    pointer-events: none;
+}
+
+.welcome-copy {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-title-spacing);
+    min-width: 0;
+}
+
+.welcome-mascot {
+    position: absolute;
+    z-index: 2;
+    width: var(--mascot-size);
+    right: calc(var(--welcome-art-center) - var(--mascot-size) / 2 - var(--space-4) + var(--welcome-mascot-shift));
+    bottom: calc(var(--mascot-size) * -0.28);
+}
+
+.welcome-mascot .mascot-image {
+    width: 100%;
+    transform-origin: 50% 72%;
+    filter: drop-shadow(0 4px 3px rgb(34 28 88 / 0.18));
+}
+
+.welcome-mascot.mascot-reacting .mascot-image {
+    animation: mascot-greet 1100ms infinite;
+}
+
+.welcome-banner:has(.welcome-mascot.mascot-reacting)::after {
+    animation: mascot-contact 1100ms infinite;
+}
+
+.study-mascot {
+    position: absolute;
+    z-index: 11;
+    width: 80px;
+    right: var(--space-6);
+    bottom: -14px;
+    pointer-events: none;
+    transform-origin: 50% 85%;
+}
+
+.study-mascot .mascot-image {
+    width: 100%;
+}
+
+.study-mascot .mascot-seated {
+    display: none;
+}
+
+.study-mascot[data-pose="celebrate"] {
+    bottom: -27px;
+    transform-origin: 50% 72%;
+}
+
+.study-mascot[data-pose="celebrate"] .mascot-peek {
+    display: none;
+}
+
+.study-mascot[data-pose="celebrate"] .mascot-seated {
+    display: block;
+}
+
+.study-mascot.mascot-reacting {
+    animation: mascot-cheer 1100ms both;
+}
+
+/* Anticipation, lift, soft landing, then a quiet settle at the original pose. */
+@keyframes mascot-greet {
+    0%, 100% { transform: translate(0, 0) rotate(0) scale(1); }
+    16% {
+        transform: translate(1px, 2px) rotate(1deg) scale(1.015, 0.975);
+        animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1);
+    }
+    42% {
+        transform: translate(-3px, -8px) rotate(-3deg) scale(0.99, 1.02);
+        animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    67% {
+        transform: translate(0, 1.5px) rotate(0.6deg) scale(1.012, 0.985);
+        animation-timing-function: cubic-bezier(0.2, 0.6, 0.3, 1);
+    }
+    84% {
+        transform: translate(0, -0.7px) rotate(-0.2deg) scale(0.999, 1.002);
+        animation-timing-function: ease-out;
+    }
+}
+
+@keyframes mascot-contact {
+    0%, 100% { transform: scaleX(1); opacity: 1; }
+    16% { transform: scaleX(1.04); opacity: 1; }
+    42% { transform: scaleX(0.84); opacity: 0.65; }
+    67% { transform: scaleX(1.03); opacity: 1; }
+    84% { transform: scaleX(0.99); opacity: 0.95; }
+}
+
+@keyframes mascot-cheer {
+    0%, 100% { transform: translateY(0) scale(1); }
+    16% {
+        transform: translateY(2px) scale(1.025, 0.97);
+        animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1);
+    }
+    43% {
+        transform: translateY(-7px) scale(0.985, 1.025);
+        animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    70% { transform: translateY(1px) scale(1.01, 0.99); }
+    86% { transform: translateY(-0.5px) scale(1); }
+}
+
+@container (max-width: 700px) {
+    /* Reserve room for the larger compact character outside the banner. */
+    .page-section:has(> .welcome-banner) {
+        padding-bottom: var(--space-4);
+    }
+
+    .welcome-banner {
+        --mascot-size: clamp(152px, 27cqw, 180px);
+        --mascot-inset: var(--space-4);
+        --welcome-art-width: calc(var(--mascot-size) * 2);
+        padding-right: var(--card-padding);
+        padding-bottom: calc(var(--mascot-size) * 1.1 + var(--space-4));
+        justify-content: flex-start;
+    }
+
+    .welcome-scenery-image {
+        mask-image: var(--welcome-scene-mask), linear-gradient(to bottom, transparent, black var(--space-6));
+        -webkit-mask-image: var(--welcome-scene-mask), linear-gradient(to bottom, transparent, black var(--space-6));
+        mask-composite: intersect;
+        -webkit-mask-composite: source-in;
+    }
+}
+
+@container (max-width: 440px) {
+    .welcome-banner {
+        --mascot-size: clamp(140px, 43cqw, 168px);
+        --welcome-art-width: calc(100cqw - 2 * var(--space-4));
+        --welcome-art-inset: 0px;
+        padding: var(--space-5) var(--space-4) calc(var(--mascot-size) * 1.15 + var(--space-4));
+    }
+
+    .welcome-scenery-image {
+        height: calc(var(--mascot-size) * 1.45);
+    }
+}
+
+@container (max-width: 580px) {
+    .study-mascot {
+        right: var(--space-3);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .welcome-mascot.mascot-reacting .mascot-image,
+    .welcome-banner:has(.welcome-mascot.mascot-reacting)::after,
+    .study-mascot.mascot-reacting {
+        animation: none;
+    }
+}

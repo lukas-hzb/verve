@@ -3,13 +3,17 @@
 {% block content %}
 <style>
     /* Flashcard Specific Styles - With Animations */
-    /* Flashcard Specific Styles - With Animations */
     .card-container {
+        --study-card-radius: 20px;
+        --study-pill-height: 26px;
+        /* Account for the card's 1px border when sharing corner centers. */
+        --study-pill-inset: calc(var(--study-card-radius) - var(--study-pill-height) / 2 - 1px);
         perspective: 1000px;
         width: 100%;
-        max-width: 700px;
-        height: 380px;
-        margin: 0 auto var(--space-8) auto;
+        max-width: var(--study-max-width);
+        aspect-ratio: 8 / 5;
+        height: auto;
+        margin: 0 auto var(--space-4);
         position: relative;
     }
 
@@ -29,14 +33,7 @@
         transform-style: preserve-3d;
         /* Bouncy flip animation */
         transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        cursor: pointer;
-        cursor: pointer;
-    }
-
-    .wrong-mode-active .flashcard-front,
-    .wrong-mode-active .flashcard-back {
-        box-shadow: 0 0 15px rgba(255, 107, 107, 0.3) !important;
-        border-color: var(--color-accent-1) !important;
+        cursor: default;
     }
 
     .flashcard.flipped {
@@ -49,30 +46,56 @@
         width: 100%;
         height: 100%;
         backface-visibility: hidden;
-        border-radius: var(--radius-xl);
+        border-radius: var(--study-card-radius);
         background-color: var(--color-bg-surface);
-        box-shadow: var(--shadow-card);
+        box-shadow: var(--study-card-shadow);
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: var(--space-8);
+        padding: 56px var(--space-6);
         text-align: center;
-        font-size: var(--font-size-2xl);
-        font-weight: 500;
+        font-size: var(--font-size-study);
+        line-height: var(--line-height-body);
+        font-weight: var(--font-weight-medium);
         color: var(--color-text-main);
         border: 1px solid var(--color-border);
     }
 
     .flashcard-back {
         transform: rotateY(180deg);
+        pointer-events: none;
         background-color: var(--color-bg-surface-hover);
         color: var(--color-text-main);
+    }
+    .flashcard.flipped .flashcard-front { pointer-events: none; }
+    .flashcard.flipped .flashcard-back { pointer-events: auto; }
+
+    .study-page {
+        --study-mode-color: var(--color-text-muted);
+        --study-card-shadow: var(--shadow-card);
+    }
+    .study-page[data-study-mode="practice"] {
+        --study-pill-text-color: color-mix(in srgb, var(--color-practice-all) 24%, var(--color-text-muted));
+        --study-card-shadow: 0 10px 30px color-mix(in srgb, var(--color-practice-all) 18%, transparent);
+    }
+    .study-page[data-study-mode="mistakes"] {
+        --study-pill-text-color: color-mix(in srgb, var(--color-accent-1) 24%, var(--color-text-muted));
+        --study-card-shadow: 0 10px 30px color-mix(in srgb, var(--color-accent-1) 18%, transparent);
     }
 
     .flashcard-content {
         overflow-y: auto;
         max-height: 100%;
         width: 100%;
+        overflow-wrap: anywhere;
+    }
+    .flashcard-content > p { margin: 0; }
+
+    @container (max-width: 440px) {
+        .flashcard-front,
+        .flashcard-back {
+            padding: 44px var(--space-4);
+        }
     }
 
     /* Smooth Swipe Animations with subtle Tilt */
@@ -126,153 +149,96 @@
     /* Level Indicator */
     .card-level {
         position: absolute;
-        top: var(--space-4);
-        right: var(--space-4);
-        padding: 4px 12px;
-        border-radius: 20px;
+        top: var(--study-pill-inset);
+        right: var(--study-pill-inset);
+        height: var(--study-pill-height);
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-full);
         font-size: 12px;
+        line-height: var(--line-height-control);
         color: white;
         z-index: 10;
-        font-weight: 600;
+        font-weight: var(--font-weight-semibold);
         box-shadow: var(--shadow-sm);
     }
 
     /* Original Level Colors (Variables for JS compatibility) */
     .card-container {
-        --level-1: #ff6b6b;
-        --level-2: #ffa07a;
-        --level-3: #ffd700;
-        --level-4: #98fb98;
-        --level-5: #87cefa;
+        --level-1: var(--color-accent-1);
+        --level-2: var(--color-accent-2);
+        --level-3: var(--color-accent-3);
+        --level-4: var(--color-accent-4);
+        --level-5: var(--color-accent-5);
     }
 
-    /* Custom Toggle Switch (Keep as is, but cleaner) */
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 44px;
-        height: 24px;
-        margin-right: var(--space-2);
-    }
-
-    .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: var(--color-border);
-        transition: .3s;
-        border-radius: 24px;
-    }
-
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 18px;
-        width: 18px;
-        left: 3px;
-        bottom: 3px;
-        background-color: white;
-        transition: .3s;
-        border-radius: 50%;
-    }
-
-    input:checked+.slider {
-        background-color: var(--color-primary);
-    }
-
-    input:checked+.slider:before {
-        transform: translateX(20px);
-    }
-    
-    /* Wrong Answers Toggle Specific Style */
-    #wrong-answers-checkbox:checked + .slider {
-        background-color: var(--color-accent-1);
-    }
 </style>
 
-<div
-    style="padding: 15px var(--space-6) var(--space-6) var(--space-6); max-width: 1400px; width: 100%; margin: 0 auto;">
-
+<div class="page-shell study-page" data-study-mode="{{ study_mode }}">
+    <div class="study-above-card">
     <!-- Secondary Header for Learning -->
-    <div style="margin-bottom: var(--space-6);">
+    <div class="page-section">
         <div class="card-header-secondary">
             <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') | title }}</h1>
             <div class="button-group">
                 <a href="{{ url_for('main.set_overview', set_id=set_id) }}" class="btn-secondary"
                     style="text-decoration: none;">
-                    <span class="material-symbols-outlined">arrow_back</span> Back to Overview
+                    <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Back to Overview
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Controls Bar -->
-    <div class="card-normal"
-        style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-4); margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-4);">
-        <div style="display: flex; gap: var(--space-6);">
-            <div style="display: flex; align-items: center;">
-                <label class="switch">
-                    <input type="checkbox" id="practice-mode-checkbox">
-                    <span class="slider round"></span>
-                </label>
-                <span style="font-weight: 500; font-size: var(--font-size-base); margin-left: var(--space-2);">Practice Mode</span>
-            </div>
-            <div style="display: flex; align-items: center;">
-                <label class="switch">
-                    <input type="checkbox" id="wrong-answers-checkbox">
-                    <span class="slider round"></span>
-                </label>
-                <span style="font-weight: 500; font-size: var(--font-size-base); margin-left: var(--space-2);">Wrong Only</span>
-            </div>
-        </div>
-        <div class="button-group" style="gap: var(--space-2);">
-            <button class="btn-secondary" id="shuffle-btn">
-                <span class="material-symbols-outlined">shuffle</span> Shuffle
-            </button>
-            <button class="btn-secondary" id="back-btn" disabled>
-                <span class="material-symbols-outlined">undo</span> Undo
-            </button>
-            <button class="btn-secondary" id="restart-btn" title="Restart Session">
-                <span class="material-symbols-outlined" style="transform: scaleX(-1) rotate(-90deg);">refresh</span> Restart
-            </button>
-        </div>
-    </div>
-
     <!-- Progress Bar (positioned above flashcard with matching width) -->
-    <div id="progress-container" style="max-width: 652px; width: 100%; margin: var(--space-6) auto var(--space-2) auto;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.875rem; color: var(--color-text-secondary);">
-            <span>Progress</span>
+    <div id="progress-container" class="study-progress">
+        <div class="study-progress-heading">
+            <span id="round-label">Round Progress</span>
             <span id="progress-text">0 / 0</span>
         </div>
-        <div style="height: 8px; background-color: var(--color-bg-surface-hover); border-radius: 4px; overflow: hidden; display: flex; border: 1px solid var(--color-border);">
+        <div class="study-progress-track" id="round-progress" role="progressbar" aria-label="Cards Answered in This Round" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
             <div id="progress-correct" style="width: 0%; background-color: var(--color-accent-4); transition: width 0.3s;"></div>
             <div id="progress-wrong" style="width: 0%; background-color: var(--color-accent-1); transition: width 0.3s;"></div>
             <div id="progress-remaining" style="width: 100%; background-color: transparent; transition: width 0.3s;"></div>
         </div>
     </div>
 
+    </div>
+
+    {% macro card_badges(level_id) %}
+        <div class="study-mode-badge-group">
+            <span class="study-mode-pill">
+                <button type="button" class="btn-study-mode-info study-mode-info-button" popovertarget="study-mode-info" aria-label="About This Learning Mode" title="About This Learning Mode">
+                    <span class="material-symbols-rounded" aria-hidden="true">info</span>
+                </button>
+                <button type="button" class="btn-study-mode-picker study-mode-switch" data-study-mode-picker aria-haspopup="dialog" aria-controls="study-mode-picker" aria-label="Change Learning Mode">
+                    <span>{{ 'Learn Due Cards' if study_mode == 'learn' else ('Practice All Cards' if study_mode == 'practice' else 'Review Mistakes') }}</span>
+                    <svg class="study-mode-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m1.5 5 6.5 6.5 6.5-6.5" /></svg>
+                </button>
+            </span>
+        </div>
+        <!-- Level Indicator (ID matches what flashcard.js expects) -->
+        <div id="{{ level_id }}" class="card-level" style="display: none;">Level 1</div>
+
+    {% endmacro %}
+
     <!-- Flashcard Area -->
     <div class="card-container">
-        <!-- Level Indicator (ID matches what flashcard.js expects) -->
-        <div id="card-level" class="card-level" style="display: none;">Level 1</div>
-
         <div class="flashcard-wrapper" id="flashcard-wrapper">
             <div class="flashcard" id="flashcard">
                 <div class="flashcard-front" id="card-front-container">
+                    {{ card_badges("card-level") }}
                     <div class="flashcard-content">
                         <p id="card-front">Loading...</p>
+                        <div id="study-completion" class="study-completion" hidden>
+                            <p id="study-completion-text"></p>
+                            <button type="button" class="btn-primary" id="continue-practice-btn"><span class="material-symbols-rounded" aria-hidden="true">refresh</span><span id="continue-practice-label">Practice Again</span></button>
+                        </div>
+                        <div id="study-empty-action" class="study-empty-action" hidden>
+                            <a class="btn-primary" href="{{ url_for('main.learn_set', set_id=set_id, mode='practice') }}"><span class="material-symbols-rounded" aria-hidden="true">stacks</span> Practice All Cards</a>
+                        </div>
                     </div>
                 </div>
                 <div class="flashcard-back" id="card-back-container">
+                    {{ card_badges("card-level-back") }}
                     <div class="flashcard-content">
                         <p id="card-back"></p>
                     </div>
@@ -281,32 +247,49 @@
         </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div style="display: flex; justify-content: center; gap: var(--space-4); margin-top: var(--space-4);">
-        <button class="btn-primary" id="flip-btn" style="min-width: 180px;">
-            Flip Card <span style="opacity: 0.7; font-weight: 400; font-size: 0.875rem;">(Space)</span>
-        </button>
+    <div id="study-mode-info" class="study-mode-info-panel" popover role="dialog" aria-label="{{ 'Learn Due Cards' if study_mode == 'learn' else ('Practice All Cards' if study_mode == 'practice' else 'Review Mistakes') }}">
+        {% if study_mode == 'learn' %}
+        <p>Review cards due today. Your answers update their levels and next review dates, and count toward your learning progress.</p>
+        {% elif study_mode == 'practice' %}
+        <p>Practice every card in this set, regardless of its level or when it is due for review.</p>
+        {% else %}
+        <p>Review cards whose last answer was incorrect, whether in normal learning or practice, regardless of their level or review date. New cards and cards last answered correctly are excluded.</p>
+        {% endif %}
+        {% if study_mode != 'learn' %}
+        <p>Practice does not change card levels, review dates or your learning progress. Answers only update whether a card was last answered incorrectly. The progress bar tracks this practice round.</p>
+        {% endif %}
+    </div>
 
-        <div id="feedback-btns" style="display: none; gap: var(--space-4);">
-            <button class="btn-danger" id="not-known-btn" style="min-width: 140px;">
-                <span class="material-symbols-outlined" style="font-size: 18px;">close</span> Didn't know <span
-                    style="opacity: 0.7; font-weight: 400; font-size: 0.875rem;">(A)</span>
+    <!-- Quiet controls, aligned with the card edges and center. -->
+    <div class="study-actions" aria-label="Card Controls">
+        <div class="study-actions-left">
+            <button class="btn-study" id="back-btn" disabled>
+                <span class="material-symbols-rounded" aria-hidden="true">undo</span> Undo
             </button>
-            <button class="btn-success" id="known-btn" style="min-width: 140px;">
-                <span class="material-symbols-outlined" style="font-size: 18px;">check</span> Knew it <span
-                    style="opacity: 0.7; font-weight: 400; font-size: 0.875rem;">(D)</span>
+            <button class="btn-study" id="shuffle-btn">
+                <span class="material-symbols-rounded" aria-hidden="true">shuffle</span> Shuffle
             </button>
         </div>
+        <div class="study-actions-center">
+            <button class="btn-primary study-flip-button" id="flip-btn">
+                Flip Card
+                <span class="study-key-hint">(Space)</span>
+            </button>
+            <div id="feedback-btns" class="study-feedback" style="display: none;">
+                <button class="btn-danger" id="not-known-btn">
+                    <span class="material-symbols-rounded" aria-hidden="true">close</span> Didn't Know <span class="study-key-hint">(A)</span>
+                </button>
+                <button class="btn-success" id="known-btn">
+                    <span class="material-symbols-rounded" aria-hidden="true">check</span> Knew It <span class="study-key-hint">(D)</span>
+                </button>
+            </div>
+        </div>
+        <button class="btn-study study-actions-reset" id="restart-btn"
+            title="Reset this round’s counter and load the currently available cards. Saved learning progress stays unchanged.">
+            <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span> Reset Progress Bar
+        </button>
     </div>
 
 </div>
 
-<!-- Logic Link -->
-<script type="module">
-    import { FlashcardManager } from "{{ url_for('static', filename='js/modules/flashcard.js') }}";
-
-    document.addEventListener('DOMContentLoaded', () => {
-        new FlashcardManager("{{ set_id }}");
-    });
-</script>
 {% endblock %}

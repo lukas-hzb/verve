@@ -38,12 +38,14 @@ class VocabSet(db.Model):
             Card.id,
         ).all()
     
-    def get_all_cards(self, *, wrong_only: bool = False) -> List['Card']:
+    def get_all_cards(self, *, wrong_only: bool = False, last_wrong_only: bool = False) -> List['Card']:
         """Get all cards in the set."""
         from app.models.card import Card
 
         query = self.cards
-        if wrong_only:
+        if last_wrong_only:
+            query = query.filter(Card.last_practice_wrong.is_(True))
+        elif wrong_only:
             query = query.filter(or_(Card.last_practice_wrong.is_(True), Card.level == 1))
         return query.order_by(
             Card.shuffle_order.is_(None),

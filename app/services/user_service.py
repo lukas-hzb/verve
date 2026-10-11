@@ -91,10 +91,13 @@ class UserService:
         if existing_set:
             return
         
-        # Get the shared default set
+        # Prefer the database template; deployments may skip the startup seed.
         default_set = VocabSet.query.filter_by(is_shared=True, name="Hauptstädte").first()
-        if not default_set:
-            return
+        if default_set:
+            vocabulary = [(card.front, card.back) for card in default_set.cards]
+        else:
+            from app.data.standard_sets import HAUPTSTAEDTE_DATA
+            vocabulary = [(item['front'], item['back']) for item in HAUPTSTAEDTE_DATA]
             
         # Create user set
         new_set_id = str(uuid.uuid4())
@@ -121,12 +124,12 @@ class UserService:
             Card(
                 id=str(uuid.uuid4()),
                 vocab_set_id=new_set_id,
-                front=card.front,
-                back=card.back,
+                front=front,
+                back=back,
                 level=1,
                 next_review=yesterday
             )
-            for card in default_set.cards
+            for front, back in vocabulary
         ]
         db.session.add_all(cards)
 
