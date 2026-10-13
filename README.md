@@ -24,21 +24,49 @@ Verve combines adaptive review scheduling with vocabulary sets, bulk imports, th
 
 ### Screenshots
 
-| Dashboard | Profile |
-| :-------: | :-----: |
-| <img src="static/images/dashboard_preview.png" alt="Verve dashboard showing vocabulary sets and due reviews" width="500" /> | <img src="static/images/profile.png" alt="Verve profile showing account details and settings" width="500" /> |
+<table>
+  <tr>
+    <th width="50%">Dashboard</th>
+    <th width="50%">Profile</th>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="static/images/dashboard_preview.png" alt="Verve dashboard showing vocabulary sets and due reviews" width="500" /></td>
+    <td width="50%" align="center"><img src="static/images/profile.png" alt="Verve profile showing account details and settings" width="500" /></td>
+  </tr>
+</table>
 
-| Study Session | Statistics |
-| :-----------: | :--------: |
-| <img src="static/images/study_session.png" alt="Verve flashcard session showing round progress and learning controls" width="500" /> | <img src="static/images/statistics.png" alt="Verve statistics showing the distribution of cards across learning levels" width="500" /> |
+<table>
+  <tr>
+    <th width="50%">Study Session</th>
+    <th width="50%">Statistics</th>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="static/images/study_session.png" alt="Verve flashcard session showing round progress and learning controls" width="500" /></td>
+    <td width="50%" align="center"><img src="static/images/statistics.png" alt="Verve statistics showing the distribution of cards across learning levels" width="500" /></td>
+  </tr>
+</table>
 
-| Add Card | Import Cards |
-| :------: | :----------: |
-| <img src="static/images/add_card_dialog.png" alt="Dialog for adding the front and back of a vocabulary card" width="500" /> | <img src="static/images/import_cards_dialog.png" alt="Dialog for importing vocabulary with configurable separators" width="500" /> |
+<table>
+  <tr>
+    <th width="50%">Add Card</th>
+    <th width="50%">Import Cards</th>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="static/images/add_card_dialog.png" alt="Dialog for adding the front and back of a vocabulary card" width="500" /></td>
+    <td width="50%" align="center"><img src="static/images/import_cards_dialog.png" alt="Dialog for importing vocabulary with configurable separators" width="500" /></td>
+  </tr>
+</table>
 
-| Dark Mode — Dashboard | Dark Mode — Profile |
-| :-------------------: | :-----------------: |
-| <img src="static/images/dashboard_dark.png" alt="Verve dashboard in dark mode" width="500" /> | <img src="static/images/profile_dark.png" alt="Verve profile and account settings in dark mode" width="500" /> |
+<table>
+  <tr>
+    <th width="50%">Dark Mode — Dashboard</th>
+    <th width="50%">Dark Mode — Profile</th>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="static/images/dashboard_dark.png" alt="Verve dashboard in dark mode" width="500" /></td>
+    <td width="50%" align="center"><img src="static/images/profile_dark.png" alt="Verve profile and account settings in dark mode" width="500" /></td>
+  </tr>
+</table>
 
 ## Installation
 
