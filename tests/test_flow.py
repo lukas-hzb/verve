@@ -263,6 +263,13 @@ class VerveTestCase(unittest.TestCase):
         flags = VocabSet.query.filter_by(name='Flaggen der Welt', is_shared=True).one()
         self.assertEqual(flags.cards.count(), 254)
 
+    def test_flags_standard_recognizes_existing_underscore_name(self):
+        existing = VocabService.create_user_set(self.user.id, 'Flaggen_der_Welt')
+        UserService.assign_default_vocab_set(self.user.id, set_names={'Flaggen der Welt'})
+        db.session.commit()
+        self.assertEqual(VocabSet.query.filter_by(user_id=self.user.id, name='Flaggen der Welt').count(), 0)
+        self.assertEqual(db.session.get(VocabSet, existing.id).name, 'Flaggen_der_Welt')
+
     def test_managed_session_revocation_removes_protected_access(self):
         client = self.app.test_client()
         client.set_cookie('verve_neon.session_token', 'managed-session')

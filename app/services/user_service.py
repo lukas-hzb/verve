@@ -94,7 +94,9 @@ class UserService:
         for name, fallback in default_vocabularies().items():
             if set_names is not None and name not in set_names:
                 continue
-            if VocabSet.query.filter_by(user_id=user_id, name=name, is_shared=False).first():
+            if VocabSet.query.filter_by(user_id=user_id, is_shared=False).filter(
+                func.lower(func.replace(VocabSet.name, '_', ' ')) == name.lower()
+            ).first():
                 continue
             # Use bundled data when Vercel skips startup seeds.
             template = VocabSet.query.filter_by(is_shared=True, name=name).first()

@@ -22,6 +22,7 @@ def main():
     from app.database import db, create_default_vocab_set
     from app.models import User, VocabSet
     from app.services.user_service import UserService
+    from sqlalchemy import func
 
     app = create_app('production')
     with app.app_context():
@@ -29,7 +30,9 @@ def main():
         added = 0
         try:
             for user in User.query.all():
-                if VocabSet.query.filter_by(user_id=user.id, name='Flaggen der Welt').first():
+                if VocabSet.query.filter_by(user_id=user.id).filter(
+                    func.lower(func.replace(VocabSet.name, '_', ' ')) == 'flaggen der welt'
+                ).first():
                     continue
                 UserService.assign_default_vocab_set(user.id, set_names={'Flaggen der Welt'})
                 added += 1
