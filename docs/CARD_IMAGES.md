@@ -16,7 +16,7 @@ Supported direct URL extensions: SVG, PNG, WebP, JPEG, GIF and AVIF. Images load
 
 ## Size
 
-The study view displays the complete image at up to 480 × 240 CSS pixels, bounded by the screen and card width. It preserves the aspect ratio and never crops images. Overview and import thumbnails fit within 160 × 96 pixels.
+The study view displays the complete image at up to 480 × 240 CSS pixels, bounded by the screen and card width. It preserves the aspect ratio and never crops images. Overview thumbnails fit within 72 × 40 pixels to keep rows compact; import previews fit within 160 × 96 pixels.
 
 Use SVG for flags and diagrams. For raster images, about 960 pixels in width is sufficient for sharp display on high-density screens; WebP or PNG under roughly 200 KB keeps loading fast. No manual dimensions are needed.
 

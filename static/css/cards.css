@@ -503,14 +503,19 @@
     max-height: min(240px, 32dvh, 100cqh);
 }
 
-.card-list-item-info .card-media img,
 .preview-content .card-media img {
     max-width: min(100%, 160px);
     max-height: 96px;
 }
 
+.card-list-item-info .card-media img {
+    max-width: min(100%, 72px);
+    max-height: 40px;
+}
+
 .card-list-item-info .card-media {
-    min-height: 96px;
+    min-height: 40px;
+    justify-content: flex-start;
 }
 
 .preview-content:has(.card-media) {
