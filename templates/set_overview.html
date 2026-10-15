@@ -285,7 +285,7 @@
 
 <script>
     async function fetchCards() {
-        const { formatCardText } = await import({{ url_for('static', filename='js/modules/card-text.js') | tojson }});
+        const { renderCardContent } = await import({{ url_for('static', filename='js/modules/card-text.js') | tojson }});
         const response = await fetch(`/api/set/${window.setId}/cards`);
         const data = await response.json();
         const container = document.getElementById('cards-list');
@@ -313,7 +313,8 @@
             for (const [className, text] of [['card-list-item-title', card.front], ['card-list-item-subtitle', card.back]]) {
                 const span = document.createElement('span');
                 span.className = className;
-                span.textContent = formatCardText(text);
+                renderCardContent(span, text, { lazy: true });
+                span.dataset.searchText = text;
                 info.appendChild(span);
             }
             const actions = document.createElement('div');
@@ -574,14 +575,14 @@
             let match = false;
 
             if (frontElement) {
-                const frontValue = frontElement.textContent || frontElement.innerText;
+                const frontValue = frontElement.dataset.searchText || frontElement.textContent || '';
                 if (frontValue.toLowerCase().indexOf(filter) > -1) {
                     match = true;
                 }
             }
 
             if (!match && backElement) {
-                const backValue = backElement.textContent || backElement.innerText;
+                const backValue = backElement.dataset.searchText || backElement.textContent || '';
                 if (backValue.toLowerCase().indexOf(filter) > -1) {
                     match = true;
                 }
@@ -605,7 +606,7 @@
         }
     }
 
-    function updatePreview() {
+    async function updatePreview() {
 
         const importType = document.getElementById('import_type').value;
         let content = '';
@@ -650,8 +651,9 @@
         const parts = firstCard.split(fieldSep);
         const front = parts[0] ? parts[0].trim() : '';
         const back = parts[1] ? parts[1].trim() : '';
-        document.getElementById('preview-front').textContent = front || '(empty)';
-        document.getElementById('preview-back').textContent = back || '(empty)';
+        const { renderCardContent } = await import({{ url_for('static', filename='js/modules/card-text.js') | tojson }});
+        renderCardContent(document.getElementById('preview-front'), front || '(empty)');
+        renderCardContent(document.getElementById('preview-back'), back || '(empty)');
         const totalCards = cards.filter(c => c.trim()).length;
         document.getElementById('preview-note').textContent = `Total ${totalCards} card(s) recognized`;
         document.getElementById('preview-section').style.display = 'block';

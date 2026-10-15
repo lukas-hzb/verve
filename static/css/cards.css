@@ -480,6 +480,50 @@
     white-space: pre-line;
 }
 
+/* Fit the whole image without cropping or changing its aspect ratio. */
+.card-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-inline: auto;
+    white-space: normal;
+}
+
+.card-media img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: min(100%, 480px);
+    max-height: min(240px, 32dvh);
+    object-fit: contain;
+}
+
+.flashcard-content .card-media img {
+    max-height: min(240px, 32dvh, 100cqh);
+}
+
+.card-list-item-info .card-media img,
+.preview-content .card-media img {
+    max-width: min(100%, 160px);
+    max-height: 96px;
+}
+
+.card-list-item-info .card-media {
+    min-height: 96px;
+}
+
+.preview-content:has(.card-media) {
+    display: block;
+    white-space: pre-line;
+}
+
+.card-media-error {
+    min-height: 80px;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-body);
+}
+
 .card-list-actions {
     display: flex;
     align-items: center;

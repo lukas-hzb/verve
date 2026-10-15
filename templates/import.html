@@ -195,7 +195,7 @@
         }
     }
 
-    function updatePreview() {
+    async function updatePreview() {
         // Logic same as original
         const importType = document.getElementById('import_type').value;
         let content = '';
@@ -250,8 +250,9 @@
         const front = parts[0] ? parts[0].trim() : '';
         const back = parts[1] ? parts[1].trim() : '';
 
-        document.getElementById('preview-front').textContent = front || '(empty)';
-        document.getElementById('preview-back').textContent = back || '(empty)';
+        const { renderCardContent } = await import({{ url_for('static', filename='js/modules/card-text.js') | tojson }});
+        renderCardContent(document.getElementById('preview-front'), front || '(empty)');
+        renderCardContent(document.getElementById('preview-back'), back || '(empty)');
 
         const totalCards = cards.filter(c => c.trim()).length;
         document.getElementById('preview-note').textContent = `Total ${totalCards} card(s) recognized`;

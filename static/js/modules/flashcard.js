@@ -3,7 +3,7 @@
  * Handles flashcard learning functionality including persistence, shuffle, and progress
  */
 
-import { formatCardText } from './card-text.js';
+import { renderCardContent } from './card-text.js';
 
 export class FlashcardManager {
     constructor(setId) {
@@ -411,8 +411,8 @@ export class FlashcardManager {
 
     updateCardContent(card) {
         this.updateCompletionAction();
-        this.cardFront.textContent = formatCardText(card.front);
-        this.cardBack.textContent = formatCardText(card.back);
+        renderCardContent(this.cardFront, card.front);
+        renderCardContent(this.cardBack, card.back);
         const displayLevel = Math.max(1, Math.min(card.level, 5));
         this.cardLevels.forEach(level => {
             level.textContent = `Level ${displayLevel}`;
