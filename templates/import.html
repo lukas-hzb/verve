@@ -71,7 +71,7 @@
                         <label for="card_separator" class="card-input-label">Separator (Cards)</label>
                         <select id="card_separator" name="card_separator" class="card-input"
                             onchange="toggleCustom('card'); updatePreview()">
-                            <option value="\n">New Line (\n)</option>
+                            <option value="\n">Line break (Enter)</option>
                             <option value=";">Semicolon (;)</option>
                             <option value="|">Pipe (|)</option>
                             <option value="custom">Custom</option>
@@ -82,6 +82,8 @@
                     </div>
                 </div>
             </div>
+
+            <p class="card-input-description">With “Line break (Enter)”, each input line creates a separate card. Within a card, type <code>\n</code> for a line break or <code>\n\n</code> for a blank line.</p>
 
             <div id="preview-section" class="preview-section"
                 style="display: none; background-color: var(--color-bg-body); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: var(--space-6);">
