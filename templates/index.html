@@ -99,9 +99,9 @@
             <div class="card-normal set-card link-card"
                 onclick="window.location.href='{{ url_for('main.set_overview', set_id=set.id) }}';">
                 <div class="set-card-header">
-                    <h3 class="card-normal-title">{{ set.name.replace('_', ' ') | title }}</h3>
+                    <h3 class="card-normal-title">{{ set.name.replace('_', ' ') }}</h3>
                     <button type="button" class="set-card-delete-btn btn-icon"
-                        aria-label="Delete {{ set.name.replace('_', ' ') | title }}"
+                        aria-label="Delete {{ set.name.replace('_', ' ') }}"
                         onclick='event.stopPropagation(); deleteVocabSet("{{ set.id }}", {{ set.name | tojson }})'>
                         <span class="material-symbols-rounded" aria-hidden="true">delete</span>
                     </button>

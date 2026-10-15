@@ -85,11 +85,11 @@
 
             {% for set in sets %}
             <li>
-                <a href="{{ url_for('main.set_overview', set_id=set.id) }}" title="{{ set.name.replace('_', ' ') | title }}"
+                <a href="{{ url_for('main.set_overview', set_id=set.id) }}" title="{{ set.name.replace('_', ' ') }}"
                     {% if set_id == set.id %}class="sidebar-current-set"{% if request.endpoint != 'main.set_overview' %} aria-current="location"{% endif %}{% endif %}
                     {% if request.endpoint == 'main.set_overview' and set_id == set.id %}aria-current="page"{% endif %}>
                     <span class="material-symbols-rounded" aria-hidden="true">inventory_2</span>
-                    <span class="link_name">{{ set.name.replace('_', ' ') | title }}</span>
+                    <span class="link_name">{{ set.name.replace('_', ' ') }}</span>
                 </a>
             </li>
             {% endfor %}
