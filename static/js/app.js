@@ -159,7 +159,7 @@ function setupGlobalFunctions() {
             const data = await response.json();
 
             if (data.status === 'success') {
-                window.location.reload();
+                window.location.assign(`/set/${encodeURIComponent(data.id)}/overview`);
             } else {
                 alert('Error: ' + (data.message || 'Failed to create set'));
             }
