@@ -69,6 +69,12 @@ body {
     min-width: 0;
 }
 
+#setSearchInput::placeholder,
+.section-search .card-input-icon {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 @container (max-width: 280px) {
     .section-header {
         grid-template-columns: minmax(0, 1fr);

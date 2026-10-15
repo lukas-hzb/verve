@@ -774,6 +774,8 @@
 
 .set-card-create {
     min-height: 0;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .set-card-create-icon {
