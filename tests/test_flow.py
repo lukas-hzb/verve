@@ -210,10 +210,14 @@ class VerveTestCase(unittest.TestCase):
                          {(item['front'], item['back']) for item in HAUPTSTAEDTE_DATA})
         self.assertTrue(all(card.level == 1 and card.next_review < utc_now()
                             for card in sets[0].cards))
+        from app.data.standard_sets import default_vocabularies
+        flags = VocabSet.query.filter_by(user_id=user.id, name='Flaggen der Welt', is_shared=False).one()
+        self.assertEqual([(card.front, card.back) for card in flags.get_all_cards()],
+                         default_vocabularies()['Flaggen der Welt'])
 
     def test_new_account_gets_capitals_without_database_seed(self):
-        template = VocabSet.query.filter_by(name='Hauptstädte', is_shared=True).one()
-        db.session.delete(template)
+        for template in VocabSet.query.filter_by(is_shared=True).all():
+            db.session.delete(template)
         db.session.commit()
         with patch.object(UserService, 'google_subject', return_value=None):
             user = UserService.resolve_neon_user({'id': str(uuid.uuid4()),
@@ -231,6 +235,33 @@ class VerveTestCase(unittest.TestCase):
         db.session.commit()
         self.assertEqual(VocabSet.query.filter_by(user_id=self.user.id, name='Hauptstädte').count(), 1)
         self.assertEqual(db.session.get(Card, card.id).level, 4)
+
+    def test_flags_standard_backfill_is_private_and_preserves_existing_sets(self):
+        UserService.assign_default_vocab_set(self.user.id, set_names={'Flaggen der Welt'})
+        db.session.commit()
+        flags = VocabSet.query.filter_by(user_id=self.user.id, name='Flaggen der Welt').one()
+        card = flags.get_all_cards()[0]
+        card.level = 4
+        card.back = 'Edited answer'
+        db.session.commit()
+        UserService.assign_default_vocab_set(self.user.id, set_names={'Flaggen der Welt'})
+        db.session.commit()
+        self.assertEqual(flags.cards.count(), 254)
+        self.assertFalse(flags.is_shared)
+        self.assertEqual(VocabSet.query.filter_by(user_id=self.user.id, name='Flaggen der Welt').count(), 1)
+        self.assertEqual((card.level, card.back), (4, 'Edited answer'))
+        self.assertNotIn(flags.id, {v['id'] for v in VocabService.get_all_set_names('other-user')})
+
+    def test_standard_seed_adds_flags_when_capitals_already_exist(self):
+        from app.database import create_default_vocab_set
+        flags = VocabSet.query.filter_by(name='Flaggen der Welt', is_shared=True).one()
+        db.session.delete(flags)
+        db.session.commit()
+        create_default_vocab_set()
+        create_default_vocab_set()
+        self.assertEqual(VocabSet.query.filter_by(name='Hauptstädte', is_shared=True).count(), 1)
+        flags = VocabSet.query.filter_by(name='Flaggen der Welt', is_shared=True).one()
+        self.assertEqual(flags.cards.count(), 254)
 
     def test_managed_session_revocation_removes_protected_access(self):
         client = self.app.test_client()

@@ -3,6 +3,21 @@ Standard vocabulary sets data.
 This module contains the default vocabulary sets provided with the application.
 """
 
+import json
+from pathlib import Path
+
+
+def default_vocabularies():
+    """Return standard templates, including offline data for serverless signup."""
+    flags = json.loads(Path(__file__).with_name('world_flags.json').read_text())
+    return {
+        'Hauptstädte': [(row['front'], row['back']) for row in HAUPTSTAEDTE_DATA],
+        'Flaggen der Welt': [
+            (f"https://flagcdn.com/{row['code']}.svg", f"{row['country']}\n{row['capital']}")
+            for row in flags
+        ],
+    }
+
 HAUPTSTAEDTE_DATA = [
     {"front": "Afghanistan", "back": "Kabul"},
     {"front": "Ägypten", "back": "Kairo"},

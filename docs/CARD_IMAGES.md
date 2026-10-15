@@ -34,7 +34,15 @@ Sources, checked 2026-10-15:
 
 The adapted country/capital database in `app/data/world_flags.json` is available under [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), following [mledoze/countries](https://github.com/mledoze/countries/blob/master/LICENSE). Changes include German names, selected capital corrections and administrative-seat notes, and the four UK constituent countries. Flag images remain hosted by Flagcdn and are separate from this database license.
 
-The dataset is not seeded as a shared set. To create a private copy for one existing user with the configured database:
+“Flaggen der Welt” is a standard set alongside “Hauptstädte”. New accounts receive independent private copies, so learning progress is stored separately for each user. Shared database templates are seeded locally; bundled data also supports new accounts on Vercel without a startup seed.
+
+To enable the standard for existing accounts, adding only missing flags sets:
+
+```sh
+python scripts/enable_flag_standard.py --apply
+```
+
+Existing flags sets, edits and learning progress are preserved. To create a private copy for one existing user with the configured database:
 
 ```sh
 python scripts/create_flag_set.py --username Lukas

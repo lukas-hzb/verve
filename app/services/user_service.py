@@ -85,53 +85,31 @@ class UserService:
             raise UserAlreadyExistsError('username', username)
     
     @staticmethod
-    def assign_default_vocab_set(user_id: str) -> None:
-        # Check if user already has the default set
-        existing_set = VocabSet.query.filter_by(user_id=user_id, name="Hauptstädte", is_shared=False).first()
-        if existing_set:
-            return
-        
-        # Prefer the database template; deployments may skip the startup seed.
-        default_set = VocabSet.query.filter_by(is_shared=True, name="Hauptstädte").first()
-        if default_set:
-            vocabulary = [(card.front, card.back) for card in default_set.cards]
-        else:
-            from app.data.standard_sets import HAUPTSTAEDTE_DATA
-            vocabulary = [(item['front'], item['back']) for item in HAUPTSTAEDTE_DATA]
-            
-        # Create user set
-        new_set_id = str(uuid.uuid4())
-        user_set = VocabSet(
-            id=new_set_id,
-            name="Hauptstädte",
-            user_id=user_id,
-            is_shared=False,
-            created_at=utc_now(),
-            updated_at=utc_now()
-        )
-        db.session.add(user_set)
-        
-        # Copy cards
-        # We process efficiently by querying and bulk inserting if possible, 
-        # but standard add loop is fine for this scale
-        
-        # Set next_review to past so cards are immediately due
-        # Use timezone naive or UTC as appropriate. Models default to utcnow.
+    def assign_default_vocab_set(user_id: str, *, set_names=None) -> None:
+        """Give accounts independent copies of missing standard sets."""
         from datetime import timedelta
-        yesterday = utc_now() - timedelta(days=1)
+        from app.data.standard_sets import default_vocabularies
 
-        cards = [
-            Card(
-                id=str(uuid.uuid4()),
-                vocab_set_id=new_set_id,
-                front=front,
-                back=back,
-                level=1,
-                next_review=yesterday
-            )
-            for front, back in vocabulary
-        ]
-        db.session.add_all(cards)
+        yesterday = utc_now() - timedelta(days=1)
+        for name, fallback in default_vocabularies().items():
+            if set_names is not None and name not in set_names:
+                continue
+            if VocabSet.query.filter_by(user_id=user_id, name=name, is_shared=False).first():
+                continue
+            # Use bundled data when Vercel skips startup seeds.
+            template = VocabSet.query.filter_by(is_shared=True, name=name).first()
+            vocabulary = ([(card.front, card.back) for card in template.get_all_cards()]
+                          if template else fallback)
+            set_id = str(uuid.uuid4())
+            db.session.add(VocabSet(
+                id=set_id, name=name, user_id=user_id, is_shared=False,
+                created_at=utc_now(), updated_at=utc_now(),
+            ))
+            db.session.add_all([
+                Card(id=str(uuid.uuid4()), vocab_set_id=set_id, front=front, back=back,
+                     level=1, next_review=yesterday, shuffle_order=index)
+                for index, (front, back) in enumerate(vocabulary)
+            ])
 
     @staticmethod
     def update_user_profile(user_id: str, username: str, email: str, avatar_file=None, remove_avatar=False) -> User:

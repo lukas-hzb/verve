@@ -41,48 +41,28 @@ def init_db(app: Flask) -> None:
 
 def create_default_vocab_set() -> None:
     """
-    Create the default shared vocabulary set that all users can access.
-    This set serves as an example for new users.
+    Create missing shared templates for the standard vocabulary sets.
     """
     from app.models import VocabSet, Card
-    from app.data.standard_sets import HAUPTSTAEDTE_DATA
+    from app.data.standard_sets import default_vocabularies
     import uuid
     from app.utils.time import utc_now
     
-    # Check if default set already exists
-    default_set = VocabSet.query.filter_by(name="Hauptstädte", is_shared=True).first()
-    if default_set:
-        return  # Already exists
-    
     try:
-        # Create the shared vocab set (user_id=None for shared sets)
-        set_id = str(uuid.uuid4())
-        vocab_set = VocabSet(
-            id=set_id,
-            name="Hauptstädte",
-            user_id=None,
-            is_shared=True,
-            created_at=utc_now(),
-            updated_at=utc_now()
-        )
-        db.session.add(vocab_set)
-
-        cards = [
-            Card(
-                id=str(uuid.uuid4()),
-                vocab_set_id=set_id,
-                front=item['front'],
-                back=item['back'],
-                level=1,
-                next_review=utc_now()
-            )
-            for item in HAUPTSTAEDTE_DATA
-        ]
-        db.session.add_all(cards)
-
+        for name, vocabulary in default_vocabularies().items():
+            if VocabSet.query.filter_by(name=name, is_shared=True).first():
+                continue
+            set_id = str(uuid.uuid4())
+            db.session.add(VocabSet(
+                id=set_id, name=name, user_id=None, is_shared=True,
+                created_at=utc_now(), updated_at=utc_now(),
+            ))
+            db.session.add_all([
+                Card(id=str(uuid.uuid4()), vocab_set_id=set_id, front=front, back=back,
+                     level=1, next_review=utc_now(), shuffle_order=index)
+                for index, (front, back) in enumerate(vocabulary)
+            ])
         db.session.commit()
-        print(f"✓ Created default shared vocabulary set: Hauptstädte with {len(HAUPTSTAEDTE_DATA)} cards")
-        
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        print(f"Error creating default vocab set: {e}")
+        raise
