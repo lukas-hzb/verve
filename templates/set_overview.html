@@ -133,13 +133,13 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="card-input-group">
                     <label for="front" class="card-input-label">Front</label>
-                    <input type="text" id="front" name="front" required class="card-input" placeholder="rogare" />
-                    <div class="card-input-description">Shown First</div>
+                    <textarea id="front" name="front" required maxlength="255" class="card-input" placeholder="rogare"></textarea>
+                    <div class="card-input-description">Shown First. Use Enter or \n for a line break, or \n\n for a new paragraph.</div>
                 </div>
                 <div class="card-input-group">
                     <label for="back" class="card-input-label">Back</label>
-                    <input type="text" id="back" name="back" required class="card-input" placeholder="to ask" />
-                    <div class="card-input-description">The Answer You Want to Learn</div>
+                    <textarea id="back" name="back" required maxlength="10000" class="card-input" placeholder="to ask"></textarea>
+                    <div class="card-input-description">The Answer You Want to Learn. Use Enter or \n for a line break, or \n\n for a new paragraph.</div>
                 </div>
                 <div class="popup-footer">
                     <button type="button" class="btn-secondary" onclick="closeAddCardModal()">Cancel</button>
@@ -163,7 +163,7 @@
             <form id="editCardForm" onsubmit="handleEditCard(event)">
                 <div class="card-input-group">
                     <label for="editFront" class="card-input-label">Front</label>
-                    <input id="editFront" name="front" type="text" required maxlength="255" class="card-input">
+                    <textarea id="editFront" name="front" required maxlength="255" class="card-input"></textarea>
                 </div>
                 <div class="card-input-group">
                     <label for="editBack" class="card-input-label">Back</label>
@@ -285,6 +285,7 @@
 
 <script>
     async function fetchCards() {
+        const { formatCardText } = await import({{ url_for('static', filename='js/modules/card-text.js') | tojson }});
         const response = await fetch(`/api/set/${window.setId}/cards`);
         const data = await response.json();
         const container = document.getElementById('cards-list');
@@ -312,7 +313,7 @@
             for (const [className, text] of [['card-list-item-title', card.front], ['card-list-item-subtitle', card.back]]) {
                 const span = document.createElement('span');
                 span.className = className;
-                span.textContent = text;
+                span.textContent = formatCardText(text);
                 info.appendChild(span);
             }
             const actions = document.createElement('div');

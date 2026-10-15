@@ -2,6 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlashcardManager } from '../static/js/modules/flashcard.js';
 
+test('card display preserves paragraphs and interprets escaped newlines on both sides', () => {
+    const m = Object.assign(Object.create(FlashcardManager.prototype), {
+        cardFront: {}, cardBack: {}, cardLevels: [], updateCompletionAction() {},
+    });
+    const card = { front: 'First\\n\\nSecond', back: 'Answer\n\n<img src=x onerror=alert(1)>', level: 1 };
+    m.updateCardContent(card);
+    assert.equal(m.cardFront.textContent, 'First\n\nSecond');
+    assert.equal(m.cardBack.textContent, 'Answer\n\n<img src=x onerror=alert(1)>');
+    assert.equal(card.front, 'First\\n\\nSecond');
+    m.updateCardContent({ front: 'First\\r\\nSecond', back: 'Plain answer', level: 1 });
+    assert.equal(m.cardFront.textContent, 'First\nSecond');
+    assert.equal(m.cardBack.textContent, 'Plain answer');
+});
+
 test('Space overrides focused buttons without interfering with typing or dialogs', t => {
     const previous = globalThis.document;
     let onKeydown;

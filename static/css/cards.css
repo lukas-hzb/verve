@@ -476,6 +476,10 @@
     overflow-wrap: anywhere;
 }
 
+.card-list-item-info > span {
+    white-space: pre-line;
+}
+
 .card-list-actions {
     display: flex;
     align-items: center;
