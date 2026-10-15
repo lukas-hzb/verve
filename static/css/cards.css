@@ -624,6 +624,12 @@
     z-index: 1;
 }
 
+#mastery-stat-value,
+.card-progress-value {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 .card-progress-bar.bg-accent-3 .card-progress-value {
     color: var(--color-text-on-yellow);
 }
