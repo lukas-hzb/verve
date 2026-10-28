@@ -5,6 +5,16 @@
   "scripts": {
     "build:auth": "esbuild frontend/auth.js --bundle --minify --format=esm --target=es2022 --outfile=static/js/neon-auth.js"
   },
-  "dependencies": { "@neondatabase/auth": "0.5.0-beta" },
-  "devDependencies": { "esbuild": "0.25.12" }
+  "dependencies": {
+    "@neondatabase/auth": "0.7.0-beta"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  },
+  "overrides": {
+    "zod": "4.6.7",
+    "better-auth": "1.7.14",
+    "@better-auth/core": "1.7.14",
+    "html-to-text": "10.0.1"
+  }
 }

@@ -20,4 +20,4 @@ psycopg2-binary==2.9.12
 gunicorn==26.2.0
 
 # Image Processing
-Pillow==12.3.0
+Pillow==13.0.0
