@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeStudyInfo();
     initializeStudyModePicker();
     initializeStudyUtilityBar();
+    initializeStudyCardPosition();
 
     // Determine current page and initialize appropriate module
     const currentPath = window.location.pathname;
@@ -53,6 +54,33 @@ function initializeStudyUtilityBar() {
     };
     placeToolbar();
     mobile.addEventListener('change', placeToolbar);
+}
+
+function initializeStudyCardPosition() {
+    const page = document.querySelector('.study-page');
+    if (!page) return;
+    const above = page.querySelector('.study-above-card');
+    const actions = page.querySelector('.study-actions');
+    const toolbar = document.querySelector('.study-utility-bar');
+    const mobile = window.matchMedia('(max-width: 768px)');
+    const positionCard = () => {
+        if (!mobile.matches) return;
+        const bounds = page.getBoundingClientRect();
+        const center = window.innerHeight / 2;
+        const aboveSpace = center - above.getBoundingClientRect().bottom - 12;
+        const belowSpace = toolbar.getBoundingClientRect().top - center
+            - actions.getBoundingClientRect().height - 20 - 12;
+        const height = Math.max(0, Math.min(bounds.width * 5 / 8,
+            aboveSpace * 2, belowSpace * 2));
+        page.style.setProperty('--study-card-height', `${height}px`);
+        page.style.setProperty('--study-card-top', `${center - bounds.top - height / 2}px`);
+    };
+    const observer = new ResizeObserver(positionCard);
+    [page, above, actions, toolbar].forEach(element => observer.observe(element));
+    window.addEventListener('resize', positionCard);
+    window.visualViewport?.addEventListener('resize', positionCard);
+    mobile.addEventListener('change', positionCard);
+    positionCard();
 }
 
 
