@@ -681,6 +681,8 @@
 }
 
 @container (max-width: 580px) {
+    #setsGrid > .create-new-card { order: 1; }
+
 
     .card-grid-2,
     .card-grid-3 {
@@ -856,8 +858,8 @@
     }
 
     .card-stat .card-icon-wrapper {
-        width: var(--space-10);
-        height: var(--space-10);
+        width: var(--space-12);
+        height: var(--space-12);
         min-height: 0;
         padding: var(--space-2);
         align-self: center;
