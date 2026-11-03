@@ -63,9 +63,15 @@ function initializeStudyCardPosition() {
     const actions = page.querySelector('.study-actions');
     const toolbar = document.querySelector('.study-utility-bar');
     const mobile = window.matchMedia('(max-width: 768px)');
+    let previousLayout = '';
     const positionCard = () => {
         if (!mobile.matches) return;
         const bounds = page.getBoundingClientRect();
+        // Safari resizes its viewport while scrolling its browser bars away.
+        // Recenter only for a changed content layout or width, never height alone.
+        const layout = [bounds.width, above.offsetHeight, actions.offsetHeight].join(':');
+        if (layout === previousLayout) return;
+        previousLayout = layout;
         const center = window.innerHeight / 2;
         // Use document coordinates so scrolling never pins the card to the viewport.
         const headingBottom = above.getBoundingClientRect().bottom + window.scrollY;
@@ -81,7 +87,6 @@ function initializeStudyCardPosition() {
     const observer = new ResizeObserver(positionCard);
     [page, above, actions, toolbar].forEach(element => observer.observe(element));
     window.addEventListener('resize', positionCard);
-    window.visualViewport?.addEventListener('resize', positionCard);
     mobile.addEventListener('change', positionCard);
     positionCard();
 }
