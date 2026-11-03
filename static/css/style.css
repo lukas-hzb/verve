@@ -403,10 +403,12 @@ textarea.popup-input {
 .study-above-card {
     display: flex;
     flex-direction: column;
+    gap: var(--space-3);
 }
-.study-above-card .page-section { margin-bottom: var(--space-2); }
-.study-above-card .study-progress { margin-top: auto; }
+.study-above-card .page-section { margin-bottom: 0; }
+.study-above-card .study-progress { margin: 0 auto; }
 .study-page .card-container { margin-block: 0; }
+.study-card-and-actions { display: contents; }
 .study-page .study-actions { align-self: start; margin-top: var(--space-4); }
 @media (max-width: 768px) {
     .study-overview-navigation { display: none; }
@@ -573,7 +575,6 @@ textarea.popup-input {
 .card-container:has(.study-empty-action:not([hidden])) { min-height: 280px; }
 .card-container:has(.study-completion:not([hidden])) { min-height: 280px; }
 .card-container:has(.study-completion:not([hidden]) > p:not([hidden])) { min-height: 420px; }
-.flashcard-content:has(:is(.study-empty-action, .study-completion):not([hidden])) { padding: 0 12px 24px; overflow: visible; }
 
 .study-actions {
     --study-button-width: min(180px, calc((100cqw - var(--space-3)) / 2));
@@ -657,8 +658,46 @@ textarea.popup-input {
     }
 
     body:has(.study-page) {
+        height: 100dvh;
+        min-height: 0;
+        overflow-y: hidden;
         padding-bottom: calc(var(--mobile-bar-height) + env(safe-area-inset-bottom));
     }
+    html:has(.study-page) { overflow-y: hidden; }
+    body:has(.study-page) > .mobile-header { flex-shrink: 0; }
+    .home-section:has(> .study-page) {
+        flex: 1;
+        min-height: 0;
+        overflow: clip;
+    }
+    .home-section .study-page {
+        height: 100%;
+        min-height: 0;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: var(--space-3);
+        padding-block: var(--space-3);
+    }
+    .study-above-card .page-section { margin: 0; }
+    .study-card-and-actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-5);
+        align-self: center;
+        width: 100%;
+        max-height: 100%;
+        min-height: 0;
+    }
+    .study-page .card-container {
+        flex: 0 1 auto;
+        height: auto;
+        max-height: none;
+        min-height: 0;
+    }
+    .study-page .card-container:has(:is(.study-completion, .study-empty-action):not([hidden])),
+    .study-page .card-container:has(.study-completion:not([hidden]) > p:not([hidden])) {
+        min-height: 0;
+    }
+    .study-page .study-actions { flex-shrink: 0; margin-top: 0; }
     .study-utility-bar {
         position: fixed;
         inset: auto 0 0;

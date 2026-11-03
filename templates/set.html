@@ -76,6 +76,7 @@
 
     .flashcard-front,
     .flashcard-back {
+        --study-content-top: 56px;
         container-type: size;
         position: absolute;
         width: 100%;
@@ -90,7 +91,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 56px var(--space-6) var(--space-6);
+        padding: 0;
+        overflow: clip;
         text-align: center;
         font-size: var(--font-size-study);
         line-height: var(--line-height-body);
@@ -122,11 +124,18 @@
     }
 
     .flashcard-content {
+        position: absolute;
+        inset: var(--study-content-top) 0 0;
+        display: flex;
+        flex-direction: column;
         overflow-y: auto;
-        max-height: 100%;
-        width: 100%;
+        padding: 0 var(--space-3) var(--space-2);
         overflow-wrap: anywhere;
     }
+    /* Center short content; auto margins collapse when the text needs scrolling. */
+    .flashcard-content::before { content: ''; margin-top: auto; }
+    .flashcard-content::after { content: ''; margin-bottom: auto; }
+    .flashcard-content > * { flex-shrink: 0; }
     .flashcard-content > p {
         margin: 0;
         white-space: pre-line;
@@ -135,7 +144,7 @@
     @container (max-width: 440px) {
         .flashcard-front,
         .flashcard-back {
-            padding: 44px var(--space-4) var(--space-4);
+            --study-content-top: 44px;
         }
     }
 
@@ -229,7 +238,7 @@
         </div>
     </div>
 
-    <!-- Progress Bar (positioned above flashcard with matching width) -->
+    <!-- Round progress sits directly below the title card. -->
     <div id="progress-container" class="study-progress">
         <div class="study-progress-heading">
             <span id="round-label">Round Progress</span>
@@ -241,7 +250,6 @@
             <div id="progress-remaining" style="width: 100%; background-color: transparent; transition: width 0.3s;"></div>
         </div>
     </div>
-
     </div>
 
     {% macro card_badges(level_id) %}
@@ -262,6 +270,7 @@
     {% endmacro %}
 
     <!-- Flashcard Area -->
+    <div class="study-card-and-actions">
     <div class="card-container">
         <div class="flashcard-wrapper" id="flashcard-wrapper">
             <div class="flashcard" id="flashcard">
@@ -333,6 +342,7 @@
         </div>
     </div>
 
+    </div>
 </div>
 
 {% endblock %}
