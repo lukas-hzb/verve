@@ -67,13 +67,16 @@ function initializeStudyCardPosition() {
         if (!mobile.matches) return;
         const bounds = page.getBoundingClientRect();
         const center = window.innerHeight / 2;
-        const aboveSpace = center - above.getBoundingClientRect().bottom - 12;
+        // Use document coordinates so scrolling never pins the card to the viewport.
+        const headingBottom = above.getBoundingClientRect().bottom + window.scrollY;
+        const aboveSpace = center - headingBottom - 12;
         const belowSpace = toolbar.getBoundingClientRect().top - center
             - actions.getBoundingClientRect().height - 20 - 12;
         const height = Math.max(0, Math.min(bounds.width * 5 / 8,
             aboveSpace * 2, belowSpace * 2));
         page.style.setProperty('--study-card-height', `${height}px`);
-        page.style.setProperty('--study-card-top', `${center - bounds.top - height / 2}px`);
+        page.style.setProperty('--study-card-offset',
+            `${Math.max(0, center - height / 2 - headingBottom - 12)}px`);
     };
     const observer = new ResizeObserver(positionCard);
     [page, above, actions, toolbar].forEach(element => observer.observe(element));

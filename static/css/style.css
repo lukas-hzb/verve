@@ -659,30 +659,25 @@ textarea.popup-input {
     }
 
     body:has(.study-page) {
-        height: 100dvh;
-        min-height: 0;
-        overflow-y: hidden;
+        min-height: 100dvh;
         padding-bottom: calc(var(--mobile-bar-height) + env(safe-area-inset-bottom));
     }
-    html:has(.study-page) { overflow-y: hidden; }
     body:has(.study-page) > .mobile-header { flex-shrink: 0; }
     .home-section:has(> .study-page) {
         flex: 1;
         min-height: 0;
-        overflow: clip;
     }
     .home-section .study-page {
-        height: 100%;
-        min-height: 0;
-        grid-template-rows: auto minmax(0, 1fr);
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100dvh - 2 * var(--mobile-bar-height) - env(safe-area-inset-bottom));
         gap: var(--space-3);
         padding-block: var(--space-3);
     }
     .study-above-card .page-section { margin: 0; }
     .study-card-and-actions {
-        position: absolute;
-        top: var(--study-card-top, 50%);
-        left: 0;
+        flex: none;
+        margin-top: var(--study-card-offset, 0px);
         display: flex;
         flex-direction: column;
         gap: var(--space-5);
