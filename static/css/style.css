@@ -76,6 +76,12 @@ input[placeholder*="search" i]::placeholder,
     user-select: none;
 }
 
+@container (max-width: 580px) {
+    .section-header {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 60cqw);
+    }
+}
+
 @container (max-width: 280px) {
     .section-header {
         grid-template-columns: minmax(0, 1fr);
@@ -287,7 +293,7 @@ textarea.popup-input {
 }
 
 .card-input-with-icon {
-    padding-left: calc(var(--space-3) + 1.25rem + var(--space-3));
+    padding-left: calc(var(--space-3) + var(--icon-size-ui) + var(--space-2));
 }
 
 .card-input-group:has(.card-input-icon):focus-within .card-input-icon {

@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block mobile_header_actions %}
+<a class="mobile-header-action" href="{{ url_for('main.set_overview', set_id=set_id) }}"
+    aria-label="Back to Set Overview">
+    <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Overview
+</a>
+{% endblock %}
+
 {% block content %}
 <div class="page-shell">
 
@@ -7,7 +14,7 @@
     <div class="page-section">
         <div class="card-header-secondary">
             <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') }} Stats</h1>
-            <div class="button-group">
+            <div class="button-group study-overview-navigation">
                 <a href="{{ url_for('main.set_overview', set_id=set_id) }}" class="btn-secondary"
                     style="text-decoration: none;">
                     <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Back to Overview
