@@ -195,38 +195,30 @@
 }
 
 @container (max-width: 700px) {
-    /* Reserve room for the larger compact character outside the banner. */
-    .page-section:has(> .welcome-banner) {
-        padding-bottom: var(--space-4);
-    }
-
     .welcome-banner {
-        --mascot-size: clamp(152px, 27cqw, 180px);
+        --mascot-size: clamp(120px, 23cqw, 152px);
         --mascot-inset: var(--space-4);
         --welcome-art-width: calc(var(--mascot-size) * 2);
+        /* A broad curved reveal keeps the upper copy on a quiet purple field. */
+        --welcome-scene-mask: radial-gradient(ellipse 105% 100% at 85% 115%,
+            black 24%, rgb(0 0 0 / 0.95) 40%, rgb(0 0 0 / 0.5) 57%,
+            rgb(0 0 0 / 0.12) 73%, transparent 90%);
         padding-right: var(--card-padding);
-        padding-bottom: calc(var(--mascot-size) * 1.1 + var(--space-4));
+        padding-bottom: calc(var(--mascot-size) * 0.65 + var(--space-4));
         justify-content: flex-start;
     }
 
     .welcome-scenery-image {
-        mask-image: var(--welcome-scene-mask), linear-gradient(to bottom, transparent, black var(--space-6));
-        -webkit-mask-image: var(--welcome-scene-mask), linear-gradient(to bottom, transparent, black var(--space-6));
-        mask-composite: intersect;
-        -webkit-mask-composite: source-in;
+        height: 100%;
     }
 }
 
 @container (max-width: 440px) {
     .welcome-banner {
-        --mascot-size: clamp(140px, 43cqw, 168px);
+        --mascot-size: clamp(108px, 32cqw, 128px);
         --welcome-art-width: calc(100cqw - 2 * var(--space-4));
         --welcome-art-inset: 0px;
-        padding: var(--space-5) var(--space-4) calc(var(--mascot-size) * 1.15 + var(--space-4));
-    }
-
-    .welcome-scenery-image {
-        height: calc(var(--mascot-size) * 1.45);
+        padding: var(--space-5) var(--space-4) calc(var(--mascot-size) * 0.65 + var(--space-4));
     }
 }
 

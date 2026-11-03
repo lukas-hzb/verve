@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeWelcomeMascot();
     initializeStudyInfo();
     initializeStudyModePicker();
+    initializeStudyUtilityBar();
 
     // Determine current page and initialize appropriate module
     const currentPath = window.location.pathname;
@@ -38,6 +39,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // Expose global functions for HTML event handlers
     setupGlobalFunctions();
 });
+
+function initializeStudyUtilityBar() {
+    const toolbar = document.querySelector('.study-utility-bar');
+    if (!toolbar) return;
+    const anchor = document.createComment('Round actions');
+    toolbar.before(anchor);
+    const mobile = window.matchMedia('(max-width: 768px)');
+    const placeToolbar = () => {
+        // Keep the fixed bar outside the page's container-query containing block.
+        if (mobile.matches) document.body.append(toolbar);
+        else anchor.after(toolbar);
+    };
+    placeToolbar();
+    mobile.addEventListener('change', placeToolbar);
+}
 
 
 /**

@@ -97,6 +97,7 @@
   --study-max-width: 40rem;
   --section-gap: var(--space-8);
   --control-height: 2.5rem;
+  --mobile-bar-height: 56px;
   --control-padding: calc(var(--space-2) - var(--border-width));
   --control-padding-inline: var(--space-3);
 
@@ -157,6 +158,5 @@
 @media (max-width: 768px) {
   :root {
     --sidebar-width: 240px;
-    --section-gap: var(--space-6);
   }
 }

@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block mobile_header_actions %}
+<a class="btn-secondary mobile-header-action" href="{{ url_for('main.set_overview', set_id=set_id) }}"
+    aria-label="Back to Set Overview">
+    <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Overview
+</a>
+{% endblock %}
+
 {% block content %}
 <style>
     /* Flashcard Specific Styles - With Animations */
@@ -83,7 +90,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 56px var(--space-6);
+        padding: 56px var(--space-6) var(--space-6);
         text-align: center;
         font-size: var(--font-size-study);
         line-height: var(--line-height-body);
@@ -128,7 +135,7 @@
     @container (max-width: 440px) {
         .flashcard-front,
         .flashcard-back {
-            padding: 44px var(--space-4);
+            padding: 44px var(--space-4) var(--space-4);
         }
     }
 
@@ -213,7 +220,7 @@
     <div class="page-section">
         <div class="card-header-secondary">
             <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') }}</h1>
-            <div class="button-group">
+            <div class="button-group study-overview-navigation">
                 <a href="{{ url_for('main.set_overview', set_id=set_id) }}" class="btn-secondary"
                     style="text-decoration: none;">
                     <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Back to Overview
@@ -296,12 +303,18 @@
 
     <!-- Quiet controls, aligned with the card edges and center. -->
     <div class="study-actions" aria-label="Card Controls">
-        <div class="study-actions-left">
-            <button class="btn-study" id="back-btn" disabled>
-                <span class="material-symbols-rounded" aria-hidden="true">undo</span> Undo
-            </button>
-            <button class="btn-study" id="shuffle-btn">
-                <span class="material-symbols-rounded" aria-hidden="true">shuffle</span> Shuffle
+        <div class="study-utility-bar" role="group" aria-label="Round Actions">
+            <div class="study-actions-left">
+                <button class="btn-study" id="back-btn" disabled>
+                    <span class="material-symbols-rounded" aria-hidden="true">undo</span> Undo
+                </button>
+                <button class="btn-study" id="shuffle-btn">
+                    <span class="material-symbols-rounded" aria-hidden="true">shuffle</span> Shuffle
+                </button>
+            </div>
+            <button class="btn-study study-actions-reset" id="restart-btn" aria-label="Reset Progress Bar"
+                title="Reset Progress Bar: Reset this round’s counter and load the currently available cards. Saved learning progress stays unchanged.">
+                <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span> Reset Bar
             </button>
         </div>
         <div class="study-actions-center">
@@ -318,10 +331,6 @@
                 </button>
             </div>
         </div>
-        <button class="btn-study study-actions-reset" id="restart-btn"
-            title="Reset this round’s counter and load the currently available cards. Saved learning progress stays unchanged.">
-            <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span> Reset Progress Bar
-        </button>
     </div>
 
 </div>

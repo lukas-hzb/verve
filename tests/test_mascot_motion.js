@@ -133,6 +133,23 @@ test('touch taps greet while touch entry does not', (t) => {
     assert.equal(mascot.classList.contains('mascot-reacting'), false);
 });
 
+test('three rapid touch taps play once and a later tap can greet again', (t) => {
+    const { mascot, finish } = welcomeFixture(t);
+    const tap = () => mascot.dispatchEvent(Object.assign(new Event('pointerup'), {
+        pointerType: 'touch',
+    }));
+    tap();
+    tap();
+    tap();
+    assert.equal(mascot.starts, 1);
+    finish();
+    assert.equal(mascot.classList.contains('mascot-reacting'), false);
+    tap();
+    assert.equal(mascot.starts, 2);
+    finish();
+    assert.equal(mascot.classList.contains('mascot-reacting'), false);
+});
+
 test('reduced motion does not start or queue welcome greetings', (t) => {
     const { mascot, enter } = welcomeFixture(t, true);
     enter();

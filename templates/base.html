@@ -60,6 +60,7 @@
             <span class="material-symbols-rounded" aria-hidden="true">menu</span>
         </button>
         <a class="mobile-brand" href="{{ url_for('main.index') }}">Verve</a>
+        {% block mobile_header_actions %}{% endblock %}
     </header>
     <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
     <aside id="primary-sidebar" aria-label="Navigation" class="sidebar {% if sidebar_collapsed %}close{% endif %}">

@@ -1,4 +1,4 @@
-/** Each hover gets a full greeting; queued greetings join at the resting pose. */
+/** Hover greetings queue at rest; touch taps during a greeting are ignored. */
 export function initializeWelcomeMascot() {
     const mascot = document.querySelector('[data-welcome-mascot]');
     if (!mascot) return;
@@ -7,10 +7,10 @@ export function initializeWelcomeMascot() {
     if (!image) return;
     let pendingGreetings = 0;
 
-    const greet = () => {
+    const greet = (queueIfBusy = true) => {
         if (reducedMotion.matches) return;
         if (mascot.classList.contains('mascot-reacting')) {
-            pendingGreetings++;
+            if (queueIfBusy) pendingGreetings++;
             return;
         }
         mascot.classList.add('mascot-reacting');
@@ -20,7 +20,7 @@ export function initializeWelcomeMascot() {
         if (event.pointerType === 'mouse' || event.pointerType === 'pen') greet();
     });
     mascot.addEventListener('pointerup', (event) => {
-        if (event.pointerType === 'touch') greet();
+        if (event.pointerType === 'touch') greet(false);
     });
     image.addEventListener('animationiteration', (event) => {
         if (event.target !== image || event.animationName !== 'mascot-greet') return;

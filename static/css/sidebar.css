@@ -244,13 +244,19 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    min-height: 56px;
-    padding: var(--space-2) max(var(--space-3), env(safe-area-inset-left));
+    min-height: var(--mobile-bar-height);
+    padding: 0 max(var(--space-3), env(safe-area-inset-left));
     background: var(--color-bg-body);
     border-bottom: 1px solid var(--color-border);
   }
   .mobile-brand {
     font-size: var(--font-size-section);
+  }
+  .mobile-header-action {
+    margin-left: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+    text-decoration: none;
   }
   .home-section,
   .sidebar.close ~ .home-section {

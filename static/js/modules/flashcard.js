@@ -236,9 +236,16 @@ export class FlashcardManager {
             this.shuffleCards();
             this.shuffleBtn.blur();
         });
-        this.restartBtn?.addEventListener("click", async () => {
-             await this.restartRound();
-             this.restartBtn.blur();
+        this.restartBtn?.addEventListener("click", () => {
+            if (this.areControlsDisabled) return;
+            window.showConfirmationModal({
+                title: 'Reset Progress Bar?',
+                message: 'Reset the counter for this round and reload the available cards? Your saved card levels and review dates stay unchanged.',
+                confirmText: 'Reset Progress Bar',
+                confirmClass: 'btn-danger',
+                onConfirm: () => this.restartRound(),
+            });
+            this.restartBtn.blur();
         });
         this.continuePracticeBtn?.addEventListener('click', async () => {
             if (this.areControlsDisabled) return;
@@ -282,7 +289,7 @@ export class FlashcardManager {
 
     attachKeyboardListeners() {
         document.addEventListener('keydown', (event) => {
-            if (document.querySelector('dialog[open], [popover]:popover-open')) return;
+            if (document.querySelector('dialog[open], [popover]:popover-open, .popup-overlay.active')) return;
             // Keep typing and modified shortcuts native, but let study shortcuts
             // take priority over a button left focused by a previous click.
             const activeElement = document.activeElement;

@@ -9,6 +9,7 @@
 .study-mode-options { display: grid; gap: var(--space-4); }
 .study-mode-picker .card-clickable {
     --action-art-width: 230px;
+    border-radius: var(--radius-btn);
     min-height: 132px;
     overflow: hidden;
 }
@@ -18,11 +19,12 @@
 @media (max-width: 540px) {
     .study-mode-picker { padding: var(--space-4); }
     .study-mode-picker .card-clickable {
-        --action-art-width: 150px;
-        min-height: 176px;
-        padding: var(--space-4) var(--space-4) 100px;
+        min-height: 0;
+        padding: var(--space-3) var(--space-4);
     }
-    .study-mode-picker .card-action-scenery { height: 100px; top: auto; bottom: 0; transform: none; }
+    .study-mode-picker .card-action-scenery {
+        display: none;
+    }
 }
 
 .study-mode-picker.popup-content { transform: none; max-width: 720px; width: calc(100% - 32px); }

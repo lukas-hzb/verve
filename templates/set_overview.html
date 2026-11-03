@@ -6,8 +6,8 @@
     <!-- Secondary Header -->
     <div class="page-section">
         <div class="card-header-secondary">
-            <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') }} Overview</h1>
-            <div class="button-group">
+            <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') }}</h1>
+            <div class="button-group set-overview-actions">
                 <button class="btn-secondary" onclick="openRenameModal()" style="white-space: nowrap;">
                     <span class="material-symbols-rounded" aria-hidden="true">edit</span> Rename
                 </button>
@@ -304,6 +304,10 @@
         data.cards.forEach(card => {
             const div = document.createElement('div');
             div.className = 'card-list-item';
+            div.tabIndex = 0;
+            div.addEventListener('click', (event) => {
+                if (!event.target.closest('button, a')) div.focus({ preventScroll: true });
+            });
             if (card.last_practice_wrong || card.level === 1) {
                 div.classList.add('card-list-item-wrong');
             }

@@ -2,6 +2,31 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { FlashcardManager } from '../static/js/modules/flashcard.js';
 
+test('reset waits for confirmation and ignores requests while controls are disabled', t => {
+    const previousWindow = globalThis.window;
+    let confirmation;
+    globalThis.window = { showConfirmationModal: options => { confirmation = options; } };
+    t.after(() => { globalThis.window = previousWindow; });
+    const restartBtn = new EventTarget();
+    restartBtn.blur = () => {};
+    let resets = 0;
+    const m = Object.assign(Object.create(FlashcardManager.prototype), {
+        restartBtn, areControlsDisabled: false,
+        restartRound() { resets++; },
+    });
+    m.attachEventListeners();
+    restartBtn.dispatchEvent(new Event('click'));
+    assert.equal(resets, 0);
+    assert.equal(confirmation.title, 'Reset Progress Bar?');
+    confirmation.onConfirm();
+    assert.equal(resets, 1);
+    confirmation = undefined;
+    m.areControlsDisabled = true;
+    restartBtn.dispatchEvent(new Event('click'));
+    assert.equal(confirmation, undefined);
+    assert.equal(resets, 1);
+});
+
 test('card display preserves paragraphs and interprets escaped newlines on both sides', () => {
     const m = Object.assign(Object.create(FlashcardManager.prototype), {
         cardFront: {}, cardBack: {}, cardLevels: [], updateCompletionAction() {},

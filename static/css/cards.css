@@ -534,6 +534,26 @@
     align-items: center;
     gap: var(--space-1);
     flex-shrink: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-fast);
+}
+
+.card-list-item:focus-within .card-list-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.card-list-item:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .card-list-item:hover .card-list-actions {
+        opacity: 1;
+        pointer-events: auto;
+    }
 }
 
 .card-list-edit-btn,
@@ -830,6 +850,31 @@
 }
 
 @container (max-width: 580px) {
+    .card-stat {
+        padding: var(--space-3);
+        gap: var(--space-3);
+    }
+
+    .card-stat .card-icon-wrapper {
+        width: var(--space-10);
+        height: var(--space-10);
+        min-height: 0;
+        padding: var(--space-2);
+        align-self: center;
+    }
+
+    .card-stat .card-icon-wrapper .material-symbols-rounded {
+        font-size: var(--icon-size-feature);
+    }
+
+    .card-stat-value {
+        font-size: var(--font-size-xl);
+    }
+
+    .card-stat-label {
+        font-size: 0.8125rem;
+    }
+
     .card-action-primary,
     .card-action-secondary {
         --action-art-width: 144px;
@@ -856,6 +901,19 @@
 
     .card-header-secondary .button-group {
         width: 100%;
+    }
+
+    .card-header-secondary .set-overview-actions {
+        display: flex;
+        gap: var(--space-2);
+    }
+
+    .set-overview-actions > .btn-secondary {
+        flex: 1 1 0;
+        min-width: max-content;
+        flex-direction: row;
+        gap: var(--space-1);
+        padding-inline: var(--space-2);
     }
 }
 
@@ -903,5 +961,21 @@
         right: var(--space-2);
         bottom: var(--space-2);
         object-fit: contain;
+    }
+
+    /* Compact overview cards: keep the illustration below the full-width copy. */
+    .card-action-grid > .card-clickable {
+        min-height: 0;
+        padding-bottom: calc(var(--space-10) + var(--space-6));
+    }
+
+    .card-action-grid .card-action-illustration {
+        width: 168px;
+        height: 80px;
+        right: var(--space-2);
+        bottom: 0;
+        object-fit: contain;
+        mask-image: linear-gradient(to bottom, transparent, black var(--space-6));
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black var(--space-6));
     }
 }
