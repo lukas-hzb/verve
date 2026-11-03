@@ -388,22 +388,14 @@
     font-size: var(--icon-size-ui);
 }
 
-.popup-close-btn,
-.popup-close-btn * {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.popup-close-btn::selection,
-.popup-close-btn *::selection {
-    background: transparent;
-    color: inherit;
-}
-
 .popup-close-btn:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+}
+
+/* Initial focus announces the dialog heading without decorating static text. */
+.study-mode-picker .popup-title:focus {
+    outline: none;
 }
 
 .import-section > .card-input-group:last-child {
