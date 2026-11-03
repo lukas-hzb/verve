@@ -15,7 +15,8 @@ function attachInfoPopover(panel) {
     const position = () => {
         if (!panel.matches(':popover-open')) return;
         const anchor = trigger.getBoundingClientRect();
-        const box = panel.getBoundingClientRect();
+        // Measure layout size so the entrance scale cannot move the anchor.
+        const box = { width: panel.offsetWidth, height: panel.offsetHeight };
         const edge = 12;
         const gap = 8;
         const below = window.innerHeight - anchor.bottom - gap - edge;
@@ -25,6 +26,7 @@ function attachInfoPopover(panel) {
         const left = Math.max(edge, Math.min(anchor.left, window.innerWidth - box.width - edge));
         panel.style.left = `${left}px`;
         panel.style.top = `${Math.max(edge, Math.min(top, window.innerHeight - box.height - edge))}px`;
+        panel.style.transformOrigin = `${Math.max(0, Math.min(anchor.left + anchor.width / 2 - left, box.width))}px ${preferBelow ? 'top' : 'bottom'}`;
         // Follow scrolling, responsive layout and the sidebar's animated width.
         frame = requestAnimationFrame(position);
     };

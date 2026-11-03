@@ -1,0 +1,228 @@
+/* Shared motion: spring for surfaces and controls, smooth easing for layout. */
+.popup-overlay {
+    pointer-events: none;
+    transition: opacity var(--motion-short) ease,
+        visibility 0s linear var(--motion-short);
+}
+
+.popup-overlay.active {
+    pointer-events: auto;
+    transition: opacity var(--motion-medium) ease, visibility 0s;
+}
+
+.popup-overlay .popup-content,
+.study-mode-picker.popup-content {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+    transform-origin: center;
+    transition: opacity var(--motion-short) ease,
+        transform var(--motion-short) var(--motion-exit);
+}
+
+.popup-overlay.active .popup-content,
+.study-mode-picker.popup-content[open] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: opacity var(--motion-medium) ease,
+        transform var(--motion-enter) var(--motion-spring);
+}
+
+/* Discrete transitions keep native surfaces in the top layer during exit.
+   Browsers without support retain their native open/close behavior. */
+.study-mode-picker.popup-content {
+    transition: opacity var(--motion-short) ease,
+        transform var(--motion-short) var(--motion-exit),
+        display var(--motion-short) allow-discrete,
+        overlay var(--motion-short) allow-discrete;
+}
+
+.study-mode-picker.popup-content[open] {
+    transition: opacity var(--motion-medium) ease,
+        transform var(--motion-enter) var(--motion-spring),
+        display var(--motion-enter) allow-discrete,
+        overlay var(--motion-enter) allow-discrete;
+}
+
+.study-mode-picker::backdrop {
+    background: rgb(0 0 0 / 0);
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+    transition: background-color var(--motion-short) ease,
+        backdrop-filter var(--motion-short) ease,
+        display var(--motion-short) allow-discrete,
+        overlay var(--motion-short) allow-discrete;
+}
+
+.study-mode-picker[open]::backdrop {
+    background: rgb(0 0 0 / 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition-duration: var(--motion-medium);
+}
+
+.study-mode-info-panel[popover] {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+    transition: opacity var(--motion-short) ease,
+        transform var(--motion-short) var(--motion-exit),
+        display var(--motion-short) allow-discrete,
+        overlay var(--motion-short) allow-discrete;
+}
+
+.study-mode-info-panel:popover-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition-duration: var(--motion-medium);
+    transition-timing-function: ease, var(--motion-spring), linear, linear;
+}
+
+@starting-style {
+    .study-mode-picker.popup-content[open] {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+    }
+    .study-mode-picker[open]::backdrop {
+        background: rgb(0 0 0 / 0);
+        backdrop-filter: blur(0);
+        -webkit-backdrop-filter: blur(0);
+    }
+    .study-mode-info-panel:popover-open {
+        opacity: 0;
+        transform: translateY(4px) scale(0.97);
+    }
+}
+
+/* Press quickly, then settle back with a small spring on release. */
+:is(.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-danger-secondary, .btn-success),
+button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):not(.popup-close-btn):not(.import-tab):not(.auth-link),
+.card-clickable,
+.card-stat-clickable,
+.create-new-card,
+.set-card {
+    transition: transform var(--motion-medium) var(--motion-spring),
+        background-color var(--transition-fast), color var(--transition-fast),
+        border-color var(--transition-fast), box-shadow var(--transition-normal);
+}
+
+:is(.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-danger-secondary, .btn-success):not(:disabled):active,
+button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):not(.popup-close-btn):not(.import-tab):not(.auth-link):not(:disabled):active,
+.card-clickable:active,
+.card-stat-clickable:active,
+.create-new-card:active {
+    transform: translateY(0) scale(0.98);
+    transition-duration: var(--motion-press);
+}
+
+.card-clickable-arrow {
+    transition: transform var(--motion-medium) var(--motion-spring), color var(--transition-fast);
+}
+
+.card-list-actions {
+    transform: translateX(4px);
+    transition: opacity var(--motion-short) ease,
+        transform var(--motion-medium) var(--motion-spring);
+}
+
+.card-list-item:focus-within .card-list-actions { transform: translateX(0); }
+
+@media (hover: hover) and (pointer: fine) {
+    .set-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card-hover); }
+    .card-list-item:hover .card-list-actions { transform: translateX(0); }
+}
+
+.popup-close-btn,
+.card-list-edit-btn,
+.card-list-delete-btn,
+.set-card-delete-btn,
+.sidebar-control,
+.sidebar-theme-toggle,
+.auth-theme-toggle,
+.btn-study,
+.study-mode-info-button {
+    transition: scale var(--motion-medium) var(--motion-spring),
+        background-color var(--transition-fast), color var(--transition-fast);
+}
+
+:is(.popup-close-btn, .card-list-edit-btn, .card-list-delete-btn, .set-card-delete-btn,
+    .sidebar-control, .sidebar-theme-toggle, .auth-theme-toggle, .btn-study,
+    .study-mode-info-button):not(:disabled):active {
+    scale: 0.92;
+    transition-duration: var(--motion-press);
+}
+
+.sidebar { transition: width var(--motion-medium) var(--motion-ease); }
+.home-section { transition: margin-left var(--motion-medium) var(--motion-ease); }
+
+@media (min-width: 769px) {
+    #sidebar-toggle {
+        transition: left var(--motion-medium) var(--motion-ease),
+            scale var(--motion-medium) var(--motion-spring),
+            background-color var(--transition-fast), color var(--transition-fast);
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar,
+    .sidebar.close {
+        transition: transform var(--motion-medium) var(--motion-ease),
+            visibility 0s linear var(--motion-medium);
+    }
+    .sidebar.mobile-open {
+        transition: transform var(--motion-enter) var(--motion-spring), visibility 0s;
+    }
+    .sidebar-backdrop {
+        transition: opacity var(--motion-medium) ease,
+            visibility 0s linear var(--motion-medium);
+    }
+    .navigation-open .sidebar-backdrop {
+        transition: opacity var(--motion-medium) ease, visibility 0s;
+    }
+}
+
+/* Progress must stay within its track, so it uses easing without overshoot. */
+.study-progress-track > div,
+.card-progress-bar { transition: width var(--motion-enter) var(--motion-ease); }
+
+@starting-style {
+    /* The final percentage is supplied as an inline width. */
+    .card-progress-bar { width: 0 !important; }
+}
+
+.study-feedback > button,
+.study-completion:not([hidden]),
+.import-section,
+.import-preview-box {
+    animation: surface-reveal var(--motion-medium) var(--motion-spring) backwards;
+}
+.study-feedback > button + button { animation-delay: 40ms; }
+
+@keyframes surface-reveal {
+    from { opacity: 0; transform: translateY(6px) scale(0.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.page-shell:not(.study-page) > .page-section {
+    animation: section-arrive var(--motion-medium) var(--motion-ease) backwards;
+}
+.page-shell:not(.study-page) > .page-section:nth-child(2) { animation-delay: 40ms; }
+.page-shell:not(.study-page) > .page-section:nth-child(n + 3) { animation-delay: 80ms; }
+
+@keyframes section-arrive {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Include inline study animations and native top-layer backdrops as well. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after,
+    *::backdrop {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0s !important;
+        transition-delay: 0s !important;
+        scroll-behavior: auto !important;
+    }
+}

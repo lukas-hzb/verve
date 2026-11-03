@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/motion.css') }}">
 
     <style>
         body {
@@ -41,7 +42,7 @@
             display: flex;
             align-items: center;
             gap: var(--space-3);
-            margin: var(--space-6) 0;
+            margin: var(--space-5) 0;
             color: var(--color-text-muted);
             font-size: var(--font-size-caption);
         }
@@ -55,7 +56,7 @@
 
         .auth-footer {
             text-align: center;
-            margin-top: var(--space-6);
+            margin-top: var(--space-5);
             font-size: var(--font-size-caption);
             color: var(--color-text-muted);
         }
@@ -87,7 +88,7 @@
 
         .auth-heading {
             text-align: center;
-            margin-bottom: var(--space-8);
+            margin-bottom: var(--space-6);
         }
 
         .auth-logo {
@@ -106,10 +107,25 @@
         .auth-recovery {
             text-align: center;
             font-size: var(--font-size-caption);
+            margin-top: calc(-1 * var(--space-1));
         }
 
+        #auth-form,
+        #verification-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .auth-card .card-input-group,
         #verification-form > p {
-            margin-bottom: var(--space-5);
+            margin-bottom: 0;
+        }
+
+        .auth-submit {
+            width: 100%;
+            justify-content: center;
+            margin-top: var(--space-1);
         }
     </style>
 </head>
@@ -178,7 +194,7 @@
                     <button type="button" id="forgot-password" class="auth-link">Forgot Password?</button>
                 </div>
                 {% endif %}
-                <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:var(--space-6)">
+                <button type="submit" class="btn-primary auth-submit">
                     <span class="material-symbols-rounded" aria-hidden="true">{{ 'person_add' if mode == 'register' else 'lock' if mode in ('change-password', 'reset-password') else 'login' }}</span>
                     {{ 'Create Account' if mode == 'register' else 'Save Password' if mode in ('change-password', 'reset-password') else 'Login' }}
                 </button>
@@ -189,7 +205,7 @@
                     <label for="verification-code" class="card-input-label">Verification Code</label>
                     <input id="verification-code" name="otp" class="card-input" autocomplete="one-time-code" required>
                 </div>
-                <button type="submit" class="btn-primary">Verify Email</button>
+                <button type="submit" class="btn-primary auth-submit">Verify Email</button>
             </form>
             {% if mode in ('login', 'register') %}
             <div class="auth-divider">or</div>

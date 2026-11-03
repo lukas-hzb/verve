@@ -121,6 +121,13 @@
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-normal: 300ms ease;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-spring: cubic-bezier(0.2, 1.35, 0.35, 1);
+  --motion-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-press: 100ms;
+  --motion-short: 180ms;
+  --motion-medium: 320ms;
+  --motion-enter: 480ms;
 
   /* Sidebar Dimensions */
   --sidebar-width: 240px;

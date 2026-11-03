@@ -27,7 +27,15 @@
     }
 }
 
-.study-mode-picker.popup-content { transform: none; max-width: 720px; width: calc(100% - 32px); }
+.study-mode-picker.popup-content {
+    /* A native modal must not inherit the relative positioning of overlay content. */
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    transform: none;
+    max-width: 720px;
+    width: calc(100% - 32px);
+}
 .popup-overlay {
     position: fixed;
     top: 0;
