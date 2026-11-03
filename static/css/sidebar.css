@@ -253,10 +253,24 @@
     font-size: var(--font-size-section);
   }
   .mobile-header-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    min-height: 44px;
+    padding: var(--space-2);
     margin-left: auto;
     flex-shrink: 0;
+    color: var(--color-text-main);
+    font-size: var(--font-size-ui);
     white-space: nowrap;
     text-decoration: none;
+  }
+  .mobile-header-action .material-symbols-rounded { font-size: var(--icon-size-ui); }
+  .mobile-header-action:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+    border-radius: var(--radius-btn);
   }
   .home-section,
   .sidebar.close ~ .home-section {

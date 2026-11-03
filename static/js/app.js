@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeStudyModePicker();
     initializeStudyUtilityBar();
     initializeStudyCardPosition();
+    initializeStudyCardTextAlignment();
 
     // Determine current page and initialize appropriate module
     const currentPath = window.location.pathname;
@@ -62,33 +63,74 @@ function initializeStudyCardPosition() {
     const above = page.querySelector('.study-above-card');
     const actions = page.querySelector('.study-actions');
     const toolbar = document.querySelector('.study-utility-bar');
+    const progress = page.querySelector('.study-progress');
+    const group = page.querySelector('.study-card-and-actions');
+    const progressAnchor = document.createComment('Desktop round progress');
+    progress.before(progressAnchor);
     const mobile = window.matchMedia('(max-width: 768px)');
+    const placeProgress = () => {
+        if (mobile.matches) group.prepend(progress);
+        else progressAnchor.after(progress);
+    };
+    placeProgress();
     let previousLayout = '';
     const positionCard = () => {
         if (!mobile.matches) return;
         const bounds = page.getBoundingClientRect();
         // Safari resizes its viewport while scrolling its browser bars away.
         // Recenter only for a changed content layout or width, never height alone.
-        const layout = [bounds.width, above.offsetHeight, actions.offsetHeight].join(':');
+        const progressHeight = progress.getBoundingClientRect().height;
+        const layout = [bounds.width, above.offsetHeight, progressHeight, actions.offsetHeight].join(':');
         if (layout === previousLayout) return;
         previousLayout = layout;
         const center = window.innerHeight / 2;
         // Use document coordinates so scrolling never pins the card to the viewport.
         const headingBottom = above.getBoundingClientRect().bottom + window.scrollY;
-        const aboveSpace = center - headingBottom - 12;
+        const aboveSpace = center - headingBottom - 12 - progressHeight - 20;
         const belowSpace = toolbar.getBoundingClientRect().top - center
             - actions.getBoundingClientRect().height - 20 - 12;
         const height = Math.max(0, Math.min(bounds.width * 5 / 8,
             aboveSpace * 2, belowSpace * 2));
         page.style.setProperty('--study-card-height', `${height}px`);
         page.style.setProperty('--study-card-offset',
-            `${Math.max(0, center - height / 2 - headingBottom - 12)}px`);
+            `${Math.max(0, center - height / 2 - headingBottom - 12 - progressHeight - 20)}px`);
     };
     const observer = new ResizeObserver(positionCard);
-    [page, above, actions, toolbar].forEach(element => observer.observe(element));
+    [page, above, progress, actions, toolbar].forEach(element => observer.observe(element));
     window.addEventListener('resize', positionCard);
-    mobile.addEventListener('change', positionCard);
+    mobile.addEventListener('change', () => {
+        placeProgress();
+        previousLayout = '';
+        positionCard();
+    });
     positionCard();
+}
+
+function initializeStudyCardTextAlignment() {
+    const flashcard = document.querySelector('.study-page .flashcard');
+    if (!flashcard) return;
+    const faces = [...flashcard.querySelectorAll('.flashcard-front, .flashcard-back')];
+    const alignText = () => faces.forEach(face => {
+        const content = face.querySelector('.flashcard-content');
+        const text = content.querySelector('p');
+        const lineHeight = parseFloat(getComputedStyle(text).lineHeight);
+        const topSpace = parseFloat(getComputedStyle(face).getPropertyValue('--study-content-top'));
+        const short = text.textContent.trim() && !text.querySelector('img')
+            && text.offsetHeight <= lineHeight * 2 + 1
+            && face.clientHeight - text.offsetHeight >= topSpace * 2
+            && !content.querySelector('.study-completion:not([hidden]), .study-empty-action:not([hidden])');
+        content.classList.toggle('short-text', Boolean(short));
+    });
+    const resize = new ResizeObserver(alignText);
+    faces.forEach(face => {
+        resize.observe(face);
+        resize.observe(face.querySelector('.flashcard-content > p'));
+    });
+    new MutationObserver(alignText).observe(flashcard, {
+        subtree: true, childList: true, characterData: true,
+        attributes: true, attributeFilter: ['hidden'],
+    });
+    alignText();
 }
 
 

@@ -16,9 +16,14 @@ test('Safari viewport height changes preserve the initial card position', () => 
     };
     const actions = { offsetHeight: 56, getBoundingClientRect: () => ({ height: 56 }) };
     const toolbar = { getBoundingClientRect: () => ({ top: window.innerHeight - 56 }) };
+    const progress = { before() {}, getBoundingClientRect: () => ({ height: 33 }) };
+    const group = { prepend() {} };
     const page = {
         getBoundingClientRect: () => ({ width }),
-        querySelector: selector => selector === '.study-above-card' ? above : actions,
+        querySelector: selector => ({
+            '.study-above-card': above, '.study-actions': actions,
+            '.study-progress': progress, '.study-card-and-actions': group,
+        })[selector],
         style: { setProperty: (name, value) => { properties.set(name, value); writes++; } },
     };
     const window = {
@@ -29,6 +34,7 @@ test('Safari viewport height changes preserve the initial card position', () => 
     };
     const document = {
         addEventListener() {},
+        createComment: () => ({ after() {} }),
         querySelector: selector => selector === '.study-page' ? page : toolbar,
     };
     const source = readFileSync(new URL('../static/js/app.js', import.meta.url), 'utf8')

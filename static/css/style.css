@@ -412,6 +412,12 @@ textarea.popup-input {
 .study-page .study-actions { align-self: start; margin-top: var(--space-4); }
 @media (max-width: 768px) {
     .study-overview-navigation { display: none; }
+    .card-header-secondary {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        padding: 0;
+    }
     .study-page .card-header-secondary-title {
         flex-basis: auto;
         overflow-wrap: anywhere;
@@ -441,7 +447,7 @@ textarea.popup-input {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: var(--space-1) var(--space-2);
+    padding: var(--space-1) var(--space-3);
     min-width: 0;
     border-radius: var(--radius-full);
     background: color-mix(in srgb, var(--study-mode-color) 16%, var(--color-bg-surface));
@@ -532,7 +538,7 @@ textarea.popup-input {
     justify-content: space-between;
     gap: var(--space-2);
     flex-wrap: wrap;
-    font-size: var(--font-size-caption);
+    font-size: 12px;
     color: var(--color-text-muted);
 }
 
@@ -541,12 +547,12 @@ textarea.popup-input {
 }
 
 .study-progress-track {
-    height: 8px;
+    height: 10px;
     display: flex;
     overflow: clip;
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-full);
-    background: var(--color-bg-surface-hover);
+    background: transparent;
 }
 
 /* Text-and-icon controls align to both edges without button surfaces. */
@@ -684,6 +690,7 @@ textarea.popup-input {
         width: 100%;
         min-height: 0;
     }
+    .study-card-and-actions > .study-progress { margin: 0 auto; }
     .study-page .card-container {
         flex: none;
         height: var(--study-card-height, auto);
@@ -704,7 +711,6 @@ textarea.popup-input {
         height: calc(var(--mobile-bar-height) + env(safe-area-inset-bottom));
         padding: 0 0 env(safe-area-inset-bottom);
         background: var(--color-bg-body);
-        border-top: var(--border-width) solid var(--color-border);
     }
     .study-utility-bar .study-actions-left { display: contents; }
     .study-utility-bar .btn-study {

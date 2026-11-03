@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block mobile_header_actions %}
-<a class="btn-secondary mobile-header-action" href="{{ url_for('main.set_overview', set_id=set_id) }}"
+<a class="mobile-header-action" href="{{ url_for('main.set_overview', set_id=set_id) }}"
     aria-label="Back to Set Overview">
     <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Overview
 </a>
@@ -140,6 +140,10 @@
         margin: 0;
         white-space: pre-line;
     }
+    .flashcard-content.short-text {
+        inset: 0;
+        padding-block: 0;
+    }
 
     @container (max-width: 440px) {
         .flashcard-front,
@@ -255,9 +259,6 @@
     {% macro card_badges(level_id) %}
         <div class="study-mode-badge-group">
             <span class="study-mode-pill">
-                <button type="button" class="btn-study-mode-info study-mode-info-button" popovertarget="study-mode-info" aria-label="About This Learning Mode" title="About This Learning Mode">
-                    <span class="material-symbols-rounded" aria-hidden="true">info</span>
-                </button>
                 <button type="button" class="btn-study-mode-picker study-mode-switch" data-study-mode-picker aria-haspopup="dialog" aria-controls="study-mode-picker" aria-label="Change Learning Mode">
                     <span>{{ 'Learn Due Cards' if study_mode == 'learn' else ('Practice All Cards' if study_mode == 'practice' else 'Review Mistakes') }}</span>
                     <svg class="study-mode-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m1.5 5 6.5 6.5 6.5-6.5" /></svg>
