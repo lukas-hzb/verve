@@ -11,13 +11,13 @@
                 <div class="card-input-group">
                     <label for="export-format" class="card-input-label">File Format</label>
                     <select id="export-format" name="format" class="card-input">
-                        <option value="verve">Verve · Levels &amp; review dates</option>
-                        <option value="csv" selected>CSV (.csv)</option>
+                        <option value="verve" selected>Verve (.verve) – includes levels and review dates</option>
+                        <option value="csv">CSV (.csv)</option>
                         <option value="tsv">TSV (.tsv)</option>
                         <option value="txt">Text (.txt)</option>
                     </select>
                 </div>
-                <div class="import-box" id="export-separators">
+                <div class="import-box" id="export-separators" hidden>
                     <div class="import-settings-grid">
                         <div>
                             <label for="export-field" class="card-input-label">Field Separator</label>

@@ -34,7 +34,7 @@ class VerveTestCase(unittest.TestCase):
         card.next_review = datetime(2027, 2, 3, 15, 30)
         db.session.commit()
         client = self.authenticated_client()
-        response = client.get(f'/api/set/{original.id}/export?format=verve')
+        response = client.get(f'/api/set/{original.id}/export')
         self.assertEqual(response.status_code, 200)
         self.assertIn('Verve_Source.verve', response.headers['Content-Disposition'])
         self.assertEqual(response.mimetype, 'application/vnd.verve+json')

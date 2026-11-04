@@ -11,7 +11,7 @@ class ExportSerializationTests(unittest.TestCase):
     def test_verve_preserves_progress_and_normalizes_dates_to_utc(self):
         source = [{'front': 'Grüße', 'back': 'First\nSecond', 'level': 7,
                    'next_review': '2026-12-03T18:30:00+02:00', 'last_answer_wrong': True}]
-        content = ExportService.serialize(source, 'verve', set_name='Languages')
+        content = ExportService.serialize(source, set_name='Languages')
         payload = json.loads(content)
         self.assertEqual(payload['version'], 1)
         self.assertEqual(payload['set_name'], 'Languages')
@@ -62,7 +62,8 @@ class ExportSerializationTests(unittest.TestCase):
                 ExportService.serialize([{'front': 'Dog', 'back': 'Hund'}], *options)
 
     def test_empty_set_downloads_an_empty_file(self):
-        self.assertEqual(ExportService.serialize([]), '')
+        self.assertEqual(ExportService.serialize([], 'csv'), '')
+        self.assertEqual(json.loads(ExportService.serialize([]))['cards'], [])
 
     def test_utf8_bom_is_not_imported_as_card_text(self):
         self.assertEqual(ImportService.parse_content('\ufeffDog,Hund\n', '\n', ','), [('Dog', 'Hund')])

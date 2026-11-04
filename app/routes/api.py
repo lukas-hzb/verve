@@ -100,7 +100,7 @@ def get_all_cards(set_id: str):
 @handle_api_errors
 def export_set(set_id: str):
     vocab_set = VocabService.get_vocab_set(set_id, current_user.id)
-    file_format = request.args.get('format', 'csv')
+    file_format = request.args.get('format', 'verve')
     try:
         content = ExportService.serialize(
             VocabService.get_all_cards(set_id, current_user.id), file_format,

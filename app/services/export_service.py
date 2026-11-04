@@ -14,7 +14,7 @@ class ExportService:
                   'verve': 'application/vnd.verve+json'}
 
     @staticmethod
-    def serialize(cards, file_format='csv', field_separator=None, card_separator='\\n', *, set_name=None):
+    def serialize(cards, file_format='verve', field_separator=None, card_separator='\\n', *, set_name=None):
         if file_format == 'verve':
             return VerveFormat.dumps(cards, set_name)
         if file_format not in ExportService.MIME_TYPES:
