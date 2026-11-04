@@ -5,22 +5,13 @@
 
     <!-- Secondary Header -->
     <div class="page-section">
-        <div class="card-header-secondary">
+        <div class="card-header-secondary set-overview-header">
             <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') }}</h1>
-            <div class="button-group set-overview-actions">
-                <button class="btn-secondary" onclick="openRenameModal()" style="white-space: nowrap;">
-                    <span class="material-symbols-rounded" aria-hidden="true">edit</span> Rename
-                </button>
-                <button type="button" class="btn-secondary" id="openExportModal" aria-haspopup="dialog" aria-controls="exportModal">
-                    <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4" /></svg> Export
-                </button>
-                <button class="btn-secondary" onclick="openAddCardModal()" style="white-space: nowrap;">
-                    <span class="material-symbols-rounded" aria-hidden="true">add</span> Add Card
-                </button>
-                <button class="btn-secondary" onclick="openImportModal()" style="white-space: nowrap;">
-                    <span class="material-symbols-rounded" aria-hidden="true">upload_file</span> Import
-                </button>
-            </div>
+            <button type="button" class="btn-secondary set-settings-trigger" id="openSetSettings"
+                aria-label="Set Settings" aria-haspopup="dialog" aria-controls="set-settings-dialog">
+                <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m10 3-.5 2-2 .9-1.9-.6-2 3.4 1.5 1.4v2.3l-1.5 1.4 2 3.4 1.9-.6 2 .9.5 2h4l.5-2 2-.9 1.9.6 2-3.4-1.5-1.4v-2.3l1.5-1.4-2-3.4-1.9.6-2-.9L14 3z" /><circle cx="12" cy="11.65" r="3" /></svg>
+                <span class="set-settings-label">Settings</span>
+            </button>
         </div>
     </div>
 
@@ -287,7 +278,9 @@
 </div>
 
 {% include '_export_dialog.html' %}
+{% include '_set_settings_dialog.html' %}
 <script type="module" src="{{ url_for('static', filename='js/modules/set-export.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/modules/set-settings.js') }}"></script>
 
 <script>
     async function fetchCards() {

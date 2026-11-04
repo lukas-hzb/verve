@@ -11,7 +11,7 @@
 }
 
 .popup-overlay .popup-content,
-.study-mode-picker.popup-content {
+:is(.study-mode-picker, .set-settings-dialog).popup-content {
     opacity: 0;
     transform: translateY(18px) scale(0.96);
     transform-origin: center;
@@ -20,7 +20,7 @@
 }
 
 .popup-overlay.active .popup-content,
-.study-mode-picker.popup-content[open] {
+:is(.study-mode-picker, .set-settings-dialog).popup-content[open] {
     opacity: 1;
     transform: translateY(0) scale(1);
     transition: opacity var(--motion-medium) ease,
@@ -29,21 +29,21 @@
 
 /* Discrete transitions keep native surfaces in the top layer during exit.
    Browsers without support retain their native open/close behavior. */
-.study-mode-picker.popup-content {
+:is(.study-mode-picker, .set-settings-dialog).popup-content {
     transition: opacity var(--motion-short) ease,
         transform var(--motion-short) var(--motion-exit),
         display var(--motion-short) allow-discrete,
         overlay var(--motion-short) allow-discrete;
 }
 
-.study-mode-picker.popup-content[open] {
+:is(.study-mode-picker, .set-settings-dialog).popup-content[open] {
     transition: opacity var(--motion-medium) ease,
         transform var(--motion-enter) var(--motion-spring),
         display var(--motion-enter) allow-discrete,
         overlay var(--motion-enter) allow-discrete;
 }
 
-.study-mode-picker::backdrop {
+:is(.study-mode-picker, .set-settings-dialog)::backdrop {
     background: rgb(0 0 0 / 0);
     backdrop-filter: blur(0);
     -webkit-backdrop-filter: blur(0);
@@ -53,12 +53,16 @@
         overlay var(--motion-short) allow-discrete;
 }
 
-.study-mode-picker[open]::backdrop {
+:is(.study-mode-picker, .set-settings-dialog)[open]::backdrop {
     background: rgb(0 0 0 / 0.4);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     transition-duration: var(--motion-medium);
 }
+
+/* Action dialogs take over immediately instead of appearing under a closing menu. */
+.set-settings-dialog.popup-content[data-handoff],
+.set-settings-dialog[data-handoff]::backdrop { transition: none; }
 
 .study-mode-info-panel[popover] {
     opacity: 0;
@@ -77,11 +81,11 @@
 }
 
 @starting-style {
-    .study-mode-picker.popup-content[open] {
+    :is(.study-mode-picker, .set-settings-dialog).popup-content[open] {
         opacity: 0;
         transform: translateY(18px) scale(0.96);
     }
-    .study-mode-picker[open]::backdrop {
+    :is(.study-mode-picker, .set-settings-dialog)[open]::backdrop {
         background: rgb(0 0 0 / 0);
         backdrop-filter: blur(0);
         -webkit-backdrop-filter: blur(0);

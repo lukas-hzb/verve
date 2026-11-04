@@ -1,0 +1,30 @@
+<dialog id="set-settings-dialog" class="popup-content set-settings-dialog" aria-labelledby="set-settings-title">
+    <div class="popup-header">
+        <h2 class="popup-title" id="set-settings-title" tabindex="-1" autofocus>Set Settings</h2>
+        <button type="button" class="popup-close-btn" data-close-settings aria-label="Close Set Settings">
+            <span class="material-symbols-rounded" aria-hidden="true">close</span>
+        </button>
+    </div>
+    <div class="set-settings-options">
+        <button type="button" class="btn-set-option" data-settings-action="rename">
+            <span class="material-symbols-rounded" aria-hidden="true">edit</span>
+            <span><strong>Rename Set</strong><span class="set-option-description">Change the name of this set.</span></span>
+            <svg class="export-icon set-option-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+        </button>
+        <button type="button" class="btn-set-option" data-settings-action="add">
+            <span class="material-symbols-rounded" aria-hidden="true">add</span>
+            <span><strong>Add Card</strong><span class="set-option-description">Create a new flashcard.</span></span>
+            <svg class="export-icon set-option-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+        </button>
+        <button type="button" class="btn-set-option" data-settings-action="import">
+            <span class="material-symbols-rounded" aria-hidden="true">upload_file</span>
+            <span><strong>Import Cards</strong><span class="set-option-description">Add cards from a file or text.</span></span>
+            <svg class="export-icon set-option-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+        </button>
+        <button type="button" class="btn-set-option" id="openExportModal" data-settings-action="export">
+            <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4" /></svg>
+            <span><strong>Export Set</strong><span class="set-option-description">Download your cards and learning progress.</span></span>
+            <svg class="export-icon set-option-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+        </button>
+    </div>
+</dialog>

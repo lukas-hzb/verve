@@ -57,13 +57,25 @@
     gap: var(--space-3) var(--space-4);
 }
 
-.card-header-secondary .set-overview-actions {
+.set-overview-header {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2);
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-4);
 }
+.set-overview-header .card-header-secondary-title { overflow-wrap: anywhere; }
+.set-settings-trigger { flex-shrink: 0; }
 
-.set-overview-actions > .btn-secondary { min-width: 0; }
+@media (max-width: 768px) {
+    .set-settings-label { display: none; }
+    .set-settings-trigger {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+    }
+}
 
 /* TYPOGRAPHY */
 .card-header-title,
@@ -911,18 +923,6 @@
         width: 100%;
     }
 
-    .card-header-secondary .set-overview-actions {
-        display: grid;
-        gap: var(--space-2);
-    }
-
-    .set-overview-actions > .btn-secondary {
-        flex: 1 1 0;
-        min-width: 0;
-        flex-direction: row;
-        gap: var(--space-1);
-        padding-inline: var(--space-2);
-    }
 }
 
 /* Keep illustration banners readable before the compact layout gets crowded. */

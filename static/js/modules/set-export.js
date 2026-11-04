@@ -25,7 +25,7 @@ if (modal && form && trigger) {
         activeRequest = null;
         setBusy(false);
         modal.classList.remove('active');
-        trigger.focus();
+        (document.getElementById('openSetSettings') || trigger).focus();
     };
     const update = () => {
         customField.hidden = field.disabled || field.value !== 'custom';

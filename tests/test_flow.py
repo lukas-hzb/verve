@@ -93,10 +93,14 @@ class VerveTestCase(unittest.TestCase):
         db.session.refresh(card)
         self.assertEqual(card.to_dict(), before)
         page = client.get(f'/set/{vocab_set.id}/overview').get_data(as_text=True)
-        actions = page.split('set-overview-actions')[1].split('</div>')[0]
-        self.assertLess(actions.index('Rename'), actions.index('Export'))
-        self.assertLess(actions.index('Export'), actions.index('Add Card'))
-        self.assertLess(actions.index('Add Card'), actions.index('Import'))
+        header = page.split('set-overview-header')[1].split('<!-- One entry point')[0]
+        self.assertIn('id="openSetSettings"', header)
+        self.assertNotIn('openRenameModal()', header)
+        self.assertNotIn('id="openExportModal"', header)
+        settings = page.split('id="set-settings-dialog"')[1].split('</dialog>')[0]
+        for label in ['Rename Set', 'Add Card', 'Import Cards', 'Export Set']:
+            self.assertIn(label, settings)
+        self.assertEqual(page.count('id="openExportModal"'), 1)
 
     def test_export_enforces_read_access_and_rejects_invalid_settings(self):
         other_user = self.create_user('exportowner', 'export-owner@example.com')

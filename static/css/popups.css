@@ -36,6 +36,44 @@
     max-width: 720px;
     width: calc(100% - 32px);
 }
+.set-settings-dialog.popup-content {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    max-width: 480px;
+    width: calc(100% - 32px);
+}
+.set-settings-dialog .popup-title:focus { outline: none; }
+.set-settings-options { display: grid; gap: var(--space-2); }
+.btn-set-option {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 20px;
+    gap: var(--space-3);
+    align-items: center;
+    width: 100%;
+    padding: var(--space-3);
+    background: var(--color-bg-surface-hover);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-btn);
+    color: var(--color-text-main);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+.btn-set-option > :first-child { color: var(--color-primary); }
+.btn-set-option strong { font-size: var(--font-size-ui); }
+.set-option-description {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--font-size-caption);
+    color: var(--color-text-muted);
+    line-height: var(--line-height-compact);
+}
+.set-option-chevron { color: var(--color-text-muted); }
+.btn-set-option:hover { background: var(--sidebar-hover); border-color: var(--color-primary-muted); }
+.btn-set-option:active { background: var(--sidebar-active); }
+.btn-set-option:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .popup-overlay {
     position: fixed;
     top: 0;
