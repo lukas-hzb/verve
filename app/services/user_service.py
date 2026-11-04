@@ -69,7 +69,7 @@ class UserService:
     def google_subject(neon_id: str) -> str | None:
         return db.session.execute(text(
             'SELECT "accountId" FROM neon_auth.account '
-            'Where "userid" = cast(:ID as uuid) and "providerid" = \'Google\''
+            'WHERE "userId" = CAST(:id AS uuid) AND "providerId" = \'google\''
         ), {'id': neon_id}).scalar()
 
     @staticmethod

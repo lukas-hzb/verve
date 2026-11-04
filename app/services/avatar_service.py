@@ -19,14 +19,14 @@ class AvatarService:
     def process(cls, avatar_file) -> str:
         raw_image = avatar_file.stream.read(cls.MAX_BYTES + 1)
         if len(raw_image) > cls.MAX_BYTES:
-            raise InvalidInputError('avatar', 'Image is too large (max 5 mb)')
+            raise InvalidInputError('avatar', 'Image is too large (max 5 MB)')
 
         try:
             with Image.open(io.BytesIO(raw_image)) as probe:
                 if probe.format not in cls.ALLOWED_FORMATS:
-                    raise InvalidInputError('avatar', 'Only jpeg, png and gif Images are supported')
+                    raise InvalidInputError('avatar', 'Only JPEG, PNG and GIF Images are supported')
                 if probe.width * probe.height > cls.MAX_PIXELS:
-                    raise InvalidInputError('avatar', 'Image dimensions are too large')
+                    raise InvalidInputError('avatar', 'Image Dimensions are too large')
                 probe.verify()
 
             with Image.open(io.BytesIO(raw_image)) as image:

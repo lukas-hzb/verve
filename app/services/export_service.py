@@ -29,7 +29,7 @@ class ExportService:
                 or '\0' in field + between or field in between or between in field):
             raise ExportSettingsError('Choose different, non-empty Separators of up to 16 Characters.')
         if file_format == 'tsv' and field != '\t':
-            raise ExportSettingsError('TSV Uses a Tab between the Front and Back.')
+            raise ExportSettingsError('TSV uses a Tab between the Front and Back.')
         if file_format != 'txt' and (len(field) != 1 or field in '\r\n"' or between != '\n'):
             raise ExportSettingsError('CSV and TSV need a single Field Separator and a Line Break between Cards.')
 
@@ -42,5 +42,5 @@ class ExportService:
 
         # Custom TXT separators have no quoting convention in the importer.
         if any(field in value or between in value for row in rows for value in row):
-            raise ExportSettingsError('A TXT Separator occurs in the Card Text. Choose another Separator or Export as CSV.')
+            raise ExportSettingsError('A TXT Separator occurs in the Card Text. Choose another Separator or export as CSV.')
         return between.join(field.join(row) for row in rows)
