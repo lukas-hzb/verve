@@ -210,6 +210,7 @@ class VerveTestCase(unittest.TestCase):
         self.assertIn('immutable', response.headers['Cache-Control'])
         self.assertFalse(response.headers.getlist('Set-Cookie'))
         identity.assert_not_called()
+        self.assertNotIn('Cookie', response.headers.get('Vary', ''))
         response.close()
         client.delete_cookie('verve_neon.session_token')
         missing = client.get('/assets/00000000000000000000/css/cards.css')
