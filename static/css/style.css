@@ -443,6 +443,7 @@ textarea.popup-input {
 .study-card-and-actions > .study-progress { margin: 0 auto; }
 .study-page .study-actions { align-self: stretch; margin-top: 0; }
 @media (max-width: 768px) {
+    .page-section:has(> .set-overview-header) { margin-bottom: var(--space-5); }
     .study-overview-navigation { display: none; }
     .card-header-secondary {
         background: transparent;

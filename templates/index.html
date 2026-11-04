@@ -85,7 +85,7 @@
                         <button type="button" class="set-card-delete-btn btn-icon" data-delete-folder="{{ folder.id }}" aria-label="Delete Folder {{ folder.name }}"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
                     </div>
                 </div>
-                <a class="btn-primary set-card-learn btn-folder-average" style="--folder-button-color: {{ folder.color }}; --folder-button-ink: {{ 'var(--color-text-on-yellow)' if folder.color == 'var(--color-accent-3)' else 'white' }};" href="{{ url_for('main.learn_folder', folder_id=folder.id) }}">Learn {{ folder.due_count }} of {{ folder.card_count }} Cards in {{ folder.sets | length }} Sets</a>
+                <a class="btn-primary set-card-learn btn-folder-learn" href="{{ url_for('main.learn_folder', folder_id=folder.id) }}">Learn {{ folder.due_count }} of {{ folder.card_count }} Cards in {{ folder.sets | length }} Sets</a>
             </article>
             {% endfor %}
 

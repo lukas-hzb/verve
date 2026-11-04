@@ -277,3 +277,18 @@ test('folder answers target their original sets and cancel by card ID', async t 
     await m.processSyncQueue();
     assert.deepEqual(calls, [{url:'/api/set/stgb/mark_wrong', body:{card_front:'Same question'}}]);
 });
+
+test('folder learning titles follow the current set except in practice-all mode', () => {
+    for (const mode of ['learn', 'mistakes', 'practice']) {
+        const m = Object.assign(Object.create(FlashcardManager.prototype), {
+            scope: 'folder', studyMode: mode, studyTitle: {textContent: 'Languages'},
+            sourceSet: mode === 'practice' ? {} : null,
+            cardFront: {}, cardBack: {}, cardLevels: [], updateCompletionAction() {},
+        });
+        m.updateCardContent({front:'Hello',back:'Hallo',level:1,set_name:'Everyday Words'});
+        assert.equal(m.studyTitle.textContent, mode === 'practice' ? 'Languages' : 'Everyday Words');
+        m.updateCardContent({front:'Train',back:'Zug',level:1,set_name:'Travel Words'});
+        assert.equal(m.studyTitle.textContent, mode === 'practice' ? 'Languages' : 'Travel Words');
+        if (m.sourceSet) assert.equal(m.sourceSet.textContent, 'Travel Words');
+    }
+});

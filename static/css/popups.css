@@ -286,7 +286,7 @@
 .import-file-area {
     min-height: 112px;
     padding: var(--space-4);
-    border: 2px dashed var(--color-border);
+    border: var(--border-width) dashed var(--color-border);
 
     border-radius: var(--radius-md);
     display: flex;

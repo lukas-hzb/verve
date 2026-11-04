@@ -234,7 +234,7 @@
     <!-- Secondary Header for Learning -->
     <div class="page-section">
         <div class="card-header-secondary">
-            <h1 class="card-header-secondary-title">{{ set_name }}</h1>
+            <h1 id="study-title" class="card-header-secondary-title">{{ initial_cards[0].set_name if folder_id and study_mode != 'practice' and initial_cards else set_name }}</h1>
             <div class="button-group study-overview-navigation">
                 <a href="{{ (url_for('main.index', folder=folder_id) if folder_id else url_for('main.set_overview', set_id=set_id)) }}" class="btn-secondary"
                     style="text-decoration: none;">
@@ -244,7 +244,7 @@
         </div>
     </div>
 
-    {% if folder_id %}<p id="study-source-set" style="text-align: center; color: var(--color-text-muted);"></p>{% endif %}
+    {% if folder_id and study_mode == 'practice' %}<p id="study-source-set" style="text-align: center; color: var(--color-text-muted);"></p>{% endif %}
 
     <!-- Round progress sits directly below the title card. -->
     <div id="progress-container" class="study-progress">

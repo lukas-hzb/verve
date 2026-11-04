@@ -359,12 +359,14 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
 }
 
 /* Folder learning reflects an equal-weight blend of its sets' level colors. */
-.btn-folder-average {
+.btn-folder-learn {
+    --folder-button-color: var(--color-primary-muted);
+    --folder-button-ink: white;
     background: var(--folder-button-color);
     color: var(--folder-button-ink);
     box-shadow: 0 2px 8px color-mix(in srgb, var(--folder-button-color) 25%, transparent);
 }
-.btn-folder-average:hover {
+.btn-folder-learn:hover {
     background: color-mix(in srgb, var(--folder-button-color) 90%, black);
     color: var(--folder-button-ink);
     box-shadow: 0 3px 10px color-mix(in srgb, var(--folder-button-color) 28%, transparent);

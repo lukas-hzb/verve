@@ -34,6 +34,7 @@ export class FlashcardManager {
         
         // DOM elements
         this.sourceSet = document.getElementById('study-source-set');
+        this.studyTitle = document.getElementById('study-title');
         this.cardFront = document.getElementById("card-front");
         this.cardBack = document.getElementById("card-back");
         this.flashcard = document.getElementById("flashcard");
@@ -427,6 +428,9 @@ export class FlashcardManager {
         this.updateCompletionAction();
         const source = this.sourceSet;
         if (source) source.textContent = card.set_name || '';
+        if (this.scope === 'folder' && this.studyMode !== 'practice' && this.studyTitle && card.set_name) {
+            this.studyTitle.textContent = card.set_name;
+        }
         renderCardContent(this.cardFront, card.front);
         renderCardContent(this.cardBack, card.back);
         const displayLevel = Math.max(1, Math.min(card.level, 5));
