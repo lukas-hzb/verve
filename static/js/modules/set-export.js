@@ -92,7 +92,7 @@ if (modal && form && trigger) {
                 throw new Error(data.message || 'The Export could not be created. Please try again.');
             }
             if (!response.headers.get('content-disposition')?.includes('attachment')) {
-                throw new Error('Please reload the Page and Sign in again before exporting.');
+                throw new Error('Please reload the Page and sign in again before exporting.');
             }
             const blob = await response.blob();
             if (controller.signal.aborted) return;

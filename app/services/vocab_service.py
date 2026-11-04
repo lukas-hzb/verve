@@ -170,7 +170,7 @@ class VocabService:
         back = validate_card_back(back)
         duplicate = Card.query.filter_by(vocab_set_id=set_id, front=front).filter(Card.id != card_id).first()
         if duplicate:
-            raise InvalidInputError("front", "Another Card already Uses this Front")
+            raise InvalidInputError("front", "Another Card already uses this Front")
 
         card.front = front
         card.back = back
@@ -311,7 +311,7 @@ class VocabService:
                 from datetime import datetime
                 next_review_date = datetime.fromisoformat(next_review.replace('Z', '+00:00'))
             except ValueError:
-                raise InvalidInputError('next_review', 'Invalid iso Date')
+                raise InvalidInputError('next_review', 'Invalid ISO Date')
         else:
             next_review_date = next_review
 
