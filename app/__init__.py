@@ -43,6 +43,9 @@ def create_app(config_name: str = 'default') -> Flask:
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
     
+    from app.assets import init_assets
+    init_assets(app)
+
     # Setup logging
     setup_logging(app)
     
@@ -135,6 +138,8 @@ def setup_login_manager(app: Flask) -> None:
     @app.before_request
     def retire_legacy_login():
         from flask import request, session
+        if request.endpoint in {'static', 'asset'}:
+            return
         for key in ('_user_id', '_fresh', '_id', '_remember_seconds'):
             session.pop(key, None)
         if 'remember_token' in request.cookies:

@@ -197,6 +197,64 @@ class VerveTestCase(unittest.TestCase):
         self.assertEqual(VocabService.get_statistics(vocab_set.id, self.user.id), baseline)
         self.assertEqual(client.get(api + '/cards?last_wrong_only=true').get_json()['cards'], [])
 
+    def test_public_assets_are_immutable_without_loading_identity(self):
+        client = self.app.test_client()
+        client.set_cookie('verve_neon.session_token', 'fake-token')
+        client.set_cookie('remember_token', 'legacy-token')
+        with self.app.test_request_context():
+            from flask import url_for
+            url = url_for('asset', filename='css/cards.css')
+        with patch('app.neon_auth.get_identity') as identity:
+            response = client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('immutable', response.headers['Cache-Control'])
+        self.assertFalse(response.headers.getlist('Set-Cookie'))
+        identity.assert_not_called()
+        response.close()
+        client.delete_cookie('verve_neon.session_token')
+        missing = client.get('/assets/00000000000000000000/css/cards.css')
+        self.assertEqual(missing.status_code, 404)
+        self.assertIn('no-store', missing.headers['Cache-Control'])
+        self.assertIn('no-store', client.get('/auth/login').headers['Cache-Control'])
+
+    def test_initial_page_data_is_authorized_and_safely_serialized(self):
+        import json
+        target = VocabService.create_user_set(self.user.id, 'Initial_Data')
+        front = '</script><script>alert("unsafe")</script>'
+        VocabService.add_card(target.id, front, 'Safe', self.user.id)
+        client = self.authenticated_client()
+        for path in [f'/set/{target.id}', f'/set/{target.id}?mode=practice',
+                     f'/set/{target.id}?mode=mistakes', f'/stats/{target.id}']:
+            response = client.get(path)
+            self.assertEqual(response.status_code, 200)
+            text = response.get_data(as_text=True)
+            data = json.loads(re.search(r'<script id="initial-page-data" type="application/json">(.*?)</script>', text).group(1))
+            self.assertNotIn(front, text)
+            self.assertIn('no-store', response.headers['Cache-Control'])
+            if path.endswith('mode=mistakes'):
+                self.assertEqual(data, [])
+            elif path.startswith('/stats'):
+                self.assertEqual(data['total_cards'], 1)
+            else:
+                self.assertEqual(data[0]['front'], front)
+        text = client.get(f'/set/{target.id}/overview').get_data(as_text=True)
+        self.assertIn('fetchCards([', text)
+        self.assertNotIn(front, text)
+
+    def test_reused_auth_connection_does_not_reuse_user_cookies(self):
+        from app.neon_auth import auth_request, auth_transport
+        transport = auth_transport()
+        def upstream(*args, **kwargs):
+            self.assertEqual(len(transport.cookies), 0)
+            transport.cookies.set('upstream-user', 'private-cookie')
+            return self.upstream({})
+        with patch.object(transport, 'request', side_effect=upstream) as send:
+            for token in ['first-user', 'second-user']:
+                with self.app.test_request_context('/', headers={'Cookie': f'verve_neon.session_token={token}'}):
+                    auth_request('get-session')
+                self.assertEqual(len(transport.cookies), 0)
+                self.assertEqual(send.call_args.kwargs['headers']['Cookie'], '__Secure-neon-auth.session_token=' + token)
+
     def setUp(self):
         self.app = create_app('testing')
         self.app_context = self.app.app_context()
@@ -570,7 +628,7 @@ class VerveTestCase(unittest.TestCase):
         self.assertIn('SameSite=Lax', cookie)
         self.assertIn('Path=/', cookie)
         self.assertNotIn('Domain=', cookie)
-        self.assertEqual(response.headers['Cache-Control'], 'no-store')
+        self.assertIn('no-store', response.headers['Cache-Control'])
         self.assertEqual(client.post('/auth/neon/admin/delete-user').status_code, 404)
         self.assertEqual(client.get('/auth/neon/sign-in/email').status_code, 404)
 
@@ -582,8 +640,8 @@ class VerveTestCase(unittest.TestCase):
             'Cookie': 'verve_neon.session_token=signed-token; session=flask-secret; unrelated=private-data',
             'Authorization': 'Bearer untrusted',
         }):
-            from app.neon_auth import auth_request
-            with patch('app.neon_auth.requests.request', return_value=self.upstream({})) as send:
+            from app.neon_auth import auth_request, auth_transport
+            with patch.object(auth_transport(), 'request', return_value=self.upstream({})) as send:
                 auth_request('get-session')
         headers = send.call_args.kwargs['headers']
         self.assertEqual(headers['Cookie'], '__Secure-neon-auth.session_token=signed-token')
@@ -615,7 +673,7 @@ class VerveTestCase(unittest.TestCase):
     def test_profile_avatar_fallback_and_custom_image(self):
         client = self.authenticated_client()
         response = client.get('/auth/profile')
-        self.assertIn('id="avatar-preview-img" src="/static/img/default-avatar.png"', response.get_data(as_text=True))
+        self.assertRegex(response.get_data(as_text=True), r'id="avatar-preview-img" src="/assets/[a-f0-9]+/img/default-avatar.webp"')
         self.user.avatar_file = 'https://example.test/custom-avatar.png'
         db.session.commit()
         response = client.get('/auth/profile')
@@ -689,7 +747,7 @@ class VerveTestCase(unittest.TestCase):
         })
         response = client.get(response.headers['Location'])
         self.assertEqual(response.status_code, 200)
-        self.assertIn('/static/js/neon-auth.js', response.get_data(as_text=True))
+        self.assertRegex(response.get_data(as_text=True), r'/assets/[a-f0-9]+/js/neon-auth.js')
 
     def test_security_headers_are_present(self):
         response = self.app.test_client().get('/auth/login')

@@ -4,7 +4,7 @@
  */
 
 export class StatsManager {
-    constructor(setId) {
+    constructor(setId, initialStats) {
         this.setId = setId;
 
         // DOM elements
@@ -25,12 +25,13 @@ export class StatsManager {
 
         this.MAX_LEVEL_DISPLAY = 5;
 
-        this.init();
+        this.init(initialStats);
     }
 
-    async init() {
+    async init(initialStats) {
         this.attachEventListeners();
-        await this.fetchAndDisplayStats();
+        if (initialStats) this.displayStats(initialStats);
+        else await this.fetchAndDisplayStats();
     }
 
     attachEventListeners() {
@@ -52,6 +53,8 @@ export class StatsManager {
     displayStats(stats) {
         // Display total cards
         this.totalCardsEl.textContent = stats.total_cards;
+        const dueCards = document.getElementById("due-cards");
+        if (dueCards) dueCards.textContent = stats.due_cards;
 
         // Calculate and display Mastery (Level 5)
         const masteryCount = stats.level_counts[this.MAX_LEVEL_DISPLAY] || 0;

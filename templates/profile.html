@@ -123,7 +123,7 @@
     <!-- Profile Header -->
     <div class="card-normal profile-card">
         <div class="profile-avatar-large" onclick="document.getElementById('avatar').click()">
-            <img id="avatar-preview-img" src="{{ current_user.avatar_file or url_for('static', filename='img/default-avatar.png') }}" alt="Avatar"
+            <img id="avatar-preview-img" src="{{ current_user.avatar_file or url_for('static', filename='img/default-avatar.webp') }}" alt="Avatar"
                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
 
             <div class="avatar-overlay">
@@ -400,7 +400,7 @@
         if (!sidebarPlaceholder) return;
 
         const avatar = document.createElement('img');
-        avatar.src = data.avatar_url || {{ url_for('static', filename='img/default-avatar.png') | tojson }};
+        avatar.src = data.avatar_url || {{ url_for('static', filename='img/default-avatar.webp') | tojson }};
         avatar.alt = 'Avatar';
         avatar.className = 'sidebar-avatar';
         avatar.draggable = false;

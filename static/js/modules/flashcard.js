@@ -6,7 +6,7 @@
 import { renderCardContent } from './card-text.js';
 
 export class FlashcardManager {
-    constructor(setId) {
+    constructor(setId, initialCards) {
         this.setId = setId;
         
         // Session
@@ -80,10 +80,10 @@ export class FlashcardManager {
 
         this.updateModeUI();
 
-        this.init();
+        this.init(initialCards);
     }
 
-    async init() {
+    async init(initialCards) {
         this.attachEventListeners();
         this.attachKeyboardListeners();
         this.disableControls();
@@ -91,7 +91,7 @@ export class FlashcardManager {
         
         // Try loading session first
         if (!this.loadSession()) {
-             await this.fetchAndLoadCards();
+             await this.fetchAndLoadCards(initialCards);
         } else {
              console.log("Session restored from local Storage.");
              this.updateBackButtonState();
@@ -325,7 +325,7 @@ export class FlashcardManager {
         });
     }
 
-    async fetchAndLoadCards() {
+    async fetchAndLoadCards(initialCards) {
         // Clear old session when fetching new
         this.clearSession();
         
@@ -340,9 +340,14 @@ export class FlashcardManager {
         }
 
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Could not load Cards');
-            const data = await response.json();
+            let data;
+            if (Array.isArray(initialCards)) {
+                data = { cards: initialCards };
+            } else {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Could not load Cards');
+                data = await response.json();
+            }
             let loadedCards = data.cards || [];
             
             this.cards = loadedCards;

@@ -7,6 +7,7 @@ responses or accepts client-supplied identities.
 
 from http.cookies import SimpleCookie
 import re
+from threading import local
 from urllib.parse import urlparse
 
 import requests
@@ -28,6 +29,15 @@ ALLOWED_ENDPOINTS = {
 }
 
 
+_transport = local()
+
+
+def auth_transport():
+    if not hasattr(_transport, 'session'):
+        _transport.session = requests.Session()
+    return _transport.session
+
+
 def auth_request(path, method='GET', *, data=None, params=None):
     base_url = current_app.config.get('NEON_AUTH_BASE_URL', '').rstrip('/')
     if not base_url or urlparse(base_url).scheme != 'https':
@@ -37,8 +47,10 @@ def auth_request(path, method='GET', *, data=None, params=None):
         for name, value in request.cookies.items()
         if name.startswith(LOCAL_COOKIE_PREFIX + '.')
     )
+    transport = auth_transport()
     try:
-        upstream = requests.request(
+        transport.cookies.clear()
+        upstream = transport.request(
             method, f'{base_url}/{path}', json=data, params=params,
             headers={
                 'Cookie': cookies,
@@ -60,6 +72,8 @@ def auth_request(path, method='GET', *, data=None, params=None):
     except requests.RequestException:
         current_app.logger.warning('Neon Auth request failed: %s', path)
         abort(503, description='Authentication is temporarily unavailable. Please try again.')
+    finally:
+        transport.cookies.clear()
 
 
 def copy_auth_cookies(upstream, response):

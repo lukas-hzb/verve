@@ -8,7 +8,7 @@ for development, testing, and production environments.
 import os
 from datetime import timedelta
 from pathlib import Path
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import QueuePool
 
 
 def database_uri_with_driver(database_uri):
@@ -76,12 +76,15 @@ class ProductionConfig(Config):
     # Secure cookies in production (HTTPS)
     SESSION_COOKIE_SECURE = True
     
-    # SQLAlchemy engine options for serverless Postgres providers such as Neon.
-    # NullPool ensures that connections are not kept open between requests,
-    # which avoids leaking connections across serverless invocations.
+    # A small per-instance pool avoids repeat TLS handshakes without unbounded connections.
     SQLALCHEMY_ENGINE_OPTIONS = {
-        "poolclass": NullPool,
+        "poolclass": QueuePool,
+        "pool_size": 2,
+        "max_overflow": 1,
+        "pool_timeout": 10,
+        "pool_recycle": 300,
         "pool_pre_ping": True,
+        "pool_use_lifo": True,
     }
 
     # In production, SECRET_KEY must be set via environment variable

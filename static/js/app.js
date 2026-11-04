@@ -135,7 +135,7 @@ function initializeLearningPage(path) {
     // Path format: /set/<id>
     const setId = path.split("/")[2];
     if (setId) {
-        new FlashcardManager(setId);
+        new FlashcardManager(setId, JSON.parse(document.getElementById('initial-page-data').textContent));
     }
 }
 
@@ -148,7 +148,7 @@ function initializeStatsPage(path) {
     // Path format: /stats/<id>
     const setId = path.split("/")[2];
     if (setId) {
-        new StatsManager(setId);
+        new StatsManager(setId, JSON.parse(document.getElementById('initial-page-data').textContent));
     }
 }
 

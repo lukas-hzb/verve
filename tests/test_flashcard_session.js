@@ -241,3 +241,22 @@ test('practice shuffle does not overwrite the normal learning order', t => {
     assert.equal(requests.length, 0);
     assert.equal(m.cards[0].front, 'b');
 });
+
+test('initial cards avoid a duplicate request, while later rounds fetch fresh data', async t => {
+    const m = manager(t);
+    delete m.fetchAndLoadCards;
+    m.updateProgressBarVisibility = () => {};
+    const previous = globalThis.fetch;
+    const requests = [];
+    globalThis.fetch = async url => {
+        requests.push(url);
+        return { ok: true, json: async () => ({ cards: [{ id: 'fresh', front: 'Updated' }] }) };
+    };
+    t.after(() => { globalThis.fetch = previous; });
+    await m.fetchAndLoadCards([{ id: 'initial', front: 'First' }]);
+    assert.equal(requests.length, 0);
+    assert.equal(m.cards[0].id, 'initial');
+    await m.fetchAndLoadCards();
+    assert.deepEqual(requests, ['/api/set/set/due_cards']);
+    assert.equal(m.cards[0].id, 'fresh');
+});

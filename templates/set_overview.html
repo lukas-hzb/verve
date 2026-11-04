@@ -27,7 +27,7 @@
                     <p class="card-clickable-text">Choose how you want to practice</p>
                 </div>
                 <div class="card-action-scenery" aria-hidden="true">
-                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/mascot/flashcard-learning-transparent.png') }}"
+                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/mascot/flashcard-learning-transparent.webp') }}"
                         alt="" draggable="false">
                 </div>
             </a>
@@ -42,7 +42,7 @@
                     <p class="card-clickable-text">See your Learning Progress</p>
                 </div>
                 <div class="card-action-scenery" aria-hidden="true">
-                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/statistics/level-' ~ dominant_level ~ ('-v2-transparent.png' if dominant_level == 5 else '-v3-transparent.png')) }}"
+                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/statistics/level-' ~ dominant_level ~ ('-v2-transparent.webp' if dominant_level == 5 else '-v3-transparent.webp')) }}"
                         alt="" draggable="false">
                 </div>
             </a>
@@ -282,10 +282,10 @@
 <script type="module" src="{{ url_for('static', filename='js/modules/set-settings.js') }}"></script>
 
 <script>
-    async function fetchCards() {
+    async function fetchCards(initialCards) {
         const { renderCardContent } = await import({{ url_for('static', filename='js/modules/card-text.js') | tojson }});
-        const response = await fetch(`/api/set/${window.setId}/cards`);
-        const data = await response.json();
+        const data = Array.isArray(initialCards) ? { cards: initialCards }
+            : await (await fetch(`/api/set/${window.setId}/cards`)).json();
         const container = document.getElementById('cards-list');
         const loading = document.getElementById('loading-indicator');
         if (loading) loading.style.display = 'none';
@@ -493,7 +493,7 @@
     }
 
     window.setId = "{{ set_id }}";
-    fetchCards();
+    fetchCards({{ initial_cards | tojson }});
 
     function openRenameModal() { document.getElementById('renameModal').classList.add('active'); }
     function closeRenameModal() { document.getElementById('renameModal').classList.remove('active'); }

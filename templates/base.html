@@ -118,7 +118,7 @@
             <div class="sidebar-profile-item">
                 <a href="{{ url_for('auth.profile') }}" title="Profile" {% if request.endpoint == 'auth.profile' %}aria-current="page"{% endif %}>
                     <div class="sidebar-icon-placeholder">
-                        <img src="{{ current_user.avatar_file or url_for('static', filename='img/default-avatar.png') }}"
+                        <img src="{{ current_user.avatar_file or url_for('static', filename='img/default-avatar.webp') }}"
                             alt="Avatar" class="sidebar-avatar" draggable="false">
                     </div>
                     <span class="link_name">Profile</span>

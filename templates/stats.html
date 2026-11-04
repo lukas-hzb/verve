@@ -48,7 +48,7 @@
                 <span class="material-symbols-rounded" aria-hidden="true">schedule</span>
             </div>
             <div class="card-stat-content">
-                <p class="card-stat-value">0</p>
+                <p class="card-stat-value" id="due-cards">{{ initial_stats.due_cards }}</p>
                 <p class="card-stat-label">Due</p>
             </div>
         </div>
@@ -77,4 +77,5 @@
     // Set the setId for the StatsManager module
     window.statsSetId = "{{ set_id }}";
 </script>
+<script id="initial-page-data" type="application/json">{{ initial_stats | tojson }}</script>
 {% endblock %}

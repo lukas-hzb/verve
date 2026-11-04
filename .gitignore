@@ -53,3 +53,7 @@ LOGIC.md
 
 # Browser SDK build dependencies
 node_modules/
+
+# Generated immutable CDN output
+public/assets/
+asset-version.txt

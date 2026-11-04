@@ -87,3 +87,13 @@ Container platforms can build the included `Dockerfile`, which exposes port `800
 4. Deploy the new application revision.
 5. Verify local login, Google login, set creation, import, review, and account deletion.
 6. Inspect deployment logs without copying personal data or credentials into issues.
+
+## Static assets and request latency
+
+`vercel.json` places the Flask function in Frankfurt (`fra1`), alongside the Neon database. If the database moves, review both regions together.
+
+The build command `python scripts/prepare_assets.py` copies public assets to `public/assets/<content-version>/` and writes `asset-version.txt`. Vercel serves these files directly from its CDN with a one-year immutable cache. A changed asset produces a new versioned path, including relative JavaScript imports and CSS font URLs. The generated directory and version file are ignored by Git. User uploads are excluded.
+
+Templates use WebP for application artwork; PNG favicons are retained. Keep WebP counterparts current when changing artwork. Flask serves the same versioned URLs during local development. Personal pages, APIs and authentication responses use `private, no-store`.
+
+Initial cards and statistics are included in the authorized page response to avoid a second authenticated request. Mutations and subsequent learning rounds still request fresh data. Database connections use a small bounded pool, and Neon Auth reuses HTTP connections without retaining user cookies; session validation still occurs on every authenticated request.

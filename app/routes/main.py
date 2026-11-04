@@ -132,6 +132,8 @@ def learn_set(set_id: str):
             set_id=set_id,
             set_name=vocab_set.name,
             study_mode=study_mode,
+            initial_cards=(VocabService.get_due_cards(set_id, current_user.id) if study_mode == 'learn'
+                           else VocabService.get_all_cards(set_id, current_user.id, last_wrong_only=study_mode == 'mistakes')),
             sets=sets,
             sidebar_collapsed=sidebar_collapsed,
             current_user=current_user
@@ -156,6 +158,7 @@ def stats(set_id: str):
         
         return render_template(
             "stats.html",
+            initial_stats=VocabService.get_statistics(set_id, current_user.id),
             set_id=set_id,
             set_name=vocab_set.name,
             sets=sets,
@@ -191,6 +194,7 @@ def set_overview(set_id: str):
         sidebar_collapsed = request.cookies.get('sidebar_collapsed', 'false') == 'true'
         return render_template(
             "set_overview.html",
+            initial_cards=VocabService.get_all_cards(set_id, current_user.id),
             set_id=set_id,
             set_name=vocab_set.name,
             dominant_level=max(1, min(dominant_level, 5)),
