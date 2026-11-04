@@ -794,3 +794,10 @@ textarea.popup-input {
 .btn-clear-search:hover { color: var(--color-text-main); }
 .btn-clear-search:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -4px; }
 .search-field input:placeholder-shown + .btn-clear-search { display: none; }
+
+/* Pointer focus stays functional without leaving a selection-like frame behind. */
+html[data-input-method="pointer"] :is(a, button, [tabindex]):focus,
+html[data-input-method="pointer"] :is(a, button, [tabindex]):focus::after {
+    outline: none;
+}
+a, button, [tabindex] { -webkit-tap-highlight-color: transparent; }

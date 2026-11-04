@@ -1,3 +1,4 @@
+import { initializeOverlays } from './modules/overlays.js';
 import { initializeFolders } from './modules/folders.js';
 /**
  * Verve - Main Application JavaScript
@@ -18,6 +19,7 @@ import { initializeStudyModePicker } from './modules/study-mode-picker.js';
  * Application initialization
  */
 document.addEventListener("DOMContentLoaded", () => {
+    initializeOverlays();
     // Initialize sidebar on all pages
     new SidebarManager();
     initializeWelcomeMascot();

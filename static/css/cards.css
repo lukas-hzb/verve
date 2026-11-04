@@ -973,12 +973,14 @@
     }
 
     /* Compact overview cards: keep the illustration below the full-width copy. */
-    .card-action-grid > .card-clickable {
+    .card-action-grid > .card-clickable,
+    .folder-contents-tools > .card-action-flashcards {
         min-height: 0;
         padding-bottom: calc(var(--space-10) + var(--space-6));
     }
 
-    .card-action-grid .card-action-illustration {
+    .card-action-grid .card-action-illustration,
+    .folder-contents-tools .card-action-illustration {
         width: 168px;
         height: 80px;
         right: var(--space-2);

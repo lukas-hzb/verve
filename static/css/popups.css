@@ -626,3 +626,14 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 #folder-settings-form .popup-footer > button { width: 100%; text-wrap: balance; }
+
+/* Fixed-body locking also prevents background panning in mobile Safari. */
+html.overlay-scroll-locked { overflow: hidden; }
+html.overlay-scroll-locked body {
+    position: fixed;
+    top: var(--overlay-scroll-top);
+    width: 100%;
+    overflow: hidden;
+}
+.popup-overlay,
+dialog::backdrop { overscroll-behavior-y: contain; }
