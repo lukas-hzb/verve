@@ -52,14 +52,19 @@
   --font-size-4xl: 2rem;
 
   /* Semantic roles: keep the same hierarchy on every screen. */
+  --font-size-metadata: 0.8125rem;
+  --font-size-badge: var(--font-size-metadata);
   --font-size-caption: var(--font-size-sm);
+  --font-size-label: var(--font-size-sm);
   --font-size-ui: var(--font-size-md);
   --font-size-body: var(--font-size-base);
   --font-size-title: var(--font-size-lg);
   --font-size-section: var(--font-size-xl);
-  --font-size-page: clamp(var(--font-size-2xl), calc(1.25rem + 0.75vw), var(--font-size-3xl));
-  --font-size-display: clamp(var(--font-size-3xl), calc(1.5rem + 0.8vw), var(--font-size-4xl));
-  --font-size-stat: var(--font-size-4xl);
+  --font-size-subheading: var(--font-size-base);
+  --font-size-action-title: var(--font-size-base);
+  --font-size-page: clamp(1.375rem, calc(1.125rem + 0.5vw), var(--font-size-2xl));
+  --font-size-display: clamp(var(--font-size-2xl), calc(1.25rem + 0.75vw), var(--font-size-3xl));
+  --font-size-stat: var(--font-size-xl);
   --font-size-study: clamp(var(--font-size-xl), calc(1rem + 0.75vw), var(--font-size-2xl));
 
   --font-weight-normal: 400;
@@ -111,12 +116,16 @@
   /* Shared, restrained radii for surfaces and their inner controls. */
   --radius-surface: var(--radius-xl);
 
+  /* Folder surfaces remain distinct from ordinary set cards. */
+  --color-folder-surface: color-mix(in srgb, var(--color-text-main) 7%, var(--color-bg-surface));
+  --color-folder-border: color-mix(in srgb, var(--color-text-main) 15%, var(--color-border));
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.05);
-  --shadow-card-hover: 0 15px 40px rgba(154, 150, 255, 0.15);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 6px 20px rgba(154, 150, 255, 0.10);
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -158,8 +167,8 @@
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.2);
   --shadow-md: 0 4px 8px rgb(0 0 0 / 0.25);
   --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.35);
-  --shadow-card: 0 10px 30px rgb(0 0 0 / 0.2);
-  --shadow-card-hover: 0 15px 40px rgb(108 99 255 / 0.12);
+  --shadow-card: 0 4px 16px rgb(0 0 0 / 0.2);
+  --shadow-card-hover: 0 6px 20px rgb(108 99 255 / 0.09);
 }
 
 @media (max-width: 768px) {

@@ -8,6 +8,7 @@ import { renderCardContent } from './card-text.js';
 export class FlashcardManager {
     constructor(setId, initialCards) {
         this.setId = setId;
+        this.scope = document.querySelector('.study-page')?.dataset.studyScope || 'set';
         
         // Session
         this.cards = [];
@@ -32,6 +33,7 @@ export class FlashcardManager {
         this.areControlsDisabled = false;
         
         // DOM elements
+        this.sourceSet = document.getElementById('study-source-set');
         this.cardFront = document.getElementById("card-front");
         this.cardBack = document.getElementById("card-back");
         this.flashcard = document.getElementById("flashcard");
@@ -90,7 +92,7 @@ export class FlashcardManager {
         try {
         
         // Try loading session first
-        if (!this.loadSession()) {
+        if (this.scope === 'folder' || !this.loadSession()) {
              await this.fetchAndLoadCards(initialCards);
         } else {
              console.log("Session restored from local Storage.");
@@ -251,7 +253,7 @@ export class FlashcardManager {
             if (this.areControlsDisabled) return;
             if (this.isWrongAnswersMode && this.sessionStats.wrong === 0) {
                 await this.processSyncQueue();
-                window.location.assign(`/set/${this.setId}?mode=practice`);
+                window.location.assign((this.scope === 'folder' ? `/folder/${this.setId}/learn?mode=practice` : `/set/${this.setId}?mode=practice`));
                 return;
             }
             await this.restartRound();
@@ -331,12 +333,12 @@ export class FlashcardManager {
         
         let url;
         if (this.isPracticeMode || this.isWrongAnswersMode) {
-            url = `/api/set/${this.setId}/cards`;
+            url = `/api/${this.scope || 'set'}/${this.setId}/cards`;
             if (this.isWrongAnswersMode) {
                 url += '?last_wrong_only=true'; // Only cards whose last answer was incorrect.
             }
         } else {
-            url = `/api/set/${this.setId}/due_cards`;
+            url = `/api/${this.scope || 'set'}/${this.setId}/due_cards`;
         }
 
         try {
@@ -392,7 +394,7 @@ export class FlashcardManager {
         this.setMascotPose(this.isPracticeMode ? 'peek' : 'celebrate');
         this.cardFront.textContent = this.isWrongAnswersMode 
             ? "No previous Mistakes to review."
-            : (this.isPracticeMode ? "This Set is empty." : "No Cards due for Review!");
+            : (this.isPracticeMode ? (this.scope === 'folder' ? "This Folder is empty." : "This Set is empty.") : "No Cards due for Review!");
         this.cardBack.textContent = "";
         this.flipBtn.style.display = "none";
         this.feedbackBtns.style.display = "none";
@@ -423,6 +425,8 @@ export class FlashcardManager {
 
     updateCardContent(card) {
         this.updateCompletionAction();
+        const source = this.sourceSet;
+        if (source) source.textContent = card.set_name || '';
         renderCardContent(this.cardFront, card.front);
         renderCardContent(this.cardBack, card.back);
         const displayLevel = Math.max(1, Math.min(card.level, 5));
@@ -500,6 +504,8 @@ export class FlashcardManager {
                 const endpoint = quality >= 3 ? 'mark_correct' : 'mark_wrong';
                 this.queuePracticeSync({
                     cardFront: originalCard.front,
+                    cardId: originalCard.id,
+                    setId: originalCard.vocab_set_id || this.setId,
                     endpoint: endpoint,
                     timestamp: Date.now(),
                     retries: 0
@@ -508,6 +514,8 @@ export class FlashcardManager {
                 // Learning mode: use rate endpoint
                 this.queueSync({
                     cardFront: originalCard.front,
+                    cardId: originalCard.id,
+                    setId: originalCard.vocab_set_id || this.setId,
                     quality: quality,
                     timestamp: Date.now(),
                     retries: 0
@@ -579,7 +587,7 @@ export class FlashcardManager {
         this.updateProgress();
         
         // Find index
-        const cardIndexInSet = this.cards.findIndex(c => c.front === cardToRestore.front);
+        const cardIndexInSet = this.cards.findIndex(c => c.id === cardToRestore.id);
 
         if (cardIndexInSet !== -1) {
             // Restore functionality:
@@ -588,7 +596,7 @@ export class FlashcardManager {
             this.loadCard(cardIndexInSet);
 
             // 2. Cancel Sync
-            this.cancelPendingSync(cardToRestore.front);
+            this.cancelPendingSync(cardToRestore.front, cardToRestore.id);
 
             // Let in-flight feedback finish before restoring its original state.
             await this.processSyncQueue();
@@ -598,7 +606,7 @@ export class FlashcardManager {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            set_id: this.setId,
+                            set_id: cardToRestore.vocab_set_id || this.setId,
                             card_front: cardToRestore.front,
                             level: cardToRestore.level,
                             next_review: cardToRestore.next_review,
@@ -610,7 +618,7 @@ export class FlashcardManager {
                 }
             } else {
                 const wasWrong = cardToRestore.last_answer_wrong ?? cardToRestore.last_practice_wrong ?? false;
-                this.queuePracticeSync({cardFront: cardToRestore.front, endpoint: wasWrong ? 'mark_wrong' : 'mark_correct', retries: 0});
+                this.queuePracticeSync({cardId: cardToRestore.id, setId: cardToRestore.vocab_set_id || this.setId, cardFront: cardToRestore.front, endpoint: wasWrong ? 'mark_wrong' : 'mark_correct', retries: 0});
             }
         }
         } finally {
@@ -659,7 +667,7 @@ export class FlashcardManager {
         
         // Save new order to server
         const ids = this.cards.map(c => c.id);
-        if (!this.isPracticeMode) fetch(`/api/set/${this.setId}/shuffle`, {
+        if (!this.isPracticeMode && this.scope !== 'folder') fetch(`/api/set/${this.setId}/shuffle`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ card_ids: ids })
@@ -724,7 +732,7 @@ export class FlashcardManager {
             const syncItem = this.syncQueue[0];
             const endpoint = syncItem.endpoint || 'rate';
             try {
-                const response = await fetch(`/api/set/${this.setId}/${endpoint}`, {
+                const response = await fetch(`/api/set/${syncItem.setId || this.setId}/${endpoint}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -751,7 +759,7 @@ export class FlashcardManager {
         this.queueSync(syncItem);
     }
 
-    cancelPendingSync(cardFront) {
-        this.syncQueue = this.syncQueue.filter(item => item.cardFront !== cardFront);
+    cancelPendingSync(cardFront, cardId) {
+        this.syncQueue = this.syncQueue.filter(item => cardId ? item.cardId !== cardId : item.cardFront !== cardFront);
     }
 }

@@ -45,8 +45,8 @@ python scripts/enable_flag_standard.py --apply
 Existing flags sets, edits and learning progress are preserved. To create a private copy for one existing user with the configured database:
 
 ```sh
-python scripts/create_flag_set.py --username Lukas
-python scripts/create_flag_set.py --username Lukas --apply
+python scripts/create_flag_set.py --username demo_user
+python scripts/create_flag_set.py --username demo_user --apply
 ```
 
 The first command validates without accessing the database. The second creates one private set and refuses to overwrite an existing set of the same name. Credentials come from the application's existing environment configuration.

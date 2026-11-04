@@ -146,13 +146,13 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-family-base);
-    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(108, 99, 255, 0.2);
 }
 
 .btn-primary:hover {
     background: var(--color-primary-muted-hover);
     transform: none;
-    box-shadow: 0 6px 20px rgba(108, 99, 255, 0.3);
+    box-shadow: 0 3px 10px rgba(108, 99, 255, 0.24);
 }
 
 .btn-primary:active {
@@ -209,13 +209,13 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-family-base);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-1) 25%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent-1) 25%, transparent);
 }
 
 .btn-danger:hover {
     background: color-mix(in srgb, var(--color-accent-1) 90%, black);
     transform: none;
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-1) 35%, transparent);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent-1) 28%, transparent);
 }
 
 .btn-danger:active {
@@ -271,13 +271,13 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-family-base);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-4) 25%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent-4) 25%, transparent);
 }
 
 .btn-success:hover {
     background: color-mix(in srgb, var(--color-accent-4) 90%, black);
     transform: none;
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-4) 35%, transparent);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent-4) 28%, transparent);
 }
 
 .btn-success:active {
@@ -288,58 +288,58 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
 .btn-level-1 {
     --button-fill: var(--color-accent-1);
     background-color: var(--color-accent-1);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-1) 25%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent-1) 25%, transparent);
 }
 
 .btn-level-1:hover {
     background-color: color-mix(in srgb, var(--color-accent-1) 90%, black);
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-1) 35%, transparent);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent-1) 28%, transparent);
 }
 
 .btn-level-2 {
     --button-fill: var(--color-accent-2);
     background-color: var(--color-accent-2);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-2) 25%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent-2) 25%, transparent);
 }
 
 .btn-level-2:hover {
     background-color: color-mix(in srgb, var(--color-accent-2) 90%, black);
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-2) 35%, transparent);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent-2) 28%, transparent);
 }
 
 .btn-level-3 {
     --button-fill: var(--color-accent-3);
     background-color: var(--color-accent-3);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-3) 25%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent-3) 25%, transparent);
     color: var(--color-text-on-yellow);
     /* Yellow needs dark text in either theme. */
 }
 
 .btn-level-3:hover {
     background-color: color-mix(in srgb, var(--color-accent-3) 90%, black);
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-3) 35%, transparent);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent-3) 28%, transparent);
 }
 
 .btn-level-4 {
     --button-fill: var(--color-accent-4);
     background-color: var(--color-accent-4);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-4) 25%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent-4) 25%, transparent);
 }
 
 .btn-level-4:hover {
     background-color: color-mix(in srgb, var(--color-accent-4) 90%, black);
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-4) 35%, transparent);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent-4) 28%, transparent);
 }
 
 .btn-level-5 {
     --button-fill: var(--color-accent-5);
     background-color: var(--color-accent-5);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-5) 25%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent-5) 25%, transparent);
 }
 
 .btn-level-5:hover {
     background-color: color-mix(in srgb, var(--color-accent-5) 90%, black);
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-accent-5) 35%, transparent);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--color-accent-5) 28%, transparent);
 }
 
 :is(.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-danger-secondary, .btn-success) {
@@ -356,4 +356,16 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
     opacity: 0.5;
     cursor: default;
     transform: none;
+}
+
+/* Folder learning reflects an equal-weight blend of its sets' level colors. */
+.btn-folder-average {
+    background: var(--folder-button-color);
+    color: var(--folder-button-ink);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--folder-button-color) 25%, transparent);
+}
+.btn-folder-average:hover {
+    background: color-mix(in srgb, var(--folder-button-color) 90%, black);
+    color: var(--folder-button-ink);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--folder-button-color) 28%, transparent);
 }

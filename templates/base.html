@@ -85,18 +85,34 @@
 
             <li class="sidebar-divider" aria-hidden="true"></li>
 
-            {% for set in sets %}
+            {% macro sidebar_set(set) %}
             <li>
-                <a href="{{ url_for('main.set_overview', set_id=set.id) }}" title="{{ set.name.replace('_', ' ') }}"
+                <a href="{{ url_for('main.set_overview', set_id=set.id) }}" title="{{ set.name }}"
                     {% if set_id == set.id %}class="sidebar-current-set"{% if request.endpoint != 'main.set_overview' %} aria-current="location"{% endif %}{% endif %}
                     {% if request.endpoint == 'main.set_overview' and set_id == set.id %}aria-current="page"{% endif %}>
                     <span class="material-symbols-rounded" aria-hidden="true">inventory_2</span>
-                    <span class="link_name">{{ set.name.replace('_', ' ') }}</span>
+                    <span class="link_name">{{ set.name }}</span>
                 </a>
+            </li>
+            {% endmacro %}
+
+            {% for item in folders %}
+            <li>
+                <a href="{{ url_for('main.index', folder=item.id) }}" data-sidebar-folder="{{ item.id }}" title="{{ item.name }}">
+                    <span class="material-symbols-rounded" aria-hidden="true">folder</span>
+                    <span class="link_name">{{ item.name }}</span>
+                </a>
+                {% if item.sets %}
+                <ul class="sidebar-folder-sets" aria-label="Sets in {{ item.name }}">
+                    {% for set in item.sets %}{{ sidebar_set(set) }}{% endfor %}
+                </ul>
+                {% endif %}
             </li>
             {% endfor %}
 
-            {% if set_id %}
+            {% for set in sets if set.id not in folder_memberships %}{{ sidebar_set(set) }}{% endfor %}
+
+            {% if set_id and not folder_id %}
             <li class="sidebar-divider" aria-hidden="true"></li>
             <li>
                 <a href="{{ url_for('main.learn_set', set_id=set_id) }}" title="Learn with Flashcards" data-study-mode-picker aria-haspopup="dialog" aria-controls="study-mode-picker" {% if request.endpoint == 'main.learn_set' %}aria-current="page"{% endif %}>
@@ -154,7 +170,13 @@
     </main>
 
 
+    {% if current_user.is_authenticated %}
+    {% from '_set_card.html' import set_card %}
+    {% include '_folder_dialogs.html' %}
+    {% endif %}
     {% include "_study_mode_picker.html" %}
+
+    {% include "_folder_name_dialog.html" %}
 
     <!-- Generic Confirmation Modal -->
     <div id="confirmationModal" class="popup-overlay">

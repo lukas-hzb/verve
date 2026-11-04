@@ -14,6 +14,7 @@ Verve combines adaptive review scheduling with vocabulary sets, bulk imports, th
 
 - **Adaptive reviews** — SM-2-based scheduling plans the next review from each card's performance.
 - **Flexible imports** — Add vocabulary from CSV, TSV, TXT, or pasted text with configurable separators.
+- **Folders** — Organize sets in folders directly on the home page, choose their contents in a settings popup, browse their sets in a shared card grid, and study across them. Assigned sets are grouped inside their folder. Removing a folder keeps its sets and learning progress.
 - **Vocabulary sets** — Organize cards into focused collections for different languages or subjects.
 - **Flashcard modes** — Choose Learn Due Cards, Practice All Cards, or Review Mistakes from the learning menu or the mode pill on a card.
 - **Progress-free practice** — Practice all cards or revisit cards whose last answer was incorrect, whether in learning or practice, without changing card levels or review dates.

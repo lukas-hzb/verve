@@ -22,6 +22,34 @@ from app.utils.exceptions import (
 )
 
 class VerveTestCase(unittest.TestCase):
+    def test_folder_dialogs_are_available_on_all_library_pages(self):
+        item = VocabService.create_user_set(self.user.id, 'Folder Navigation')
+        client = self.authenticated_client()
+        for url in ['/', '/auth/profile', '/import', f'/set/{item.id}/overview',
+                    f'/set/{item.id}', f'/stats/{item.id}']:
+            with self.subTest(url=url):
+                response = client.get(url)
+                self.assertEqual(response.status_code, 200)
+                page = response.get_data(as_text=True)
+                for element_id in ['folder-contents-dialog', 'folder-settings-dialog',
+                                   'folder-library-data', 'study-mode-picker']:
+                    self.assertEqual(page.count(f'id="{element_id}"'), 1)
+
+    def test_set_names_preserve_spaces_and_underscores(self):
+        client = self.authenticated_client()
+        response = client.post('/api/vocab_sets', json={'name': 'Everyday Words_Test'})
+        self.assertEqual(response.status_code, 201)
+        item = VocabSet.query.filter_by(user_id=self.user.id, name='Everyday Words_Test').one()
+        for url in ['/', f'/set/{item.id}/overview', f'/set/{item.id}', f'/stats/{item.id}']:
+            page = client.get(url)
+            self.assertEqual(page.status_code, 200)
+            self.assertIn('Everyday Words_Test', page.get_data(as_text=True))
+            self.assertNotIn('Everyday Words Test', page.get_data(as_text=True))
+        response = client.post(f'/set/{item.id}/rename', data={'new_name': 'New Words_Test'})
+        self.assertEqual(response.status_code, 302)
+        db.session.refresh(item)
+        self.assertEqual(item.name, 'New Words_Test')
+
     def test_verve_file_restores_progress_in_new_and_existing_sets(self):
         import json
         from io import BytesIO
@@ -255,6 +283,94 @@ class VerveTestCase(unittest.TestCase):
                     auth_request('get-session')
                 self.assertEqual(len(transport.cookies), 0)
                 self.assertEqual(send.call_args.kwargs['headers']['Cookie'], '__Secure-neon-auth.session_token=' + token)
+
+    def test_folders_preserve_cards_and_enforce_ownership(self):
+        from app.services.folder_service import FolderService
+        from app.models.folder import FolderSet
+        from app.utils.exceptions import VocabSetNotFoundError
+        client = self.authenticated_client()
+        response = client.post('/api/folders', json={'name': 'Jura'})
+        self.assertEqual(response.status_code, 201)
+        folder_id = response.json['id']
+        sets = [VocabService.create_user_set(self.user.id, name) for name in ('BGB', 'StGB')]
+        cards = [VocabService.add_card(s.id, 'Same question', s.name, self.user.id) for s in sets]
+        for item in sets:
+            self.assertEqual(client.put(f'/api/set/{item.id}/folder', json={'folder_id': folder_id}).status_code, 200)
+        self.assertEqual(len(client.get(f'/api/folder/{folder_id}/due_cards').json['cards']), 2)
+        for path in ('/', f'/folder/{folder_id}/learn', f'/folder/{folder_id}/learn?mode=mistakes'):
+            result = client.get(path)
+            self.assertEqual(result.status_code, 200, path)
+        self.assertEqual(client.get(f'/folder/{folder_id}').status_code, 302)
+        self.assertIn(f'/?folder={folder_id}', client.get(f'/folder/{folder_id}').location)
+        page = client.get(f'/folder/{folder_id}/learn').text
+        self.assertIn('data-study-scope="folder"', page)
+        self.assertIn(f'/folder/{folder_id}/learn?mode=practice', page)
+        self.assertNotIn(f'/set/{folder_id}', page)
+        cards[0].last_practice_wrong = True
+        db.session.commit()
+        self.assertEqual(len(client.get(f'/api/folder/{folder_id}/cards?last_wrong_only=true').json['cards']), 1)
+        other = self.create_user('folder-other', 'folder-other@example.com')
+        private = FolderService.save(other.id, 'Private')
+        self.assertEqual(client.get(f'/api/folder/{private.id}/cards').status_code, 404)
+        self.assertEqual(client.patch(f'/api/folders/{private.id}', json={'name': 'Changed'}).status_code, 404)
+        self.assertEqual(client.put(f'/api/set/{sets[0].id}/folder', json={'folder_id': private.id}).status_code, 404)
+        self.assertEqual(db.session.get(FolderSet, sets[0].id).folder_id, folder_id)
+        self.assertEqual(client.delete(f'/api/folders/{folder_id}').status_code, 200)
+        self.assertTrue(all(db.session.get(Card, c.id) for c in cards))
+        self.assertEqual(FolderSet.query.count(), 0)
+
+    def test_folder_selection_is_atomic_and_can_move_multiple_sets(self):
+        from app.services.folder_service import FolderService
+        from app.models.folder import FolderSet
+        client = self.authenticated_client()
+        first = FolderService.save(self.user.id, 'First')
+        second = FolderService.save(self.user.id, 'Second')
+        sets = [VocabService.create_user_set(self.user.id, name) for name in ('One', 'Two')]
+        FolderService.assign(first.id, sets[0].id, self.user.id)
+        other = self.create_user('selectionother', 'selectionother@example.com')
+        foreign_set = VocabService.create_user_set(other.id, 'Private')
+        url = f'/api/folders/{second.id}/sets'
+        bad = client.put(url, json={'name': 'Changed', 'set_ids': [sets[0].id, foreign_set.id]})
+        self.assertEqual(bad.status_code, 400)
+        self.assertEqual(db.session.get(FolderSet, sets[0].id).folder_id, first.id)
+        self.assertEqual(second.name, 'Second')
+        self.assertEqual(client.put(url, json={'name': 'First', 'set_ids': []}).status_code, 400)
+        for invalid in ('invalid', [sets[0].id, sets[0].id], [None]):
+            self.assertEqual(client.put(url, json={'name': 'Second', 'set_ids': invalid}).status_code, 400)
+        result = client.put(url, json={'name': 'Collected', 'set_ids': [s.id for s in sets]})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(second.name, 'Collected')
+        self.assertTrue(all(db.session.get(FolderSet, s.id).folder_id == second.id for s in sets))
+        home = client.get('/').text
+        grid = home.split('id="setsGrid"', 1)[1].split('folder-library-data', 1)[0]
+        self.assertNotIn('data-set-overview=', grid)
+        self.assertIn('data-open-folder=', grid)
+        self.assertEqual(client.put(f'/api/folders/{first.id}/sets', json={'name': 'First', 'set_ids': []}).status_code, 200)
+        self.assertEqual(client.put(url, json={'name': 'Collected', 'set_ids': []}).status_code, 200)
+        self.assertEqual(FolderSet.query.count(), 0)
+        private = FolderService.save(other.id, 'Other')
+        self.assertEqual(client.put(f'/api/folders/{private.id}/sets', json={'name': 'Other', 'set_ids': []}).status_code, 404)
+        home = client.get('/').text
+        self.assertIn('folder-contents-dialog', home)
+        self.assertIn('folder-settings-dialog', home)
+        self.assertIn('Learn 0 of 0 Cards in 0 Sets', home)
+        self.assertNotIn(f'href="/folder/{second.id}"', home)
+
+    def test_folder_move_remove_and_set_deletion(self):
+        from app.services.folder_service import FolderService
+        from app.models.folder import FolderSet
+        first = FolderService.save(self.user.id, 'First')
+        second = FolderService.save(self.user.id, 'Second')
+        item = VocabService.create_user_set(self.user.id, 'Folder_Set')
+        FolderService.assign(first.id, item.id, self.user.id)
+        FolderService.assign(second.id, item.id, self.user.id)
+        self.assertEqual(FolderSet.query.count(), 1)
+        self.assertEqual(FolderService.cards(first.id, self.user.id, 'practice'), [])
+        FolderService.assign(None, item.id, self.user.id)
+        self.assertEqual(FolderSet.query.count(), 0)
+        FolderService.assign(first.id, item.id, self.user.id)
+        VocabService.delete_set(item.id, self.user.id)
+        self.assertEqual(FolderSet.query.count(), 0)
 
     def setUp(self):
         self.app = create_app('testing')

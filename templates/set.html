@@ -1,7 +1,9 @@
+{% set study_endpoint = 'main.learn_folder' if folder_id else 'main.learn_set' %}
+{% set study_args = {'folder_id': folder_id} if folder_id else {'set_id': set_id} %}
 {% extends "base.html" %}
 
 {% block mobile_header_actions %}
-<a class="mobile-header-action" href="{{ url_for('main.set_overview', set_id=set_id) }}"
+<a class="mobile-header-action" href="{{ (url_for('main.index', folder=folder_id) if folder_id else url_for('main.set_overview', set_id=set_id)) }}"
     aria-label="Back to Set Overview">
     <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Overview
 </a>
@@ -208,11 +210,11 @@
         height: var(--study-pill-height);
         padding: var(--space-1) var(--space-3);
         border-radius: var(--radius-full);
-        font-size: 12px;
+        font-size: var(--font-size-badge);
         line-height: var(--line-height-control);
         color: white;
         z-index: 10;
-        font-weight: var(--font-weight-semibold);
+        font-weight: var(--font-weight-medium);
         box-shadow: var(--shadow-sm);
     }
 
@@ -227,20 +229,22 @@
 
 </style>
 
-<div class="page-shell study-page" data-study-mode="{{ study_mode }}">
+<div class="page-shell study-page" data-study-mode="{{ study_mode }}" data-study-scope="{{ 'folder' if folder_id else 'set' }}">
     <div class="study-above-card">
     <!-- Secondary Header for Learning -->
     <div class="page-section">
         <div class="card-header-secondary">
-            <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') }}</h1>
+            <h1 class="card-header-secondary-title">{{ set_name }}</h1>
             <div class="button-group study-overview-navigation">
-                <a href="{{ url_for('main.set_overview', set_id=set_id) }}" class="btn-secondary"
+                <a href="{{ (url_for('main.index', folder=folder_id) if folder_id else url_for('main.set_overview', set_id=set_id)) }}" class="btn-secondary"
                     style="text-decoration: none;">
                     <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Back to Overview
                 </a>
             </div>
         </div>
     </div>
+
+    {% if folder_id %}<p id="study-source-set" style="text-align: center; color: var(--color-text-muted);"></p>{% endif %}
 
     <!-- Round progress sits directly below the title card. -->
     <div id="progress-container" class="study-progress">
@@ -284,7 +288,7 @@
                             <button type="button" class="btn-primary" id="continue-practice-btn"><span class="material-symbols-rounded" aria-hidden="true">refresh</span><span id="continue-practice-label">Practice again</span></button>
                         </div>
                         <div id="study-empty-action" class="study-empty-action" hidden>
-                            <a class="btn-primary" href="{{ url_for('main.learn_set', set_id=set_id, mode='practice') }}"><span class="material-symbols-rounded" aria-hidden="true">stacks</span> Practice all Cards</a>
+                            <a class="btn-primary" href="{{ url_for(study_endpoint, mode='practice', **study_args) }}"><span class="material-symbols-rounded" aria-hidden="true">stacks</span> Practice all Cards</a>
                         </div>
                     </div>
                 </div>
@@ -302,7 +306,7 @@
         {% if study_mode == 'learn' %}
         <p>Review Cards due today. Your Answers update their Levels and next Review Dates, and count toward your Learning Progress.</p>
         {% elif study_mode == 'practice' %}
-        <p>Practice every Card in this Set, regardless of its Level or when it is due for Review.</p>
+        <p>Practice every Card in this {{ 'Folder' if folder_id else 'Set' }}, regardless of its Level or when it is due for Review.</p>
         {% else %}
         <p>Review Cards whose last Answer was incorrect, whether in normal Learning or Practice, regardless of their Level or Review Date. New Cards and Cards last answered correctly are excluded.</p>
         {% endif %}

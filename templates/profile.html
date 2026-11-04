@@ -24,7 +24,7 @@
             align-items: center;
             justify-content: center;
             font-size: var(--font-size-stat);
-            font-weight: var(--font-weight-bold);
+            font-weight: var(--font-weight-semibold);
             margin: 0;
             flex-shrink: 0;
             box-shadow: var(--shadow-md);
@@ -138,7 +138,7 @@
         <div class="profile-info">
             <h1>{{ current_user.username }}</h1>
             <p>{{ current_user.email }}</p>
-            <p style="font-size: var(--font-size-caption);">Member since {{ current_user.created_at.strftime('%d.%m.%Y') }}
+            <p style="font-size: var(--font-size-metadata);">Member since {{ current_user.created_at.strftime('%d.%m.%Y') }}
             </p>
         </div>
     </div>

@@ -97,3 +97,8 @@ The build command `python scripts/prepare_assets.py` copies public assets to `pu
 Templates use WebP for application artwork; PNG favicons are retained. Keep WebP counterparts current when changing artwork. Flask serves the same versioned URLs during local development. Personal pages, APIs and authentication responses use `private, no-store`.
 
 Initial cards and statistics are included in the authorized page response to avoid a second authenticated request. Mutations and subsequent learning rounds still request fresh data. Database connections use a small bounded pool, and Neon Auth reuses HTTP connections without retaining user cookies; session validation still occurs on every authenticated request.
+
+
+## Folder schema
+
+Apply `migrations/003_folders.sql` with `scripts/apply_neon_schema.py` before deploying the folder feature. It adds `folders` and `folder_sets`; existing sets and cards remain unchanged. Each set can belong to one personal folder. Deleting a folder removes its memberships and keeps its sets and learning progress.

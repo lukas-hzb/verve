@@ -13,7 +13,7 @@
     min-height: 132px;
     overflow: hidden;
 }
-.study-mode-picker .card-clickable-title { font-size: var(--font-size-ui); }
+.study-mode-picker .card-clickable-title { font-size: var(--font-size-action-title); }
 .study-mode-picker .card-clickable-text { font-size: var(--font-size-caption); }
 .study-mode-picker .card-action-primary .card-clickable-text { color: white; }
 @media (max-width: 540px) {
@@ -62,7 +62,7 @@
     transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 .btn-set-option > :first-child { color: var(--color-primary); }
-.btn-set-option strong { font-size: var(--font-size-ui); }
+.btn-set-option strong { font-size: var(--font-size-action-title); }
 .set-option-description {
     display: block;
     margin-top: var(--space-1);
@@ -487,3 +487,142 @@
         display: none;
     }
 }
+
+/* Folder contents reuse the home grid inside a responsive modal surface. */
+.folder-contents-dialog.popup-content {
+    max-width: 760px;
+    container-type: inline-size;
+}
+.folder-settings-dialog.popup-content { max-width: 600px; }
+.folder-dialog-actions { flex: 0 0 auto; gap: var(--space-2); }
+.folder-contents-tools { display: grid; gap: var(--space-4); margin-bottom: var(--space-4); }
+/* A narrow dialog still has room for the standard horizontal overview banner. */
+@container (min-width: 441px) {
+    .folder-contents-tools > .card-action-flashcards {
+        min-height: 88px;
+        --action-art-width: 168px;
+    }
+}
+.folder-contents-dialog .folder-contents-header {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 55%);
+    margin-bottom: 0;
+}
+.folder-contents-header .section-search { width: 100%; max-width: 22rem; justify-self: end; }
+.folder-contents-dialog .popup-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: var(--font-size-page);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-heading);
+}
+.folder-contents-dialog .card-grid-2 { align-items: stretch; }
+.folder-contents-dialog .set-card[hidden], .folder-set-option[hidden] { display: none; }
+.folder-empty-state { text-align: center; padding: var(--space-6); }
+.folder-settings-dialog .folder-selection-header {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 55%);
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+/* Contents share the overview hierarchy; selection remains a form section. */
+.folder-contents-header .section-heading {
+    margin: 0;
+    font-size: var(--font-size-section);
+}
+.folder-selection-header .section-heading {
+    margin: 0;
+    font-size: var(--font-size-subheading);
+}
+.folder-set-options {
+    display: grid;
+    align-content: start;
+    gap: 0;
+    height: clamp(8rem, 30dvh, 18rem);
+    padding: var(--space-1);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+}
+.folder-set-options > p { padding: var(--space-3); margin: 0; }
+.folder-set-option {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    min-height: 44px;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+}
+.folder-set-option:last-child { border-bottom: 0; }
+.folder-set-option:hover, .folder-set-option:has(input:checked) { background: var(--color-bg-surface-hover); }
+.folder-checkbox { position: relative; display: grid; width: 16px; height: 16px; }
+.folder-set-option .folder-checkbox input {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--color-text-muted);
+    border-radius: 3px;
+    background: var(--color-bg-surface);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+.folder-set-option .folder-checkbox input:checked {
+    background: var(--color-primary-muted);
+    border-color: var(--color-primary-muted);
+}
+.folder-set-option .folder-checkbox input:not(:checked):hover { border-color: var(--color-primary); }
+.folder-set-option .folder-checkbox input:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+.folder-checkbox .folder-checkbox-mark {
+    position: absolute;
+    inset: 0;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    color: white;
+    pointer-events: none;
+    visibility: hidden;
+}
+.folder-checkbox input:checked + .folder-checkbox-mark { visibility: visible; }
+.folder-checkbox:has(input:disabled) { opacity: 0.5; }
+@media (forced-colors: active) {
+    .folder-set-option .folder-checkbox input { appearance: auto; -webkit-appearance: auto; }
+    .folder-checkbox .folder-checkbox-mark { display: none; }
+}
+.folder-set-name { min-width: 0; overflow-wrap: anywhere; font-size: var(--font-size-body); font-weight: var(--font-weight-medium); }
+.folder-set-count { font-size: var(--font-size-metadata); color: var(--color-text-muted); white-space: nowrap; }
+.folder-card-title { overflow-wrap: anywhere; }
+
+/* Only sets assigned elsewhere need a move explanation. Keep names from widening the row. */
+.folder-set-option:has(.folder-set-move-note) { row-gap: var(--space-1); }
+.folder-set-move-note {
+    grid-column: 2 / -1;
+    display: flex;
+    align-items: baseline;
+    gap: 0.25em;
+    min-width: 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-caption);
+    line-height: var(--line-height-compact);
+    white-space: nowrap;
+}
+.folder-set-move-note > span { flex-shrink: 0; }
+.folder-set-move-note .folder-set-previous-name {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: var(--font-weight-medium);
+}
+
+#folder-settings-form .popup-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+#folder-settings-form .popup-footer > button { width: 100%; text-wrap: balance; }

@@ -361,3 +361,42 @@ def delete_card(set_id: str, card_id: str):
     except Exception:
         current_app.logger.exception('Deleting a Card failed')
         return jsonify({"error": "Deleting the Card failed"}), 500
+
+
+@main_bp.app_context_processor
+def folder_navigation():
+    from app.services.folder_service import FolderService
+    if not current_user.is_authenticated:
+        return {'folders': [], 'folder_memberships': {}}
+    folders, memberships = FolderService.listing(current_user.id)
+    return {'folders': folders, 'folder_memberships': memberships}
+
+
+@main_bp.route('/folder/<string:folder_id>')
+@login_required
+def folder_overview(folder_id):
+    from app.services.folder_service import FolderService
+    from flask import abort
+    try:
+        folder = FolderService.get(folder_id, current_user.id)
+    except VocabSetNotFoundError:
+        abort(404)
+    return redirect(url_for('main.index', folder=folder.id))
+
+
+@main_bp.route('/folder/<string:folder_id>/learn')
+@login_required
+def learn_folder(folder_id):
+    from app.services.folder_service import FolderService
+    from flask import abort
+    mode = request.args.get('mode', 'learn')
+    if mode not in ('learn', 'practice', 'mistakes'):
+        mode = 'learn'
+    try:
+        folder = FolderService.get(folder_id, current_user.id)
+        cards = FolderService.cards(folder_id, current_user.id, mode)
+    except VocabSetNotFoundError:
+        abort(404)
+    return render_template('set.html', folder_id=folder.id, set_id=folder.id,
+                           set_name=folder.name, study_mode=mode, initial_cards=cards,
+                           sets=VocabService.get_all_set_names(current_user.id))

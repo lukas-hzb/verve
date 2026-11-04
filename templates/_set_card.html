@@ -1,0 +1,12 @@
+{% macro set_card(set) %}
+<article class="card-normal set-card link-card" data-set-overview="{{ url_for('main.set_overview', set_id=set.id) }}" tabindex="0" aria-label="Open {{ set.name }}">
+    <div class="set-card-header">
+        <h3 class="card-normal-title">{{ set.name }}</h3>
+        <button type="button" class="set-card-delete-btn btn-icon" aria-label="Delete {{ set.name }}"
+            onclick='event.stopPropagation(); this.closest("dialog")?.close(); deleteVocabSet("{{ set.id }}", {{ set.name | tojson }})'>
+            <span class="material-symbols-rounded" aria-hidden="true">delete</span>
+        </button>
+    </div>
+    <a class="btn-primary set-card-learn btn-level-{{ set.max_level if set.max_level <= 5 else 5 }}" href="{{ url_for('main.learn_set', set_id=set.id) }}">Learn {{ set.due_count }} of {{ set.card_count }} Cards</a>
+</article>
+{% endmacro %}

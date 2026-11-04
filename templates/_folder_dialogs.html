@@ -1,0 +1,70 @@
+<script id="folder-library-data" type="application/json">{{ {'folders': folders, 'sets': sets, 'memberships': folder_memberships} | tojson }}</script>
+{% for set in sets %}<template data-folder-set-template="{{ set.id }}">{{ set_card(set) }}</template>{% endfor %}
+
+<dialog id="folder-contents-dialog" class="popup-content set-settings-dialog folder-contents-dialog" aria-labelledby="folder-contents-title">
+    <div class="popup-header">
+        <h2 id="folder-contents-title" class="popup-title"></h2>
+        <div class="button-group folder-dialog-actions">
+            <button type="button" class="btn-icon set-card-settings-btn" data-edit-current-folder aria-label="Folder Settings">{% include '_settings_icon.html' %}</button>
+            <button type="button" class="popup-close-btn" data-close-folder-dialog aria-label="Close Folder"><span class="material-symbols-rounded" aria-hidden="true">close</span></button>
+        </div>
+    </div>
+    <div class="folder-contents-tools">
+        <a href="#" id="folder-contents-learn" data-study-folder="" class="card-clickable card-action-primary card-action-flashcards" data-study-mode-picker aria-haspopup="dialog" aria-controls="study-mode-picker">
+                <div class="card-action-copy">
+                    <div class="card-clickable-title">
+                        <span class="material-symbols-rounded card-clickable-icon" aria-hidden="true">menu_book</span>
+                        Learn with Flashcards
+                    </div>
+                    <p class="card-clickable-text">Choose how you want to practice</p>
+                </div>
+                <div class="card-action-scenery" aria-hidden="true">
+                    <img class="card-action-illustration" src="{{ url_for('static', filename='img/mascot/flashcard-learning-transparent.webp') }}"
+                        alt="" draggable="false">
+                </div>
+            </a>
+        <div class="section-header folder-contents-header">
+            <h3 id="folder-contents-sets-title" class="card-normal-title section-heading">Sets</h3>
+            <div class="search-field section-search">
+                <span class="material-symbols-rounded card-input-icon" aria-hidden="true">search</span>
+                <input type="search" id="folder-contents-search" class="card-input card-input-with-icon" placeholder="Search Sets..." aria-label="Search Sets in this Folder">
+                <button type="button" class="btn-clear-search" data-clear-search="folder-contents-search" aria-label="Clear Search"><span class="material-symbols-rounded" aria-hidden="true">close</span></button>
+            </div>
+        </div>
+    </div>
+    <div id="folder-contents-grid" class="card-grid-2"></div>
+    <div id="folder-contents-empty" class="folder-empty-state" hidden>
+        <p>This Folder is empty. Choose Sets to organize and learn together.</p>
+        <button type="button" class="btn-secondary" data-edit-current-folder>Add Sets</button>
+    </div>
+    <p id="folder-contents-no-results" hidden>No matching Sets.</p>
+</dialog>
+
+<dialog id="folder-settings-dialog" class="popup-content set-settings-dialog folder-settings-dialog" aria-labelledby="folder-settings-title">
+    <div class="popup-header">
+        <h2 id="folder-settings-title" class="popup-title">Folder Settings</h2>
+        <button type="button" class="popup-close-btn" data-close-folder-dialog aria-label="Close Folder Settings"><span class="material-symbols-rounded" aria-hidden="true">close</span></button>
+    </div>
+    <form id="folder-settings-form">
+        <div class="card-input-group">
+            <label for="folder-settings-name" class="card-input-label">Folder Name</label>
+            <input id="folder-settings-name" class="card-input" name="name" required maxlength="100" pattern="[a-zA-Z0-9_\- äöüÄÖÜß]+">
+        </div>
+        <section aria-labelledby="folder-choose-sets-title">
+            <div class="section-header folder-selection-header">
+                <h3 id="folder-choose-sets-title" class="card-normal-title section-heading">Choose Sets</h3>
+                <div class="search-field section-search">
+                    <span class="material-symbols-rounded card-input-icon" aria-hidden="true">search</span>
+                    <input type="search" id="folder-settings-search" class="card-input card-input-with-icon" placeholder="Search Sets..." aria-label="Search Sets to add">
+                    <button type="button" class="btn-clear-search" data-clear-search="folder-settings-search" aria-label="Clear Search"><span class="material-symbols-rounded" aria-hidden="true">close</span></button>
+                </div>
+            </div>
+            <div id="folder-settings-sets" class="folder-set-options" role="group" aria-labelledby="folder-choose-sets-title"></div>
+        </section>
+        <p id="folder-settings-error" role="alert" hidden></p>
+        <div class="popup-footer">
+            <button type="button" class="btn-secondary" data-close-folder-dialog>Cancel</button>
+            <button type="submit" class="btn-primary" id="folder-settings-save" aria-live="polite">Save</button>
+        </div>
+    </form>
+</dialog>

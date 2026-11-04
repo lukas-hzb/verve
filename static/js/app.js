@@ -1,3 +1,4 @@
+import { initializeFolders } from './modules/folders.js';
 /**
  * Verve - Main Application JavaScript
  * 
@@ -27,9 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeStudyCardTextAlignment();
 
     // Determine current page and initialize appropriate module
+    initializeFolders();
     const currentPath = window.location.pathname;
 
-    if (/^\/set\/[^/]+\/?$/.test(currentPath)) {
+    if (/^\/set\/[^/]+\/?$/.test(currentPath) || /^\/folder\/[^/]+\/learn\/?$/.test(currentPath)) {
         initializeLearningPage(currentPath);
     } else if (currentPath.startsWith("/stats/")) {
         initializeStatsPage(currentPath);
@@ -158,35 +160,20 @@ function initializeStatsPage(path) {
  */
 function initializeSearchBar() {
     const searchInput = document.getElementById('setSearchInput');
-    if (!searchInput) return;
+    const grid = document.getElementById('setsGrid');
+    if (!searchInput || !grid) return;
+    const normalize = value => value.replaceAll('_', ' ').toLowerCase();
 
     searchInput.addEventListener('input', function () {
-        const searchTerm = this.value.toLowerCase().trim();
-        const setCards = document.querySelectorAll('.set-card');
-        const createNewCard = document.querySelector('.create-new-card');
-
-        setCards.forEach(card => {
-            // Get the set name from the h3 inside the card
-            const setNameElement = card.querySelector('h3');
-            if (!setNameElement) return;
-
-            const setName = setNameElement.textContent.toLowerCase();
-
-            if (setName.includes(searchTerm)) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
+        const searchTerm = normalize(this.value).trim();
+        grid.querySelectorAll('.set-card').forEach(card => {
+            const title = card.querySelector('h3');
+            if (!title) return;
+            const names = [title.textContent, ...JSON.parse(card.dataset.containedSetNames || '[]')];
+            card.style.display = names.some(name => normalize(name).includes(searchTerm)) ? '' : 'none';
         });
-
-        // Hide create new card when searching, show when search is empty
-        if (createNewCard) {
-            if (searchTerm) {
-                createNewCard.style.display = 'none';
-            } else {
-                createNewCard.style.display = '';
-            }
-        }
+        const createNewCard = grid.querySelector('.create-new-card');
+        if (createNewCard) createNewCard.style.display = searchTerm ? 'none' : '';
     });
 }
 

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+{% from '_set_card.html' import set_card %}
 {% block content %}
 <div class="page-shell">
 
@@ -20,6 +21,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Stats Overview -->
     <div class="card-grid-3 page-section">
@@ -65,58 +67,44 @@
     <!-- Your Sets -->
     <div class="page-section">
         <div class="section-header">
-            <h2 class="section-heading">Your Sets</h2>
+            <h2 class="section-heading">Your Sets and Folders</h2>
             <div class="card-input-group section-search">
                 <span class="material-symbols-rounded card-input-icon" aria-hidden="true">search</span>
                 <input type="text" id="setSearchInput" class="card-input card-input-with-icon"
-                    placeholder="Search Sets..." aria-label="Search your Sets" autocomplete="off" onkeyup="filterSets()">
+                    placeholder="Search Sets and Folders..." aria-label="Search your Sets and Folders" autocomplete="off">
             </div>
         </div>
 
-        {% if not sets %}
-        <div class="card-normal" style="text-align: center; padding: var(--space-12) var(--card-padding);">
-            <span class="material-symbols-rounded"
-                style="font-size: var(--icon-size-illustration); color: var(--color-primary-muted); margin-bottom: var(--space-4);" aria-hidden="true">stacks</span>
-            <h3 class="card-normal-title" style="margin-bottom: var(--space-2);">No Sets yet</h3>
-            <p style="color: var(--color-text-muted); margin-bottom: var(--space-6);">Create your first Vocabulary Set
-                to start learning.</p>
-            <button class="btn-primary" onclick="openCreateSetModal()">
-                <span class="material-symbols-rounded" aria-hidden="true">add</span> Create Set
-            </button>
-        </div>
-        {% else %}
-
-        <!-- Create New Set Card (First in Grid) -->
         <div class="card-grid-3" id="setsGrid">
-            <div class="card-normal set-card-create create-new-card" onclick="openCreateSetModal()">
-                <div class="set-card-create-icon">
-                    <span class="material-symbols-rounded" aria-hidden="true">add</span>
-                </div>
-                <h3 class="card-normal-title" style="color: var(--color-primary); margin: 0;">Create new Set</h3>
-            </div>
-
-            {% for set in sets %}
-            <div class="card-normal set-card link-card"
-                onclick="window.location.href='{{ url_for('main.set_overview', set_id=set.id) }}';">
+            {% for folder in folders %}
+            <article class="card-normal set-card folder-card" data-open-folder="{{ folder.id }}" data-contained-set-names="{{ folder.sets | map(attribute='name') | list | tojson | forceescape }}" tabindex="0" aria-label="Open Folder {{ folder.name }}">
                 <div class="set-card-header">
-                    <h3 class="card-normal-title">{{ set.name.replace('_', ' ') }}</h3>
-                    <button type="button" class="set-card-delete-btn btn-icon"
-                        aria-label="Delete {{ set.name.replace('_', ' ') }}"
-                        onclick='event.stopPropagation(); deleteVocabSet("{{ set.id }}", {{ set.name | tojson }})'>
-                        <span class="material-symbols-rounded" aria-hidden="true">delete</span>
-                    </button>
+                    <h3 class="card-normal-title folder-card-title">{{ folder.name }}</h3>
+                    <div class="folder-card-actions">
+                        <button type="button" class="set-card-settings-btn btn-icon" data-manage-folder="{{ folder.id }}" aria-label="Settings for {{ folder.name }}">{% include '_settings_icon.html' %}</button>
+                        <button type="button" class="set-card-delete-btn btn-icon" data-delete-folder="{{ folder.id }}" aria-label="Delete Folder {{ folder.name }}"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
+                    </div>
                 </div>
+                <a class="btn-primary set-card-learn btn-folder-average" style="--folder-button-color: {{ folder.color }}; --folder-button-ink: {{ 'var(--color-text-on-yellow)' if folder.color == 'var(--color-accent-3)' else 'white' }};" href="{{ url_for('main.learn_folder', folder_id=folder.id) }}">Learn {{ folder.due_count }} of {{ folder.card_count }} Cards in {{ folder.sets | length }} Sets</a>
+            </article>
+            {% endfor %}
 
-                <button class="btn-primary set-card-learn btn-level-{{ set.max_level if set.max_level <= 5 else 5 }}"
-                    onclick="event.stopPropagation(); window.location.href='{{ url_for('main.learn_set', set_id=set.id) }}';">
-                    Learn {{ set.due_count }} of {{ set.card_count }} Cards
+            {% for set in sets if set.id not in folder_memberships %}{{ set_card(set) }}{% endfor %}
+
+            <div class="create-new-card create-split-card" role="group" aria-label="Create a Set or Folder">
+                <button type="button" class="btn-create-split" data-new-folder>
+                    <span class="material-symbols-rounded" aria-hidden="true">folder</span>
+                    <span>New Folder</span>
+                </button>
+                <button type="button" class="btn-create-split" onclick="openCreateSetModal()">
+                    <span class="material-symbols-rounded" aria-hidden="true">add</span>
+                    <span>New Set</span>
                 </button>
             </div>
-            {% endfor %}
         </div>
-        {% endif %}
     </div>
 </div>
+
 
 <!-- Create Set Modal -->
 <div id="createSetModal" class="popup-overlay">
@@ -132,10 +120,10 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="card-input-group">
                     <label for="setName" class="card-input-label">Set Name</label>
-                    <input type="text" id="setName" name="setName" required pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+"
-                        title="Only Letters, Numbers, Hyphens, Underscores and Umlauts allowed"
-                        placeholder="e.g. Spanish_Basics" class="card-input">
-                    <div class="card-input-description">Allowed Characters: Letters, Numbers, -, _ and Umlauts</div>
+                    <input type="text" id="setName" name="setName" required pattern="[a-zA-Z0-9_\- äöüÄÖÜß]+"
+                        title="Only Letters, Numbers, Spaces, Hyphens, Underscores and Umlauts allowed"
+                        placeholder="e.g. Everyday_Words" class="card-input">
+                    <div class="card-input-description">Allowed Characters: Letters, Numbers, Spaces, -, _ and Umlauts</div>
                 </div>
                 <div class="popup-footer">
                     <button type="button" class="btn-secondary" onclick="closeCreateSetModal()">Cancel</button>
@@ -146,30 +134,5 @@
     </div>
 </div>
 
-<script>
-    function filterSets() {
-        const input = document.getElementById('setSearchInput');
-        const filter = input.value.toLowerCase();
-        const grid = document.getElementById('setsGrid');
-        const cards = grid.getElementsByClassName('set-card');
-        const createCard = grid.querySelector('.create-new-card');
 
-        // Hide create card if searching
-        if (createCard) {
-            createCard.style.display = filter ? 'none' : 'flex';
-        }
-
-        for (let i = 0; i < cards.length; i++) {
-            const titleElement = cards[i].querySelector('.card-normal-title');
-            if (titleElement) {
-                const titleValue = titleElement.textContent || titleElement.innerText;
-                if (titleValue.toLowerCase().indexOf(filter) > -1) {
-                    cards[i].style.display = "flex"; // Restore flex display
-                } else {
-                    cards[i].style.display = "none";
-                }
-            }
-        }
-    }
-</script>
 {% endblock %}

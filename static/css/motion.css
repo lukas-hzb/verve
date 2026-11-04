@@ -145,7 +145,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
 .popup-close-btn,
 .card-list-edit-btn,
 .card-list-delete-btn,
-.set-card-delete-btn,
+.set-card-delete-btn, .set-card-settings-btn,
 .sidebar-control,
 .sidebar-theme-toggle,
 .auth-theme-toggle,
@@ -155,7 +155,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
         background-color var(--transition-fast), color var(--transition-fast);
 }
 
-:is(.popup-close-btn, .card-list-edit-btn, .card-list-delete-btn, .set-card-delete-btn,
+:is(.popup-close-btn, .card-list-edit-btn, .card-list-delete-btn, .set-card-delete-btn, .set-card-settings-btn,
     .sidebar-control, .sidebar-theme-toggle, .auth-theme-toggle, .btn-study,
     .study-mode-info-button):not(:disabled):active {
     scale: 0.97;
@@ -163,6 +163,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
 }
 
 .sidebar { transition: width var(--motion-medium) var(--motion-ease); }
+.sidebar-folder-sets { transition: padding-inline-start var(--motion-medium) var(--motion-ease); }
 .home-section { transition: margin-left var(--motion-medium) var(--motion-ease); }
 
 @media (min-width: 769px) {

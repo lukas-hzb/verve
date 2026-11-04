@@ -6,7 +6,7 @@
     <!-- Secondary Header -->
     <div class="page-section">
         <div class="card-header-secondary set-overview-header">
-            <h1 class="card-header-secondary-title">{{ set_name.replace('_', ' ') }}</h1>
+            <h1 class="card-header-secondary-title">{{ set_name }}</h1>
             <button type="button" class="btn-secondary set-settings-trigger" id="openSetSettings"
                 aria-label="Set Settings" aria-haspopup="dialog" aria-controls="set-settings-dialog">
                 <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m10 3-.5 2-2 .9-1.9-.6-2 3.4 1.5 1.4v2.3l-1.5 1.4 2 3.4 1.9-.6 2 .9.5 2h4l.5-2 2-.9 1.9.6 2-3.4-1.5-1.4v-2.3l1.5-1.4-2-3.4-1.9.6-2-.9L14 3z" /><circle cx="12" cy="11.65" r="3" /></svg>
@@ -100,9 +100,9 @@
                 <div class="card-input-group">
                     <label for="new_name" class="card-input-label">New Name</label>
                     <input type="text" id="new_name" name="new_name" value="{{ set_name }}" required
-                        pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+" title="Allowed Characters: Letters, Numbers, -, _ and Umlauts"
+                        pattern="[a-zA-Z0-9_\- äöüÄÖÜß]+" title="Allowed Characters: Letters, Numbers, Spaces, -, _ and Umlauts"
                         class="card-input">
-                    <div class="card-input-description">Allowed Characters: Letters, Numbers, -, _ and Umlauts</div>
+                    <div class="card-input-description">Allowed Characters: Letters, Numbers, Spaces, -, _ and Umlauts</div>
                 </div>
                 <div class="popup-footer">
                     <button type="button" class="btn-secondary" onclick="closeRenameModal()">Cancel</button>
@@ -127,12 +127,12 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="card-input-group">
                     <label for="front" class="card-input-label">Front</label>
-                    <textarea id="front" name="front" required maxlength="255" class="card-input" placeholder="rogare"></textarea>
+                    <textarea id="front" name="front" required maxlength="255" class="card-input" placeholder="Hello"></textarea>
                     <div class="card-input-description">Shown first</div>
                 </div>
                 <div class="card-input-group">
                     <label for="back" class="card-input-label">Back</label>
-                    <textarea id="back" name="back" required maxlength="10000" class="card-input" placeholder="to ask"></textarea>
+                    <textarea id="back" name="back" required maxlength="10000" class="card-input" placeholder="Hallo"></textarea>
                     <div class="card-input-description">The Answer you want to learn</div>
                 </div>
                 <div class="popup-footer">

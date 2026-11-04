@@ -25,6 +25,8 @@ class VocabSet(db.Model):
         Index('ix_vocab_sets_user_id', 'user_id'),
     )
 
+    folder_membership = db.relationship("FolderSet", cascade="all, delete-orphan", uselist=False)
+
     # Relationships
     cards = db.relationship('Card', backref='vocab_set', lazy='dynamic', cascade='all, delete-orphan')
 

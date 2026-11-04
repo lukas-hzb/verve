@@ -9,3 +9,5 @@ from app.models.vocab_set import VocabSet
 from app.models.card import Card
 
 __all__ = ['User', 'VocabSet', 'Card']
+
+from app.models.folder import Folder, FolderSet

@@ -1,0 +1,24 @@
+<dialog id="folder-name-dialog" class="popup-content set-settings-dialog" aria-labelledby="folder-name-title">
+    <div class="popup-header">
+        <h2 id="folder-name-title" class="popup-title">Create new Folder</h2>
+        <button type="button" class="popup-close-btn" data-close-folder-name aria-label="Close Dialog">
+            <span class="material-symbols-rounded" aria-hidden="true">close</span>
+        </button>
+    </div>
+    <form id="folder-name-form">
+        <div class="popup-body">
+            <div class="card-input-group">
+                <label for="folder-name-input" class="card-input-label">Folder Name</label>
+                <input id="folder-name-input" name="name" class="card-input" required maxlength="100"
+                    pattern="[a-zA-Z0-9_\- äöüÄÖÜß]+" placeholder="e.g. cross_subject_vocabulary" autofocus
+                    aria-describedby="folder-name-description">
+                <div id="folder-name-description" class="card-input-description">Allowed Characters: Letters, Numbers, Spaces, -, _ and Umlauts</div>
+            </div>
+            <p id="folder-name-error" role="alert" hidden></p>
+        </div>
+        <div class="popup-footer">
+            <button type="button" class="btn-secondary" data-close-folder-name>Cancel</button>
+            <button type="submit" class="btn-primary" id="folder-name-submit">Create</button>
+        </div>
+    </form>
+</dialog>

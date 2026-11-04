@@ -25,6 +25,8 @@ class User(UserMixin, db.Model):
         Index('uq_users_email_lower', func.lower(email), unique=True),
     )
 
+    folders = db.relationship("Folder", cascade="all, delete-orphan")
+
     # Relationships
     sets = db.relationship('VocabSet', backref='owner', lazy='dynamic', cascade='all, delete-orphan')
 

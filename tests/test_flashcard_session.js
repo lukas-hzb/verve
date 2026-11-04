@@ -260,3 +260,20 @@ test('initial cards avoid a duplicate request, while later rounds fetch fresh da
     assert.deepEqual(requests, ['/api/set/set/due_cards']);
     assert.equal(m.cards[0].id, 'fresh');
 });
+
+test('folder answers target their original sets and cancel by card ID', async t => {
+    const previousFetch = globalThis.fetch;
+    const calls = [];
+    globalThis.fetch = async (url, options) => { calls.push({url, body: JSON.parse(options.body)}); return {ok: true}; };
+    t.after(() => { globalThis.fetch = previousFetch; });
+    const m = Object.assign(Object.create(FlashcardManager.prototype), {
+        setId: 'folder', scope: 'folder', syncQueue: [
+            {cardId:'one', setId:'bgb', cardFront:'Same question', quality:5, retries:0},
+            {cardId:'two', setId:'stgb', cardFront:'Same question', endpoint:'mark_wrong', retries:0},
+        ],
+    });
+    m.cancelPendingSync('Same question', 'one');
+    assert.equal(m.syncQueue.length, 1);
+    await m.processSyncQueue();
+    assert.deepEqual(calls, [{url:'/api/set/stgb/mark_wrong', body:{card_front:'Same question'}}]);
+});

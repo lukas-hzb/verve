@@ -240,3 +240,52 @@ def api_not_found(_error):
 def api_internal_error(error):
     current_app.logger.error('Internal API Error: %s', error)
     return error_response('Internal Server Error', 500)
+
+
+@api_bp.route('/folders', methods=['POST'])
+@api_bp.route('/folders/<string:folder_id>', methods=['PATCH', 'DELETE'])
+@login_required
+@handle_api_errors
+def manage_folder(folder_id=None):
+    from app.services.folder_service import FolderService
+    if request.method == 'DELETE':
+        FolderService.delete(folder_id, current_user.id)
+        return jsonify(success_response())
+    data = json_body()
+    require_fields(data, 'name')
+    folder = FolderService.save(current_user.id, data['name'], folder_id)
+    return jsonify(success_response({'id': folder.id, 'name': folder.name})), (201 if request.method == 'POST' else 200)
+
+
+@api_bp.put('/set/<string:set_id>/folder')
+@login_required
+@handle_api_errors
+def assign_folder(set_id):
+    from app.services.folder_service import FolderService
+    data = json_body()
+    if 'folder_id' not in data or (data['folder_id'] is not None and not isinstance(data['folder_id'], str)):
+        raise InvalidInputError('folder_id', 'Folder ID or null required')
+    FolderService.assign(data['folder_id'], set_id, current_user.id)
+    return jsonify(success_response())
+
+
+@api_bp.get('/folder/<string:folder_id>/cards')
+@api_bp.get('/folder/<string:folder_id>/due_cards')
+@login_required
+@handle_api_errors
+def folder_cards(folder_id):
+    from app.services.folder_service import FolderService
+    mode = ('learn' if request.path.endswith('/due_cards') else
+            'mistakes' if request.args.get('last_wrong_only') == 'true' else 'practice')
+    return jsonify({'cards': FolderService.cards(folder_id, current_user.id, mode)})
+
+
+@api_bp.put('/folders/<string:folder_id>/sets')
+@login_required
+@handle_api_errors
+def replace_folder_sets(folder_id):
+    from app.services.folder_service import FolderService
+    data = json_body()
+    require_fields(data, 'set_ids', 'name')
+    FolderService.replace_sets(folder_id, current_user.id, data['set_ids'], data['name'])
+    return jsonify(success_response())
