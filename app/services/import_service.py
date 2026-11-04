@@ -5,7 +5,9 @@ This module provides the business logic for importing vocabulary sets
 from external files (CSV, TSV).
 """
 
+import csv
 import uuid
+from io import StringIO
 from typing import List, Tuple
 from werkzeug.datastructures import FileStorage
 
@@ -40,22 +42,27 @@ class ImportService:
         card_separator = card_separator.replace('\\n', '\n').replace('\\t', '\t').replace('\\r', '\r')
         field_separator = field_separator.replace('\\n', '\n').replace('\\t', '\t').replace('\\r', '\r')
         
+        content = content.lstrip('\ufeff')
         cards = []
         
         # Split into lines/cards
         # If card_separator is newline, we should handle universal newlines
-        if card_separator == '\n':
+        if card_separator == '\n' and len(field_separator) == 1 and field_separator not in '\r\n"':
+            # Respect quoted separators, doubled quotes and multiline fields in exports.
+            rows = csv.reader(StringIO(content, newline=''), delimiter=field_separator)
+        elif card_separator == '\n':
             rows = content.splitlines()
         else:
             rows = content.split(card_separator)
             
         for row in rows:
-            row = row.strip()
-            if not row:
-                continue
-                
-            # Split into front/back
-            parts = row.split(field_separator)
+            if isinstance(row, list):
+                parts = row
+            else:
+                row = row.strip()
+                if not row:
+                    continue
+                parts = row.split(field_separator)
             
             if len(parts) < 2:
                 continue

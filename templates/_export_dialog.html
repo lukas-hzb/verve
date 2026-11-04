@@ -1,0 +1,63 @@
+<div id="exportModal" class="popup-overlay">
+    <div class="popup-content" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+        <div class="popup-header">
+            <h3 class="popup-title" id="exportTitle">Export Cards</h3>
+            <button type="button" class="popup-close-btn" data-close-export aria-label="Close Export Dialog">
+                <span class="material-symbols-rounded" aria-hidden="true">close</span>
+            </button>
+        </div>
+        <div class="popup-body">
+            <p class="export-description">Download all cards with their front and back. Learning progress is not included.</p>
+            <form id="exportForm" action="{{ url_for('api.export_set', set_id=set_id) }}">
+                <div class="card-input-group">
+                    <label for="export-format" class="card-input-label">File Format</label>
+                    <select id="export-format" name="format" class="card-input">
+                        <option value="csv">CSV (.csv)</option>
+                        <option value="tsv">TSV (.tsv)</option>
+                        <option value="txt">Text (.txt)</option>
+                    </select>
+                </div>
+                <div class="import-box">
+                    <div class="import-settings-grid">
+                        <div>
+                            <label for="export-field" class="card-input-label">Field Separator</label>
+                            <select id="export-field" name="field_separator" class="card-input">
+                                <option value="," selected>Comma (,)</option>
+                                <option value="\t">Tab (\t)</option>
+                                <option value=";">Semicolon (;)</option>
+                                <option value="|">Pipe (|)</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <input id="export-custom-field" class="card-input export-custom" placeholder="e.g. ; or \t"
+                                aria-label="Custom Field Separator" maxlength="16" hidden>
+                        </div>
+                        <div>
+                            <label for="export-card" class="card-input-label">Between Cards</label>
+                            <select id="export-card" name="card_separator" class="card-input" disabled>
+                                <option value="\n">Line break (Enter)</option>
+                                <option value=";">Semicolon (;)</option>
+                                <option value="|">Pipe (|)</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <input id="export-custom-card" class="card-input export-custom" placeholder="e.g. \n\n or ||"
+                                aria-label="Custom Card Separator" maxlength="16" hidden>
+                        </div>
+                    </div>
+                    <p class="card-input-description export-hint" id="export-hint">CSV uses a line break between cards.</p>
+                </div>
+                <div class="import-preview-box">
+                    <div class="card-input-label">Format Example</div>
+                    <pre id="export-example" class="export-example" aria-live="polite"></pre>
+                    <p class="card-input-description">UTF-8 · No header row · Image links are preserved.</p>
+                </div>
+                <p id="export-error" class="card-edit-error" role="alert" hidden></p>
+                <div class="popup-footer">
+                    <button type="button" class="btn-secondary" data-close-export>Cancel</button>
+                    <button type="submit" class="btn-primary" id="export-download">
+                        <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4" /></svg> Download
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

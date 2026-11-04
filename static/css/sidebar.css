@@ -228,6 +228,14 @@
   .sidebar.close #sidebar-toggle {
     left: 0;
   }
+  .sidebar.close .nav-links a,
+  .sidebar.close .sidebar-profile-item a,
+  .sidebar.close #sidebar-toggle {
+    /* The rail's border leaves 39px of content, so match its height exactly. */
+    height: var(--sidebar-rail-content-width);
+    min-height: var(--sidebar-rail-content-width);
+    padding-block: var(--sidebar-icon-inset);
+  }
   .sidebar .nav-links a,
   .sidebar .sidebar-profile-item a {
     padding-inline: var(--sidebar-icon-inset);

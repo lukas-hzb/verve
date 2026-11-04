@@ -65,14 +65,8 @@ function initializeStudyCardPosition() {
     const toolbar = document.querySelector('.study-utility-bar');
     const progress = page.querySelector('.study-progress');
     const group = page.querySelector('.study-card-and-actions');
-    const progressAnchor = document.createComment('Desktop round progress');
-    progress.before(progressAnchor);
     const mobile = window.matchMedia('(max-width: 768px)');
-    const placeProgress = () => {
-        if (mobile.matches) group.prepend(progress);
-        else progressAnchor.after(progress);
-    };
-    placeProgress();
+    group.prepend(progress);
     let previousLayout = '';
     const positionCard = () => {
         if (!mobile.matches) return;
@@ -99,7 +93,6 @@ function initializeStudyCardPosition() {
     [page, above, progress, actions, toolbar].forEach(element => observer.observe(element));
     window.addEventListener('resize', positionCard);
     mobile.addEventListener('change', () => {
-        placeProgress();
         previousLayout = '';
         positionCard();
     });

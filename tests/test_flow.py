@@ -22,6 +22,41 @@ from app.utils.exceptions import (
 )
 
 class VerveTestCase(unittest.TestCase):
+    def test_export_download_preserves_content_and_learning_state(self):
+        vocab_set = VocabService.create_user_set(self.user.id, 'Export_Test')
+        card = VocabService.add_card(vocab_set.id, 'Grüße, "hello"', 'First\nSecond', self.user.id)
+        card.level = 4
+        card.last_practice_wrong = True
+        db.session.commit()
+        before = card.to_dict()
+        client = self.authenticated_client()
+        response = client.get(f'/api/set/{vocab_set.id}/export?format=csv')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, 'text/csv')
+        self.assertIn('attachment; filename=Export_Test.csv', response.headers['Content-Disposition'])
+        self.assertEqual(response.headers['Cache-Control'], 'private, no-store')
+        self.assertEqual(ImportService.parse_content(response.get_data(as_text=True), '\n', ','),
+                         [('Grüße, "hello"', 'First\nSecond')])
+        db.session.refresh(card)
+        self.assertEqual(card.to_dict(), before)
+        page = client.get(f'/set/{vocab_set.id}/overview').get_data(as_text=True)
+        actions = page.split('set-overview-actions')[1].split('</div>')[0]
+        self.assertLess(actions.index('Rename'), actions.index('Export'))
+        self.assertLess(actions.index('Export'), actions.index('Add Card'))
+        self.assertLess(actions.index('Add Card'), actions.index('Import'))
+
+    def test_export_enforces_read_access_and_rejects_invalid_settings(self):
+        other_user = self.create_user('exportowner', 'export-owner@example.com')
+        private = VocabService.create_user_set(other_user.id, 'Private_Export')
+        client = self.authenticated_client()
+        self.assertEqual(client.get(f'/api/set/{private.id}/export').status_code, 403)
+        self.assertEqual(client.get('/api/set/missing/export').status_code, 404)
+        own = VocabService.create_user_set(self.user.id, 'Own_Export')
+        self.assertEqual(client.get(f'/api/set/{own.id}/export?format=pdf').status_code, 400)
+        shared = VocabSet.query.filter_by(is_shared=True).first()
+        self.assertEqual(client.get(f'/api/set/{shared.id}/export?format=tsv').status_code, 200)
+        self.assertEqual(self.app.test_client().get(f'/api/set/{own.id}/export').status_code, 401)
+
     def test_profile_keeps_password_action_visible_for_google_accounts(self):
         client = self.authenticated_client()
         page = client.get('/auth/profile').get_data(as_text=True)

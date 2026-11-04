@@ -256,6 +256,26 @@ a:hover {
     box-shadow: none;
 }
 
+/* Keep native select behavior with a consistent inset for the chevron. */
+select.card-input {
+    -webkit-appearance: none;
+    appearance: none;
+    padding-inline: var(--control-padding-inline);
+    padding-inline-end: calc(var(--icon-size-ui) + 2 * var(--space-3));
+    background-image:
+        linear-gradient(45deg, transparent 38%, var(--color-text-muted) 38% 62%, transparent 62%),
+        linear-gradient(135deg, transparent 38%, var(--color-text-muted) 38% 62%, transparent 62%);
+    background-position:
+        right calc(var(--space-3) + 4px) center,
+        right var(--space-3) center;
+    background-size: 4px 4px;
+    background-repeat: no-repeat;
+}
+
+@media (forced-colors: active) {
+    select.card-input { appearance: auto; background-image: none; }
+}
+
 textarea.form-control,
 textarea.card-input,
 textarea.popup-input {
@@ -414,8 +434,14 @@ textarea.popup-input {
 .study-above-card .page-section { margin-bottom: 0; }
 .study-above-card .study-progress { margin: 0 auto; }
 .study-page .card-container { margin-block: 0; }
-.study-card-and-actions { display: contents; }
-.study-page .study-actions { align-self: start; margin-top: var(--space-4); }
+.study-card-and-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
+}
+.study-card-and-actions > .study-progress { margin: 0 auto; }
+.study-page .study-actions { align-self: stretch; margin-top: 0; }
 @media (max-width: 768px) {
     .study-overview-navigation { display: none; }
     .card-header-secondary {

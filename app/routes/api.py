@@ -1,12 +1,15 @@
 """Authenticated JSON API for vocabulary and profile operations."""
 
 from functools import wraps
+from io import BytesIO
 from typing import Any, Callable, Dict
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, send_file
 from flask_login import current_user, login_required
+from werkzeug.utils import secure_filename
 
 from app.services import VocabService
+from app.services.export_service import ExportService, ExportSettingsError
 from app.utils.exceptions import (
     CardNotFoundError,
     InvalidInputError,
@@ -90,6 +93,30 @@ def get_all_cards(set_id: str):
     last_wrong_only = request.args.get('last_wrong_only', 'false').lower() == 'true'
     cards = VocabService.get_all_cards(set_id, current_user.id, wrong_only=wrong_only, last_wrong_only=last_wrong_only)
     return jsonify({'cards': cards})
+
+
+@api_bp.get('/set/<string:set_id>/export')
+@login_required
+@handle_api_errors
+def export_set(set_id: str):
+    vocab_set = VocabService.get_vocab_set(set_id, current_user.id)
+    file_format = request.args.get('format', 'csv')
+    try:
+        content = ExportService.serialize(
+            VocabService.get_all_cards(set_id, current_user.id), file_format,
+            request.args.get('field_separator'), request.args.get('card_separator', '\\n'),
+        )
+    except ExportSettingsError as error:
+        return error_response(str(error), 400)
+    response = send_file(
+        BytesIO(content.encode('utf-8')),
+        mimetype=ExportService.MIME_TYPES[file_format],
+        as_attachment=True,
+        download_name=f'{secure_filename(vocab_set.name) or "cards"}.{file_format}',
+        max_age=0,
+    )
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response
 
 
 @api_bp.route('/update_card', methods=['POST'])

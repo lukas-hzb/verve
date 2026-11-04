@@ -11,6 +11,9 @@
                 <button class="btn-secondary" onclick="openRenameModal()" style="white-space: nowrap;">
                     <span class="material-symbols-rounded" aria-hidden="true">edit</span> Rename
                 </button>
+                <button type="button" class="btn-secondary" id="openExportModal" aria-haspopup="dialog" aria-controls="exportModal">
+                    <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4" /></svg> Export
+                </button>
                 <button class="btn-secondary" onclick="openAddCardModal()" style="white-space: nowrap;">
                     <span class="material-symbols-rounded" aria-hidden="true">add</span> Add Card
                 </button>
@@ -238,7 +241,7 @@
                             <input type="text" id="custom_field_separator" name="custom_field_separator"
                                 class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
                                 placeholder="e.g. - or \t" oninput="updatePreview()">
-                            <div class="card-input-description">Field Separator</div>
+                            <label for="field_separator" class="card-input-description">Field Separator</label>
                         </div>
                         <div class="preview-column">
                             <select id="card_separator" name="card_separator" class="card-input"
@@ -251,7 +254,7 @@
                             <input type="text" id="custom_card_separator" name="custom_card_separator"
                                 class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
                                 placeholder="e.g. \n\n or ;" oninput="updatePreview()">
-                            <div class="card-input-description">Between Cards</div>
+                            <label for="card_separator" class="card-input-description">Between Cards</label>
                         </div>
                     </div>
                 </div>
@@ -282,6 +285,9 @@
         </div>
     </div>
 </div>
+
+{% include '_export_dialog.html' %}
+<script type="module" src="{{ url_for('static', filename='js/modules/set-export.js') }}"></script>
 
 <script>
     async function fetchCards() {
@@ -634,31 +640,20 @@
         }
         cardSep = cardSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
         fieldSep = fieldSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
-        let cards;
-        if (cardSep === '\n') {
-            cards = content.split(/\r?\n/);
-        } else {
-            cards = content.split(cardSep);
-        }
-        let firstCard = null;
-        for (let card of cards) {
-            card = card.trim();
-            if (card) {
-                firstCard = card;
-                break;
-            }
-        }
-        if (!firstCard) {
+        const { parseDelimitedRows } = await import({{ url_for('static', filename='js/modules/delimited-text.js') | tojson }});
+        const cards = parseDelimitedRows(content, cardSep, fieldSep)
+            .filter(parts => parts.length >= 2 && parts[0].trim() && parts[1].trim());
+        if (!cards.length) {
             document.getElementById('preview-section').style.display = 'none';
             return;
         }
-        const parts = firstCard.split(fieldSep);
+        const parts = cards[0];
         const front = parts[0] ? parts[0].trim() : '';
         const back = parts[1] ? parts[1].trim() : '';
         const { renderCardContent } = await import({{ url_for('static', filename='js/modules/card-text.js') | tojson }});
         renderCardContent(document.getElementById('preview-front'), front || '(empty)');
         renderCardContent(document.getElementById('preview-back'), back || '(empty)');
-        const totalCards = cards.filter(c => c.trim()).length;
+        const totalCards = cards.length;
         document.getElementById('preview-note').textContent = `Total ${totalCards} card(s) recognized`;
         document.getElementById('preview-section').style.display = 'block';
     }

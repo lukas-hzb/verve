@@ -414,6 +414,38 @@
     gap: var(--space-4);
 }
 
+.import-settings-grid .card-input {
+    padding-inline-start: var(--control-padding-inline);
+}
+
+.import-settings-grid > * > :is(.card-input-description, .card-input-label) {
+    display: block;
+    padding-inline: calc(var(--control-padding-inline) + var(--border-width));
+}
+
+.export-description { margin-bottom: var(--space-4); }
+.export-icon {
+    width: var(--icon-size-ui);
+    height: var(--icon-size-ui);
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.export-custom, .export-hint { margin-top: var(--space-2); }
+.export-example {
+    margin-bottom: var(--space-2);
+    padding: var(--space-3);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+#exportModal [hidden] { display: none !important; }
+
 @media (max-width: 480px) {
     .import-settings-grid {
         grid-template-columns: 1fr;
