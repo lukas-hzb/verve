@@ -32,14 +32,7 @@ if (modal && form && trigger) {
         customCard.hidden = card.disabled || card.value !== 'custom';
         customField.required = !customField.hidden;
         customCard.required = !customCard.hidden;
-        const between = separator(card, customCard);
-        const within = separator(field, customField);
-        document.getElementById('export-example').textContent = [
-            ['Dog', 'Hund'], ['Cat', 'Katze'],
-        ].map(row => row.join(within)).join(between);
-        document.getElementById('export-hint').textContent = format.value === 'txt'
-            ? 'Choose the separators used in your text file.'
-            : `${format.value.toUpperCase()} uses a line break between cards.${format.value === 'tsv' ? ' Fields are separated by a tab.' : ''}`;
+        document.getElementById('export-hint').hidden = format.value === 'txt';
         error.hidden = true;
     };
 
