@@ -205,12 +205,12 @@
 
                 <div id="file-section" class="import-section">
                     <div class="card-input-group">
-                        <label class="card-input-label">Select File (CSV, TSV, TXT)</label>
+                        <label class="card-input-label">Select File (Verve, CSV, TSV, TXT)</label>
                         <div class="import-file-area" onclick="document.getElementById('import-file').click()">
                             <span class="material-symbols-rounded import-file-icon" aria-hidden="true">upload_file</span>
                             <span class="import-file-text">Click to
                                 Upload File</span>
-                            <input type="file" id="import-file" name="file" accept=".csv,.tsv,.txt"
+                            <input type="file" id="import-file" name="file" accept=".verve,.csv,.tsv,.txt"
                                 style="display: none;" onchange="updateFileName(this)">
                             <span id="file-name" class="import-file-name"></span>
                         </div>
@@ -665,4 +665,5 @@
         }
     });
 </script>
+<script type="module" src="{{ url_for('static', filename='js/modules/import-format.js') }}"></script>
 {% endblock %}

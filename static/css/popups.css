@@ -422,7 +422,6 @@
     display: block;
 }
 
-.export-description { margin-bottom: var(--space-4); }
 .export-icon {
     width: var(--icon-size-ui);
     height: var(--icon-size-ui);
@@ -433,7 +432,7 @@
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-.export-custom, .export-hint { margin-top: var(--space-2); }
+.export-custom { margin-top: var(--space-2); }
 #exportModal [hidden] { display: none !important; }
 
 @media (max-width: 480px) {

@@ -2,6 +2,7 @@
 
 import csv
 from io import StringIO
+from app.services.verve_format import VerveFormat
 
 
 class ExportSettingsError(ValueError):
@@ -9,12 +10,15 @@ class ExportSettingsError(ValueError):
 
 
 class ExportService:
-    MIME_TYPES = {'csv': 'text/csv', 'tsv': 'text/tab-separated-values', 'txt': 'text/plain'}
+    MIME_TYPES = {'csv': 'text/csv', 'tsv': 'text/tab-separated-values', 'txt': 'text/plain',
+                  'verve': 'application/vnd.verve+json'}
 
     @staticmethod
-    def serialize(cards, file_format='csv', field_separator=None, card_separator='\\n'):
+    def serialize(cards, file_format='csv', field_separator=None, card_separator='\\n', *, set_name=None):
+        if file_format == 'verve':
+            return VerveFormat.dumps(cards, set_name)
         if file_format not in ExportService.MIME_TYPES:
-            raise ExportSettingsError('Choose CSV, TSV or TXT as the export format.')
+            raise ExportSettingsError('Choose Verve, CSV, TSV or TXT as the export format.')
 
         def decode(value):
             return value.replace('\\n', '\n').replace('\\t', '\t').replace('\\r', '\r')

@@ -7,17 +7,17 @@
             </button>
         </div>
         <div class="popup-body">
-            <p class="export-description">Download all cards with their front and back. Learning progress is not included.</p>
             <form id="exportForm" action="{{ url_for('api.export_set', set_id=set_id) }}">
                 <div class="card-input-group">
                     <label for="export-format" class="card-input-label">File Format</label>
                     <select id="export-format" name="format" class="card-input">
-                        <option value="csv">CSV (.csv)</option>
+                        <option value="verve">Verve · Levels &amp; review dates</option>
+                        <option value="csv" selected>CSV (.csv)</option>
                         <option value="tsv">TSV (.tsv)</option>
                         <option value="txt">Text (.txt)</option>
                     </select>
                 </div>
-                <div class="import-box">
+                <div class="import-box" id="export-separators">
                     <div class="import-settings-grid">
                         <div>
                             <label for="export-field" class="card-input-label">Field Separator</label>
@@ -43,7 +43,6 @@
                                 aria-label="Custom Card Separator" maxlength="16" hidden>
                         </div>
                     </div>
-                    <p class="card-input-description export-hint" id="export-hint">One card per row.</p>
                 </div>
                 <p id="export-error" class="card-edit-error" role="alert" hidden></p>
                 <div class="popup-footer">

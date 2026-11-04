@@ -22,6 +22,59 @@ from app.utils.exceptions import (
 )
 
 class VerveTestCase(unittest.TestCase):
+    def test_verve_file_restores_progress_in_new_and_existing_sets(self):
+        import json
+        from io import BytesIO
+        from werkzeug.datastructures import FileStorage
+        original = VocabService.create_user_set(self.user.id, 'Verve_Source')
+        card = VocabService.add_card(original.id, 'Grüße', 'Hello\nWorld', self.user.id)
+        card.level = 6
+        card.last_practice_wrong = True
+        from datetime import datetime
+        card.next_review = datetime(2027, 2, 3, 15, 30)
+        db.session.commit()
+        client = self.authenticated_client()
+        response = client.get(f'/api/set/{original.id}/export?format=verve')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Verve_Source.verve', response.headers['Content-Disposition'])
+        self.assertEqual(response.mimetype, 'application/vnd.verve+json')
+        data = response.get_data()
+        self.assertNotIn('user_id', json.loads(data))
+        restored_id = ImportService.import_set(self.user.id, 'Verve_Restored',
+            file=FileStorage(stream=BytesIO(data), filename='backup.verve'))
+        restored = Card.query.filter_by(vocab_set_id=restored_id).one()
+        self.assertNotEqual(restored.id, card.id)
+        for field in ['front', 'back', 'level', 'next_review', 'last_practice_wrong']:
+            self.assertEqual(getattr(restored, field), getattr(card, field))
+        target = VocabService.create_user_set(self.user.id, 'Verve_Existing')
+        result = client.post(f'/set/{target.id}/import', data={
+            'file': (BytesIO(data), 'backup.verve'), 'import_type': 'file'})
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(Card.query.filter_by(vocab_set_id=target.id).one().level, 6)
+        restored.level = 2
+        db.session.commit()
+        self.assertEqual(ImportService.import_into_set(self.user.id, restored_id,
+            file=FileStorage(stream=BytesIO(data), filename='backup.verve')), 0)
+        self.assertEqual(restored.level, 2)
+
+    def test_invalid_verve_backup_is_atomic_and_cannot_change_foreign_sets(self):
+        import json
+        from io import BytesIO
+        from werkzeug.datastructures import FileStorage
+        bad = json.dumps({'format': 'verve', 'version': 1, 'cards': [
+            {'front': 'Valid', 'back': 'Card', 'level': 3, 'next_review': '2027-01-01T00:00:00Z'},
+            {'front': 'Invalid', 'back': 'Card', 'level': -1, 'next_review': '2027-01-01T00:00:00Z'}]}).encode()
+        with self.assertRaises(InvalidInputError):
+            ImportService.import_set(self.user.id, 'Invalid_Backup',
+                file=FileStorage(stream=BytesIO(bad), filename='bad.verve'))
+        self.assertIsNone(VocabSet.query.filter_by(name='Invalid_Backup', user_id=self.user.id).first())
+        other = self.create_user('backupowner', 'backup-owner@example.com')
+        target = VocabService.create_user_set(other.id, 'Private_Backup')
+        valid = b'{"format":"verve","version":1,"cards":[]}'
+        with self.assertRaises(UnauthorizedAccessError):
+            ImportService.import_into_set(self.user.id, target.id,
+                file=FileStorage(stream=BytesIO(valid), filename='backup.verve'))
+
     def test_export_download_preserves_content_and_learning_state(self):
         vocab_set = VocabService.create_user_set(self.user.id, 'Export_Test')
         card = VocabService.add_card(vocab_set.id, 'Grüße, "hello"', 'First\nSecond', self.user.id)

@@ -105,6 +105,7 @@ def export_set(set_id: str):
         content = ExportService.serialize(
             VocabService.get_all_cards(set_id, current_user.id), file_format,
             request.args.get('field_separator'), request.args.get('card_separator', '\\n'),
+            set_name=vocab_set.name,
         )
     except ExportSettingsError as error:
         return error_response(str(error), 400)

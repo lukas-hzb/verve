@@ -14,6 +14,7 @@ from werkzeug.datastructures import FileStorage
 from app.database import db
 from app.models import Card
 from app.services.vocab_service import VocabService
+from app.services.verve_format import VerveFormat
 from app.utils.time import utc_now
 from app.utils.validators import validate_card_back, validate_card_front
 from app.utils.exceptions import InvalidInputError
@@ -21,6 +22,31 @@ from app.utils.exceptions import InvalidInputError
 
 class ImportService:
     """Service class for import operations."""
+
+    @staticmethod
+    def _read_cards(file, text_content, card_separator, field_separator):
+        if file and file.filename.lower().endswith('.verve'):
+            try:
+                return VerveFormat.loads(file.stream.read().decode('utf-8-sig'))
+            except UnicodeDecodeError:
+                raise InvalidInputError('file', 'File must be UTF-8 encoded') from None
+        if file:
+            pairs = ImportService.parse_file(file, card_separator, field_separator)
+        elif text_content:
+            pairs = ImportService.parse_content(text_content, card_separator, field_separator)
+        else:
+            raise InvalidInputError('input', 'Either file or text content must be provided')
+        return [{'front': front, 'back': back} for front, back in pairs]
+
+    @staticmethod
+    def _unique_records(records, existing_fronts=()):
+        seen = set(existing_fronts)
+        result = []
+        for record in records:
+            if record['front'] not in seen:
+                seen.add(record['front'])
+                result.append(record)
+        return result
     
     @staticmethod
     def parse_content(content: str, card_separator: str = '\n', field_separator: str = '\t') -> List[Tuple[str, str]]:
@@ -138,25 +164,18 @@ class ImportService:
         Returns:
             ID of the created set
         """
-        if file:
-            cards = ImportService.parse_file(file, card_separator, field_separator)
-        elif text_content:
-            cards = ImportService.parse_content(text_content, card_separator, field_separator)
-        else:
-            raise InvalidInputError("input", "Either file or text content must be provided")
-        
-        unique_cards = ImportService._deduplicate(cards)
+        cards = ImportService._read_cards(file, text_content, card_separator, field_separator)
+        unique_cards = ImportService._unique_records(cards)
 
         try:
             vocab_set = VocabService.create_user_set(user_id, set_name, commit=False)
             db.session.add_all([
                 Card(
                     id=str(uuid.uuid4()),
-                    front=front,
-                    back=back,
+                    **record,
                     vocab_set_id=vocab_set.id,
                 )
-                for front, back in unique_cards
+                for record in unique_cards
             ])
             db.session.commit()
         except Exception:
@@ -182,12 +201,7 @@ class ImportService:
         Returns:
             Number of cards added
         """
-        if file:
-            cards = ImportService.parse_file(file, card_separator, field_separator)
-        elif text_content:
-            cards = ImportService.parse_content(text_content, card_separator, field_separator)
-        else:
-            raise InvalidInputError("input", "Either file or text content must be provided")
+        cards = ImportService._read_cards(file, text_content, card_separator, field_separator)
         
         # Verify set access
         vocab_set = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
@@ -198,18 +212,15 @@ class ImportService:
         }
 
         # Filter out duplicates first
-        new_cards = ImportService._deduplicate(
-            (front, back) for front, back in cards if front not in existing_fronts
-        )
+        new_cards = ImportService._unique_records(cards, existing_fronts)
 
         card_objects = [
             Card(
                 id=str(uuid.uuid4()),
-                front=front,
-                back=back,
+                **record,
                 vocab_set_id=vocab_set.id,
             )
-            for front, back in new_cards
+            for record in new_cards
         ]
         try:
             db.session.add_all(card_objects)

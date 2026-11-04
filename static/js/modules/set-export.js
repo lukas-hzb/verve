@@ -32,7 +32,7 @@ if (modal && form && trigger) {
         customCard.hidden = card.disabled || card.value !== 'custom';
         customField.required = !customField.hidden;
         customCard.required = !customCard.hidden;
-        document.getElementById('export-hint').hidden = format.value === 'txt';
+        document.getElementById('export-separators').hidden = format.value === 'verve';
         error.hidden = true;
     };
 
