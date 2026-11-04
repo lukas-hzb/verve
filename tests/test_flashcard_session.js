@@ -120,14 +120,14 @@ test('completed practice rounds offer the appropriate next round', t => {
     m.isPracticeMode = true;
     m.updateCompletionAction(true);
     assert.equal(m.completion.hidden, false);
-    assert.equal(m.continuePracticeLabel.textContent, 'Practice Again');
+    assert.equal(m.continuePracticeLabel.textContent, 'Practice again');
     m.isWrongAnswersMode = true;
     m.sessionStats.wrong = 1;
     m.updateCompletionAction(true);
-    assert.equal(m.continuePracticeLabel.textContent, 'Review Remaining Mistakes');
+    assert.equal(m.continuePracticeLabel.textContent, 'Review remaining Mistakes');
     m.sessionStats.wrong = 0;
     m.updateCompletionAction(true);
-    assert.equal(m.continuePracticeLabel.textContent, 'Practice All Cards');
+    assert.equal(m.continuePracticeLabel.textContent, 'Practice all Cards');
     m.updateCompletionAction();
     assert.equal(m.completion.hidden, true);
 });

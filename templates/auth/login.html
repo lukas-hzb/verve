@@ -131,14 +131,14 @@
 </head>
 
 <body>
-    <button type="button" class="auth-theme-toggle btn-theme" data-theme-toggle aria-label="Switch to Dark Mode">{% include "_theme_icon.html" %}</button>
+    <button type="button" class="auth-theme-toggle btn-theme" data-theme-toggle aria-label="Switch to dark Mode">{% include "_theme_icon.html" %}</button>
     <div class="auth-container" data-neon-auth data-mode="{{ mode }}" data-next="{{ next_page }}" data-csrf="{{ csrf_token() }}">
         <div class="card-normal auth-card">
             <div class="auth-heading">
                 <h1
                     class="auth-logo">
                     Verve</h1>
-                <h2 class="auth-title">{{ 'Create Your Account' if mode == 'register' else 'Change Password' if mode == 'change-password' else 'Reset Password' if mode == 'reset-password' else 'Welcome Back!' }}</h2>
+                <h2 class="auth-title">{{ 'Create your Account' if mode == 'register' else 'Change Password' if mode == 'change-password' else 'Reset Password' if mode == 'reset-password' else 'Welcome back!' }}</h2>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -173,7 +173,7 @@
                 </div>
                 {% endif %}
                 {% if mode == 'reset-password' %}
-                <p>If this email has an account, a reset code has been sent.</p>
+                <p>If this Email has an Account, a Reset Code has been sent.</p>
                 <div class="card-input-group">
                     <label for="reset-code" class="card-input-label">Reset Code</label>
                     <input id="reset-code" name="otp" class="card-input" required autocomplete="one-time-code">
@@ -200,7 +200,7 @@
                 </button>
             </form>
             <form id="verification-form" hidden>
-                <p>Enter the verification code sent to your email to continue.</p>
+                <p>Enter the Verification Code sent to your Email to continue.</p>
                 <div class="card-input-group">
                     <label for="verification-code" class="card-input-label">Verification Code</label>
                     <input id="verification-code" name="otp" class="card-input" autocomplete="one-time-code" required>
@@ -215,7 +215,7 @@
             </button>
             <div class="auth-footer">
                 {% if mode == 'login' %}
-                <p>Don't have an account? <a class="auth-link" href="{{ url_for('auth.register') }}">Register Now</a></p>
+                <p>Don't have an Account? <a class="auth-link" href="{{ url_for('auth.register') }}">Register now</a></p>
                 {% else %}
                 <p>Already registered? <a class="auth-link" href="{{ url_for('auth.login') }}">Login</a></p>
                 {% endif %}

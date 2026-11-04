@@ -49,7 +49,7 @@ test('system mode follows device changes while an explicit preference does not',
     assert.equal(f.root.dataset.theme, 'dark');
     assert.equal(f.root.dataset.themePreference, 'system');
     assert.equal(f.toggle.text.textContent, 'System');
-    assert.equal(f.toggle.title, 'System (follows device setting). Switch to Light Mode');
+    assert.equal(f.toggle.title, 'System (follows Device Setting). Switch to light Mode');
     f.fire('toggle', 'click');
     f.fire('system', 'change');
     assert.equal(f.root.dataset.theme, 'light');
@@ -76,7 +76,7 @@ test('the toggle cycles light, dark and system, persisting each preference', () 
     assert.equal(f.saved(), 'light');
     assert.equal(f.root.dataset.themePreference, 'light');
     assert.equal(f.root.dataset.theme, 'light');
-    assert.equal(f.toggle.attributes['aria-label'], 'Light Mode. Switch to Dark Mode');
+    assert.equal(f.toggle.attributes['aria-label'], 'Light Mode. Switch to dark Mode');
 });
 
 test('theme changes in another tab and restored pages stay synchronized', () => {

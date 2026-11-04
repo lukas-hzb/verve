@@ -93,7 +93,7 @@ export class FlashcardManager {
         if (!this.loadSession()) {
              await this.fetchAndLoadCards();
         } else {
-             console.log("Session restored from local storage.");
+             console.log("Session restored from local Storage.");
              this.updateBackButtonState();
              this.updateUI();
         }
@@ -171,7 +171,7 @@ export class FlashcardManager {
             
             return true;
         } catch (e) {
-            console.error("Failed to load session", e);
+            console.error("Failed to load Session", e);
             return false;
         }
     }
@@ -240,7 +240,7 @@ export class FlashcardManager {
             if (this.areControlsDisabled) return;
             window.showConfirmationModal({
                 title: 'Reset Progress Bar?',
-                message: 'Reset the counter for this round and reload the available cards? Your saved card levels and review dates stay unchanged.',
+                message: 'Reset the Counter for this Round and reload the available Cards? Your saved Card Levels and Review Dates stay unchanged.',
                 confirmText: 'Reset Progress Bar',
                 confirmClass: 'btn-danger',
                 onConfirm: () => this.restartRound(),
@@ -277,11 +277,11 @@ export class FlashcardManager {
         this.completionText.textContent = '';
         this.completionText.hidden = true;
         if (!this.isWrongAnswersMode) {
-            this.continuePracticeLabel.textContent = 'Practice Again';
+            this.continuePracticeLabel.textContent = 'Practice again';
         } else if (this.sessionStats.wrong > 0) {
-            this.continuePracticeLabel.textContent = 'Review Remaining Mistakes';
+            this.continuePracticeLabel.textContent = 'Review remaining Mistakes';
         } else {
-            this.continuePracticeLabel.textContent = 'Practice All Cards';
+            this.continuePracticeLabel.textContent = 'Practice all Cards';
         }
         const icon = this.continuePracticeBtn?.querySelector('.material-symbols-rounded');
         if (icon) icon.textContent = this.isWrongAnswersMode && this.sessionStats.wrong === 0 ? 'stacks' : 'refresh';
@@ -341,7 +341,7 @@ export class FlashcardManager {
 
         try {
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Could not load cards');
+            if (!response.ok) throw new Error('Could not load Cards');
             const data = await response.json();
             let loadedCards = data.cards || [];
             
@@ -365,8 +365,8 @@ export class FlashcardManager {
             this.updateUI();
 
         } catch (error) {
-            console.error("Error fetching cards:", error);
-            this.showErrorMessage("Failed to load cards");
+            console.error("Error fetching Cards:", error);
+            this.showErrorMessage("Failed to load Cards");
         }
     }
     
@@ -386,8 +386,8 @@ export class FlashcardManager {
         if (this.emptyAction) this.emptyAction.hidden = !this.isWrongAnswersMode;
         this.setMascotPose(this.isPracticeMode ? 'peek' : 'celebrate');
         this.cardFront.textContent = this.isWrongAnswersMode 
-            ? "No Previous Mistakes to Review."
-            : (this.isPracticeMode ? "This Set Is Empty." : "No Cards Due for Review!");
+            ? "No previous Mistakes to review."
+            : (this.isPracticeMode ? "This Set is empty." : "No Cards due for Review!");
         this.cardBack.textContent = "";
         this.flipBtn.style.display = "none";
         this.feedbackBtns.style.display = "none";
@@ -540,7 +540,7 @@ export class FlashcardManager {
         this.setMascotPose('celebrate');
         this.cardContainer.classList.remove('animate-swipe-right', 'animate-swipe-left');
         this.flashcard.classList.remove("flipped");
-        this.cardFront.textContent = "All Cards Reviewed!";
+        this.cardFront.textContent = "All Cards reviewed!";
         this.updateCompletionAction(true);
         this.cardBack.textContent = "";
         this.feedbackBtns.style.display = "none";
@@ -601,7 +601,7 @@ export class FlashcardManager {
                         })
                     });
                 } catch (error) {
-                    console.error("Error restoring card:", error);
+                    console.error("Error restoring Card:", error);
                 }
             } else {
                 const wasWrong = cardToRestore.last_answer_wrong ?? cardToRestore.last_practice_wrong ?? false;
@@ -658,7 +658,7 @@ export class FlashcardManager {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ card_ids: ids })
-        }).catch(err => console.error("Error saving shuffle order:", err));
+        }).catch(err => console.error("Error saving shuffle Order:", err));
         
         this.saveSession();
         // Reload current card (which might be new now)
@@ -727,13 +727,13 @@ export class FlashcardManager {
                         ...(endpoint === 'rate' ? { quality: syncItem.quality } : {})
                     })
                 });
-                if (!response.ok) throw new Error('Could not save the answer');
+                if (!response.ok) throw new Error('Could not save the Answer');
                 // Undo may have canceled this item while the request was running.
                 if (this.syncQueue[0] === syncItem) this.syncQueue.shift();
             } catch (error) {
                 syncItem.retries++;
                 if (syncItem.retries >= 3) {
-                    console.error('Failed to save answer:', error);
+                    console.error('Failed to save Answer:', error);
                     if (this.syncQueue[0] === syncItem) this.syncQueue.shift();
                 } else {
                     await new Promise(resolve => setTimeout(resolve, 1000 * syncItem.retries));

@@ -44,8 +44,8 @@ export class StatsManager {
 
             this.displayStats(stats);
         } catch (error) {
-            console.error("Error fetching statistics:", error);
-            this.showError("Failed to load statistics");
+            console.error("Error fetching Statistics:", error);
+            this.showError("Failed to load Statistics");
         }
     }
 
@@ -104,7 +104,7 @@ export class StatsManager {
     confirmAndResetSet() {
         window.showConfirmationModal({
             title: "Reset Set",
-            message: "Are you sure you want to reset this set? All cards will be moved to Level 1.",
+            message: "Are you sure you want to reset this Set? All Cards will be moved to Level 1.",
             confirmText: "Reset",
             confirmClass: "btn-danger",
             onConfirm: async () => {
@@ -117,11 +117,11 @@ export class StatsManager {
                         // Refresh statistics after reset
                         await this.fetchAndDisplayStats();
                     } else {
-                        this.showError("Failed to reset set");
+                        this.showError("Failed to reset Set");
                     }
                 } catch (error) {
-                    console.error("Error resetting set:", error);
-                    this.showError("Failed to reset set");
+                    console.error("Error resetting Set:", error);
+                    this.showError("Failed to reset Set");
                 }
             }
         });

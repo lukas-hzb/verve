@@ -61,7 +61,7 @@ def import_set():
                 field_separator = request.form.get("custom_field_separator", "\\t")
             
             if not set_name:
-                flash("Please enter a name for the set.", "error")
+                flash("Please enter a Name for the Set.", "error")
                 return redirect(url_for('main.import_set'))
             
             file = None
@@ -70,12 +70,12 @@ def import_set():
             if import_type == "file":
                 file = request.files.get("file")
                 if not file or not file.filename:
-                    flash("Please select a file.", "error")
+                    flash("Please select a File.", "error")
                     return redirect(url_for('main.import_set'))
             else:
                 text_content = request.form.get("text_content")
                 if not text_content:
-                    flash("Please enter vocabulary.", "error")
+                    flash("Please enter Vocabulary.", "error")
                     return redirect(url_for('main.import_set'))
                 
             ImportService.import_set(
@@ -91,11 +91,11 @@ def import_set():
             return redirect(url_for("main.index"))
             
         except InvalidInputError:
-            flash("The operation could not be completed. Check your input and access permissions.", "error")
+            flash("The Operation could not be completed. Check your Input and Access Permissions.", "error")
             return redirect(url_for('main.import_set'))
         except Exception:
-            current_app.logger.exception('Vocabulary set import failed')
-            flash("The import failed. Please try again.", "error")
+            current_app.logger.exception('Vocabulary Set Import failed')
+            flash("The Import failed. Please try again.", "error")
             return redirect(url_for('main.import_set'))
             
     sets = VocabService.get_all_set_names(current_user.id)
@@ -209,12 +209,12 @@ def add_card(set_id: str):
     try:
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"error": "JSON body required"}), 400
+            return jsonify({"error": "JSON Body required"}), 400
         front = data.get("front")
         back = data.get("back")
         
         if not front or not back:
-            return jsonify({"error": "Front and back are required"}), 400
+            return jsonify({"error": "Front and Back are required"}), 400
             
         card = VocabService.add_card(set_id, front, back, current_user.id)
         
@@ -223,14 +223,14 @@ def add_card(set_id: str):
             "card": card.to_dict()
         })
     except InvalidInputError:
-        return jsonify({"error": "Invalid card data"}), 400
+        return jsonify({"error": "Invalid Card Data"}), 400
     except (VocabSetNotFoundError, CardNotFoundError):
-        return jsonify({"error": "Card or vocabulary set not found"}), 404
+        return jsonify({"error": "Card or Vocabulary Set not found"}), 404
     except UnauthorizedAccessError:
         return jsonify({"error": "Access denied"}), 403
     except Exception:
-        current_app.logger.exception('Adding a card failed')
-        return jsonify({"error": "Adding the card failed"}), 500
+        current_app.logger.exception('Adding a Card failed')
+        return jsonify({"error": "Adding the Card failed"}), 500
 
 @main_bp.route("/set/<string:set_id>/delete", methods=["POST"])
 @login_required
@@ -241,11 +241,11 @@ def delete_set(set_id: str):
         flash("Set successfully deleted.", "success")
         return redirect(url_for('main.index'))
     except (VocabSetNotFoundError, UnauthorizedAccessError):
-        flash("The operation could not be completed. Check your input and access permissions.", "error")
+        flash("The Operation could not be completed. Check your Input and Access Permissions.", "error")
         return redirect(url_for('main.index'))
     except Exception:
-        current_app.logger.exception('Deleting a vocabulary set failed')
-        flash("Deleting the set failed. Please try again.", "error")
+        current_app.logger.exception('Deleting a Vocabulary Set failed')
+        flash("Deleting the Set failed. Please try again.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
@@ -256,18 +256,18 @@ def rename_set(set_id: str):
     try:
         new_name = request.form.get("new_name")
         if not new_name:
-            flash("Please enter a name.", "error")
+            flash("Please enter a Name.", "error")
             return redirect(url_for('main.set_overview', set_id=set_id))
             
         VocabService.rename_set(set_id, new_name, current_user.id)
         flash("Set renamed successfully!", "success")
         return redirect(url_for('main.set_overview', set_id=set_id))
     except (InvalidInputError, VocabSetNotFoundError, UnauthorizedAccessError):
-        flash("The operation could not be completed. Check your input and access permissions.", "error")
+        flash("The Operation could not be completed. Check your Input and Access Permissions.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
     except Exception:
-        current_app.logger.exception('Renaming a vocabulary set failed')
-        flash("Renaming the set failed. Please try again.", "error")
+        current_app.logger.exception('Renaming a Vocabulary Set failed')
+        flash("Renaming the Set failed. Please try again.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
@@ -294,12 +294,12 @@ def import_into_set(set_id: str):
         if import_type == "file":
             file = request.files.get("file")
             if not file or not file.filename:
-                flash("Please select a file.", "error")
+                flash("Please select a File.", "error")
                 return redirect(url_for('main.set_overview', set_id=set_id))
         else:
             text_content = request.form.get("text_content")
             if not text_content:
-                flash("Please enter vocabulary.", "error")
+                flash("Please enter Vocabulary.", "error")
                 return redirect(url_for('main.set_overview', set_id=set_id))
             
         count = ImportService.import_into_set(
@@ -311,14 +311,14 @@ def import_into_set(set_id: str):
             field_separator=field_separator
         )
         
-        flash(f"{count} cards imported successfully!", "success")
+        flash(f"{count} Cards imported successfully!", "success")
         return redirect(url_for('main.set_overview', set_id=set_id))
     except (InvalidInputError, VocabSetNotFoundError, UnauthorizedAccessError):
-        flash("The operation could not be completed. Check your input and access permissions.", "error")
+        flash("The Operation could not be completed. Check your Input and Access Permissions.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
     except Exception:
-        current_app.logger.exception('Import into vocabulary set failed')
-        flash("The import failed. Please try again.", "error")
+        current_app.logger.exception('Import into Vocabulary Set failed')
+        flash("The Import failed. Please try again.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
 
 
@@ -328,19 +328,19 @@ def edit_card(set_id: str, card_id: str):
     """Edit both card sides without changing its learning progress."""
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
-        return jsonify({"error": "JSON body required"}), 400
+        return jsonify({"error": "JSON Body required"}), 400
     try:
         card = VocabService.edit_card(set_id, card_id, data.get('front'), data.get('back'), current_user.id)
         return jsonify({"card": card.to_dict()})
     except InvalidInputError:
-        return jsonify({"error": "Enter valid text for both sides of the card (front: up to 255 characters; back: up to 10,000 characters)."}), 400
+        return jsonify({"error": "Enter valid Text for both sides of the Card (Front: up to 255 Characters; Back: up to 10,000 Characters)."}), 400
     except (VocabSetNotFoundError, CardNotFoundError):
-        return jsonify({"error": "Card or vocabulary set not found"}), 404
+        return jsonify({"error": "Card or Vocabulary Set not found"}), 404
     except UnauthorizedAccessError:
         return jsonify({"error": "Access denied"}), 403
     except Exception:
-        current_app.logger.exception('Editing a card failed')
-        return jsonify({"error": "Saving the card failed. Please try again."}), 500
+        current_app.logger.exception('Editing a Card failed')
+        return jsonify({"error": "Saving the Card failed. Please try again."}), 500
 
 
 @main_bp.route("/api/set/<string:set_id>/card/<string:card_id>", methods=["DELETE"])
@@ -351,9 +351,9 @@ def delete_card(set_id: str, card_id: str):
         VocabService.delete_card(set_id, card_id, current_user.id)
         return jsonify({"message": "Card deleted successfully"})
     except (VocabSetNotFoundError, CardNotFoundError):
-        return jsonify({"error": "Card or vocabulary set not found"}), 404
+        return jsonify({"error": "Card or Vocabulary Set not found"}), 404
     except UnauthorizedAccessError:
         return jsonify({"error": "Access denied"}), 403
     except Exception:
-        current_app.logger.exception('Deleting a card failed')
-        return jsonify({"error": "Deleting the card failed"}), 500
+        current_app.logger.exception('Deleting a Card failed')
+        return jsonify({"error": "Deleting the Card failed"}), 500

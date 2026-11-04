@@ -24,7 +24,7 @@
                         <span class="material-symbols-rounded card-clickable-icon" aria-hidden="true">menu_book</span>
                         Learn with Flashcards
                     </div>
-                    <p class="card-clickable-text">Choose How You Want to Practice</p>
+                    <p class="card-clickable-text">Choose how you want to practice</p>
                 </div>
                 <div class="card-action-scenery" aria-hidden="true">
                     <img class="card-action-illustration" src="{{ url_for('static', filename='img/mascot/flashcard-learning-transparent.png') }}"
@@ -39,7 +39,7 @@
                         <span class="material-symbols-rounded card-clickable-icon" aria-hidden="true">bar_chart</span>
                         Statistics
                     </div>
-                    <p class="card-clickable-text">See Your Learning Progress</p>
+                    <p class="card-clickable-text">See your Learning Progress</p>
                 </div>
                 <div class="card-action-scenery" aria-hidden="true">
                     <img class="card-action-illustration" src="{{ url_for('static', filename='img/statistics/level-' ~ dominant_level ~ ('-v2-transparent.png' if dominant_level == 5 else '-v3-transparent.png')) }}"
@@ -73,7 +73,7 @@
             <span class="material-symbols-rounded card-attention-icon" aria-hidden="true">warning</span>
             <h3 class="card-attention-title">Danger Zone</h3>
         </div>
-        <p class="card-attention-text" style="margin-bottom: var(--space-3);">Deleting a set is permanent and cannot be
+        <p class="card-attention-text" style="margin-bottom: var(--space-3);">Deleting a Set is permanent and cannot be
             undone.</p>
         <button class="btn-danger" onclick="confirmDeleteSet()">
             <span class="material-symbols-rounded" aria-hidden="true">delete</span>
@@ -100,9 +100,9 @@
                 <div class="card-input-group">
                     <label for="new_name" class="card-input-label">New Name</label>
                     <input type="text" id="new_name" name="new_name" value="{{ set_name }}" required
-                        pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+" title="Allowed characters: Letters, numbers, -, _ and umlauts"
+                        pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+" title="Allowed Characters: Letters, Numbers, -, _ and Umlauts"
                         class="card-input">
-                    <div class="card-input-description">Allowed characters: Letters, numbers, -, _ and umlauts</div>
+                    <div class="card-input-description">Allowed Characters: Letters, Numbers, -, _ and Umlauts</div>
                 </div>
                 <div class="popup-footer">
                     <button type="button" class="btn-secondary" onclick="closeRenameModal()">Cancel</button>
@@ -117,7 +117,7 @@
 <div id="addCardModal" class="popup-overlay">
     <div class="popup-content">
         <div class="popup-header">
-            <h3 class="popup-title">Add New Card</h3>
+            <h3 class="popup-title">Add new Card</h3>
             <button class="popup-close-btn" aria-label="Close Dialog" onclick="closeAddCardModal()">
                 <span class="material-symbols-rounded" aria-hidden="true">close</span>
             </button>
@@ -128,12 +128,12 @@
                 <div class="card-input-group">
                     <label for="front" class="card-input-label">Front</label>
                     <textarea id="front" name="front" required maxlength="255" class="card-input" placeholder="rogare"></textarea>
-                    <div class="card-input-description">Shown First</div>
+                    <div class="card-input-description">Shown first</div>
                 </div>
                 <div class="card-input-group">
                     <label for="back" class="card-input-label">Back</label>
                     <textarea id="back" name="back" required maxlength="10000" class="card-input" placeholder="to ask"></textarea>
-                    <div class="card-input-description">The Answer You Want to Learn</div>
+                    <div class="card-input-description">The Answer you want to learn</div>
                 </div>
                 <div class="popup-footer">
                     <button type="button" class="btn-secondary" onclick="closeAddCardModal()">Cancel</button>
@@ -199,8 +199,7 @@
                         <label class="card-input-label">Select File (Verve, CSV, TSV, TXT)</label>
                         <div class="import-file-area" onclick="document.getElementById('import-file').click()">
                             <span class="material-symbols-rounded import-file-icon" aria-hidden="true">upload_file</span>
-                            <span class="import-file-text">Click to
-                                Upload File</span>
+                            <span class="import-file-text">Click to upload File</span>
                             <input type="file" id="import-file" name="file" accept=".verve,.csv,.tsv,.txt"
                                 style="display: none;" onchange="updateFileName(this)">
                             <span id="file-name" class="import-file-name"></span>
@@ -231,20 +230,20 @@
                             </select>
                             <input type="text" id="custom_field_separator" name="custom_field_separator"
                                 class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
-                                placeholder="e.g. - or \t" oninput="updatePreview()">
+                                placeholder="E.g. - or \t" oninput="updatePreview()">
                             <label for="field_separator" class="card-input-description">Field Separator</label>
                         </div>
                         <div class="preview-column">
                             <select id="card_separator" name="card_separator" class="card-input"
                                 onchange="toggleCustom('card'); updatePreview()">
-                                <option value="\n">Line break (Enter)</option>
+                                <option value="\n">Line Break (Enter)</option>
                                 <option value=";">Semicolon (;)</option>
                                 <option value="|">Pipe (|)</option>
                                 <option value="custom">Custom</option>
                             </select>
                             <input type="text" id="custom_card_separator" name="custom_card_separator"
                                 class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
-                                placeholder="e.g. \n\n or ;" oninput="updatePreview()">
+                                placeholder="E.g. \n\n or ;" oninput="updatePreview()">
                             <label for="card_separator" class="card-input-description">Between Cards</label>
                         </div>
                     </div>
@@ -252,17 +251,17 @@
 
                 <div id="preview-section" class="preview-section import-preview-box" style="display: none;">
                     <div class="preview-header-container">
-                        <div class="card-input-label" style="margin-bottom: 0;">Preview (First Card)</div>
+                        <div class="card-input-label" style="margin-bottom: 0;">Preview (first Card)</div>
                         <span id="preview-note" class="preview-note"></span>
                     </div>
                     <div class="preview-grid">
                         <div class="preview-column">
-                            <strong class="preview-label-compact">FRONT</strong>
+                            <strong class="preview-label-compact">Front</strong>
                             <div id="preview-front" class="preview-content"></div>
                         </div>
                         <div class="preview-separator"></div>
                         <div class="preview-column">
-                            <strong class="preview-label-compact">BACK</strong>
+                            <strong class="preview-label-compact">Back</strong>
                             <div id="preview-back" class="preview-content"></div>
                         </div>
                     </div>
@@ -296,7 +295,7 @@
         container.innerHTML = '';
         
         if (data.cards.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--color-text-muted); padding: var(--space-4);">No Cards in This Set Yet.</p>';
+            container.innerHTML = '<p style="text-align: center; color: var(--color-text-muted); padding: var(--space-4);">No Cards in this Set yet.</p>';
             return;
         }
 
@@ -383,10 +382,10 @@
                 body: JSON.stringify({ front: front.value, back: back.value })
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Saving the card failed.');
+            if (!response.ok) throw new Error(data.error || 'Saving the Card failed.');
             saved = true;
         } catch (failure) {
-            error.textContent = failure.message || 'Saving the card failed. Please try again.';
+            error.textContent = failure.message || 'Saving the Card failed. Please try again.';
             error.hidden = false;
         } finally {
             editSaving = false;
@@ -457,14 +456,14 @@
             fetchCards();
         } else {
             const data = await response.json();
-            alert('Failed to add card: ' + (data.error || 'Unknown error'));
+            alert('Failed to add Card: ' + (data.error || 'Unknown Error'));
         }
     }
 
     window.deleteCard = function (cardId) {
         window.showConfirmationModal({
             title: "Delete Card",
-            message: "Are you sure you want to delete this card?",
+            message: "Are you sure you want to delete this Card?",
             confirmText: "Delete",
             confirmClass: "btn-danger",
             onConfirm: async () => {
@@ -475,7 +474,7 @@
                     fetchCards();
                 } else {
                     const data = await response.json();
-                    alert('Failed to delete card: ' + (data.error || 'Unknown error'));
+                    alert('Failed to delete Card: ' + (data.error || 'Unknown Error'));
                 }
             }
         });
@@ -484,7 +483,7 @@
     function confirmDeleteSet() {
         window.showConfirmationModal({
             title: "Delete Set",
-            message: "Are you sure you want to delete this set? This cannot be undone.",
+            message: "Are you sure you want to delete this Set? This cannot be undone.",
             confirmText: "Delete Set",
             confirmClass: "btn-danger",
             onConfirm: () => {
@@ -647,7 +646,7 @@
         renderCardContent(document.getElementById('preview-front'), front || '(empty)');
         renderCardContent(document.getElementById('preview-back'), back || '(empty)');
         const totalCards = cards.length;
-        document.getElementById('preview-note').textContent = `Total ${totalCards} card(s) recognized`;
+        document.getElementById('preview-note').textContent = `Total ${totalCards} Card(s) recognized`;
         document.getElementById('preview-section').style.display = 'block';
     }
 

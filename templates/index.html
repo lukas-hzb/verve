@@ -11,8 +11,8 @@
                     width="1942" height="809" alt="" draggable="false">
             </div>
             <div class="welcome-copy">
-                <h1 class="card-header-title">Welcome Back, {{ current_user.username }}!</h1>
-                <p class="card-header-subtitle">Here's What's Happening with Your Sets.</p>
+                <h1 class="card-header-title">Welcome back, {{ current_user.username }}!</h1>
+                <p class="card-header-subtitle">Here's what's happening with your Sets.</p>
             </div>
             <div class="welcome-mascot" data-welcome-mascot aria-hidden="true">
                 <img class="mascot-image" src="{{ url_for('static', filename='img/mascot/seated.png') }}"
@@ -43,7 +43,7 @@
                 {% set total_cards.value = total_cards.value + set.card_count %}
                 {% endfor %}
                 <p class="card-stat-value">{{ total_cards.value }}</p>
-                <p class="card-stat-label">Cards Learned</p>
+                <p class="card-stat-label">Cards learned</p>
             </div>
         </div>
 
@@ -69,7 +69,7 @@
             <div class="card-input-group section-search">
                 <span class="material-symbols-rounded card-input-icon" aria-hidden="true">search</span>
                 <input type="text" id="setSearchInput" class="card-input card-input-with-icon"
-                    placeholder="Search Sets..." aria-label="Search Your Sets" autocomplete="off" onkeyup="filterSets()">
+                    placeholder="Search Sets..." aria-label="Search your Sets" autocomplete="off" onkeyup="filterSets()">
             </div>
         </div>
 
@@ -77,8 +77,8 @@
         <div class="card-normal" style="text-align: center; padding: var(--space-12) var(--card-padding);">
             <span class="material-symbols-rounded"
                 style="font-size: var(--icon-size-illustration); color: var(--color-primary-muted); margin-bottom: var(--space-4);" aria-hidden="true">stacks</span>
-            <h3 class="card-normal-title" style="margin-bottom: var(--space-2);">No Sets Yet</h3>
-            <p style="color: var(--color-text-muted); margin-bottom: var(--space-6);">Create your first vocabulary set
+            <h3 class="card-normal-title" style="margin-bottom: var(--space-2);">No Sets yet</h3>
+            <p style="color: var(--color-text-muted); margin-bottom: var(--space-6);">Create your first Vocabulary Set
                 to start learning.</p>
             <button class="btn-primary" onclick="openCreateSetModal()">
                 <span class="material-symbols-rounded" aria-hidden="true">add</span> Create Set
@@ -92,7 +92,7 @@
                 <div class="set-card-create-icon">
                     <span class="material-symbols-rounded" aria-hidden="true">add</span>
                 </div>
-                <h3 class="card-normal-title" style="color: var(--color-primary); margin: 0;">Create New Set</h3>
+                <h3 class="card-normal-title" style="color: var(--color-primary); margin: 0;">Create new Set</h3>
             </div>
 
             {% for set in sets %}
@@ -109,7 +109,7 @@
 
                 <button class="btn-primary set-card-learn btn-level-{{ set.max_level if set.max_level <= 5 else 5 }}"
                     onclick="event.stopPropagation(); window.location.href='{{ url_for('main.learn_set', set_id=set.id) }}';">
-                    Learn {{ set.due_count }} of {{ set.card_count }} cards
+                    Learn {{ set.due_count }} of {{ set.card_count }} Cards
                 </button>
             </div>
             {% endfor %}
@@ -122,7 +122,7 @@
 <div id="createSetModal" class="popup-overlay">
     <div class="popup-content">
         <div class="popup-header">
-            <h3 class="popup-title">Create New Vocabulary Set</h3>
+            <h3 class="popup-title">Create new Vocabulary Set</h3>
             <button class="popup-close-btn" aria-label="Close Dialog" onclick="closeCreateSetModal()">
                 <span class="material-symbols-rounded" aria-hidden="true">close</span>
             </button>
@@ -133,9 +133,9 @@
                 <div class="card-input-group">
                     <label for="setName" class="card-input-label">Set Name</label>
                     <input type="text" id="setName" name="setName" required pattern="[a-zA-Z0-9_\-äöüÄÖÜß]+"
-                        title="Only letters, numbers, hyphens, underscores and umlauts allowed"
+                        title="Only Letters, Numbers, Hyphens, Underscores and Umlauts allowed"
                         placeholder="e.g. Spanish_Basics" class="card-input">
-                    <div class="card-input-description">Allowed characters: Letters, numbers, -, _ and umlauts</div>
+                    <div class="card-input-description">Allowed Characters: Letters, Numbers, -, _ and Umlauts</div>
                 </div>
                 <div class="popup-footer">
                     <button type="button" class="btn-secondary" onclick="closeCreateSetModal()">Cancel</button>

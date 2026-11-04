@@ -36,7 +36,7 @@ def neon_proxy(endpoint):
     from flask import jsonify
     from app.neon_auth import ALLOWED_ENDPOINTS, auth_request, copy_auth_cookies
     if ALLOWED_ENDPOINTS.get(endpoint) != request.method:
-        return jsonify({'message': 'Unsupported authentication endpoint.'}), 404
+        return jsonify({'message': 'Unsupported Authentication Endpoint.'}), 404
     data = request.get_json(silent=True) if request.method == 'POST' else None
     upstream = auth_request(endpoint, request.method, data=data, params=request.args)
     response = current_app.response_class(
@@ -115,12 +115,12 @@ def update_profile():
             
     except UserAlreadyExistsError:
         if request.headers.get('Accept') == 'application/json':
-            return jsonify({'success': False, 'message': 'Invalid profile data or username already in use'}), 400
-        flash('Invalid profile data or username already in use', 'error')
+            return jsonify({'success': False, 'message': 'Invalid Profile Data or Username already in Use'}), 400
+        flash('Invalid Profile Data or Username already in Use', 'error')
     except InvalidInputError:
         if request.headers.get('Accept') == 'application/json':
-            return jsonify({'success': False, 'message': 'Invalid profile data or username already in use'}), 400
-        flash('Invalid profile data or username already in use', 'error')
+            return jsonify({'success': False, 'message': 'Invalid Profile Data or Username already in Use'}), 400
+        flash('Invalid Profile Data or Username already in Use', 'error')
     except Exception:
         current_app.logger.exception('Profile update failed')
         if request.headers.get('Accept') == 'application/json':
@@ -151,6 +151,6 @@ def delete_account():
                 response.delete_cookie(name, path='/')
         return response
     except Exception:
-        current_app.logger.exception('Account deletion failed')
-        flash('Account deletion failed. Please try again.', 'error')
+        current_app.logger.exception('Account Deletion failed')
+        flash('Account Deletion failed. Please try again.', 'error')
         return redirect(url_for('auth.profile'))

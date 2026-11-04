@@ -20,8 +20,8 @@
         document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         document.documentElement.dataset.themePreference = preference;
         document.querySelectorAll('[data-theme-toggle]').forEach(button => {
-            const current = preference === 'system' ? 'System (follows device setting)' : labels[preference];
-            const label = `${current}. Switch to ${labels[nextPreference[preference]]}`;
+            const current = preference === 'system' ? 'System (follows Device Setting)' : labels[preference];
+            const label = `${current}. Switch to ${nextPreference[preference] === 'system' ? 'System' : nextPreference[preference] + ' Mode'}`;
             button.setAttribute('aria-label', label);
             button.title = label;
             const text = button.querySelector('[data-theme-label]');

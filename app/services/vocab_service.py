@@ -170,7 +170,7 @@ class VocabService:
         back = validate_card_back(back)
         duplicate = Card.query.filter_by(vocab_set_id=set_id, front=front).filter(Card.id != card_id).first()
         if duplicate:
-            raise InvalidInputError("front", "Another card already uses this front")
+            raise InvalidInputError("front", "Another Card already Uses this Front")
 
         card.front = front
         card.back = back
@@ -289,7 +289,7 @@ class VocabService:
         vset.updated_at = utc_now()
         VocabService._commit()
         
-        return {'status': 'success', 'message': f'Reset {count} cards to level 1'}
+        return {'status': 'success', 'message': f'Reset {count} Cards to Level 1'}
 
     @staticmethod
     def restore_card(set_id: str, card_front: str, level: int, next_review: str, user_id: str, last_answer_wrong: Optional[bool] = None) -> Dict:
@@ -311,12 +311,12 @@ class VocabService:
                 from datetime import datetime
                 next_review_date = datetime.fromisoformat(next_review.replace('Z', '+00:00'))
             except ValueError:
-                raise InvalidInputError('next_review', 'Invalid ISO date')
+                raise InvalidInputError('next_review', 'Invalid iso Date')
         else:
             next_review_date = next_review
 
         if not hasattr(next_review_date, 'tzinfo'):
-            raise InvalidInputError('next_review', 'Invalid date value')
+            raise InvalidInputError('next_review', 'Invalid Date Value')
         if next_review_date.tzinfo:
             from datetime import UTC
             next_review_date = next_review_date.astimezone(UTC).replace(tzinfo=None)
@@ -397,7 +397,7 @@ class VocabService:
         
         unknown_ids = set(card_ids) - set(all_cards)
         if unknown_ids:
-            raise InvalidInputError('card_ids', 'One or more cards do not belong to this set')
+            raise InvalidInputError('card_ids', 'One or more Cards do not belong to this Set')
 
         for index, card_id in enumerate(card_ids):
             all_cards[card_id].shuffle_order = index

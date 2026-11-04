@@ -27,8 +27,8 @@ if (dialog && trigger) {
         const action = actions[option.dataset.settingsAction];
         if (action) {
             action[1]();
-            [...document.getElementById(action[0]).querySelectorAll('input:not([type="hidden"]):not([type="file"]), textarea, select')]
-                .find(control => !control.disabled && control.getClientRects().length)?.focus();
+            // Focus a neutral button: focusing a select can open its native picker on iOS.
+            document.getElementById(action[0]).querySelector('button')?.focus({ preventScroll: true });
         }
     }, true);
     Object.values(actions).forEach(([id]) => {

@@ -31,7 +31,7 @@ def init_security(app) -> None:
         if request.path.startswith("/api/") or request.is_json:
             return jsonify({
                 "status": "error",
-                "message": "The request could not be verified. Please reload the page and try again.",
+                "message": "The Request could not be verified. Please reload the Page and try again.",
             }), 400
         return error.description, 400
 

@@ -35,7 +35,7 @@ class ImportService:
         elif text_content:
             pairs = ImportService.parse_content(text_content, card_separator, field_separator)
         else:
-            raise InvalidInputError('input', 'Either file or text content must be provided')
+            raise InvalidInputError('input', 'Either File or Text Content must be provided')
         return [{'front': front, 'back': back} for front, back in pairs]
 
     @staticmethod
@@ -101,7 +101,7 @@ class ImportService:
                 cards.append((validate_card_front(front), validate_card_back(back)))
                 
         if not cards:
-            raise InvalidInputError("content", "No valid vocabulary cards found")
+            raise InvalidInputError("content", "No valid Vocabulary Cards found")
             
         return cards
 
@@ -121,7 +121,7 @@ class ImportService:
         filename = file.filename.lower()
         
         if not (filename.endswith('.csv') or filename.endswith('.tsv') or filename.endswith('.txt')):
-            raise InvalidInputError("file", "Only CSV, TSV and TXT files are supported")
+            raise InvalidInputError("file", "Only CSV, TSV and TXT Files are supported")
         
         try:
             # Read file content
@@ -145,7 +145,7 @@ class ImportService:
         except InvalidInputError:
             raise
         except Exception:
-            raise InvalidInputError("file", "The file could not be parsed")
+            raise InvalidInputError("file", "The File could not be parsed")
 
     @staticmethod
     def import_set(user_id: str, set_name: str, file: FileStorage = None, text_content: str = None,

@@ -39,7 +39,7 @@ if (modal && form && trigger) {
     trigger.addEventListener('click', () => {
         update();
         modal.classList.add('active');
-        format.focus();
+        modal.querySelector('[data-close-export]').focus({ preventScroll: true });
     });
     modal.querySelectorAll('[data-close-export]').forEach(button => button.addEventListener('click', close));
     modal.addEventListener('click', event => { if (event.target === modal) close(); });
@@ -89,10 +89,10 @@ if (modal && form && trigger) {
             const response = await fetch(url, { signal: controller.signal });
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.message || 'The export could not be created. Please try again.');
+                throw new Error(data.message || 'The Export could not be created. Please try again.');
             }
             if (!response.headers.get('content-disposition')?.includes('attachment')) {
-                throw new Error('Please reload the page and sign in again before exporting.');
+                throw new Error('Please reload the Page and Sign in again before exporting.');
             }
             const blob = await response.blob();
             if (controller.signal.aborted) return;
@@ -108,7 +108,7 @@ if (modal && form && trigger) {
             close();
         } catch (exception) {
             if (!controller.signal.aborted) {
-                error.textContent = exception.message || 'The export could not be created. Please try again.';
+                error.textContent = exception.message || 'The Export could not be created. Please try again.';
                 error.hidden = false;
             }
         } finally {

@@ -39,7 +39,7 @@ test('mixed card content uses images and literal text, with an error fallback', 
     assert.equal(img.tag, 'img');
     assert.equal(img.src, 'https://flagcdn.com/de.svg');
     assert.equal(img.referrerPolicy, 'no-referrer');
-    assert.equal(img.alt, 'Card image');
+    assert.equal(img.alt, 'Card Image');
     assert.equal(element.textContent, '\n\n<img src=x onerror=alert(1)>');
     img.events.error();
     assert.equal(wrapper.textContent, 'Image unavailable');

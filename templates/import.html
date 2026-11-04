@@ -6,7 +6,7 @@
     <div class="card-normal">
         <div style="margin-bottom: var(--space-6);">
             <h1 style="margin-bottom: var(--space-2);">Import Vocabulary</h1>
-            <p style="color: var(--color-text-muted);">Create a new study set from a file or by text input.</p>
+            <p style="color: var(--color-text-muted);">Create a new Study Set from a File or by Text Input.</p>
         </div>
 
         <form method="POST" enctype="multipart/form-data" class="import-form" id="importForm">
@@ -14,7 +14,7 @@
             <div class="card-input-group">
                 <label for="set_name" class="card-input-label">Set Name</label>
                 <input type="text" id="set_name" name="set_name" class="card-input" required
-                    placeholder="e.g. Spanish Chapter 1">
+                    placeholder="E.g. Spanish Chapter 1">
             </div>
 
             <div class="button-group" style="margin-bottom: var(--space-4);">
@@ -32,7 +32,7 @@
                     <div class="import-file-area"
                         onclick="document.getElementById('file').click()">
                         <span class="material-symbols-rounded import-file-icon" aria-hidden="true">upload_file</span>
-                        <span class="import-file-text">Click to Upload
+                        <span class="import-file-text">Click to upload
                             File</span>
                         <input type="file" id="file" name="file" accept=".verve,.csv,.tsv,.txt" style="display: none;"
                             onchange="updateFileName(this)">
@@ -65,27 +65,27 @@
                         </select>
                         <input type="text" id="custom_field_separator" name="custom_field_separator"
                             class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
-                            placeholder="e.g. - or \t" oninput="updatePreview()">
+                            placeholder="E.g. - or \t" oninput="updatePreview()">
                     </div>
                     <div class="preview-column">
                         <label for="card_separator" class="card-input-label">Separator (Cards)</label>
                         <select id="card_separator" name="card_separator" class="card-input"
                             onchange="toggleCustom('card'); updatePreview()">
-                            <option value="\n">Line break (Enter)</option>
+                            <option value="\n">Line Break (Enter)</option>
                             <option value=";">Semicolon (;)</option>
                             <option value="|">Pipe (|)</option>
                             <option value="custom">Custom</option>
                         </select>
                         <input type="text" id="custom_card_separator" name="custom_card_separator"
                             class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
-                            placeholder="e.g. \n\n or ;" oninput="updatePreview()">
+                            placeholder="E.g. \n\n or ;" oninput="updatePreview()">
                     </div>
                 </div>
             </div>
 
             <div id="preview-section" class="preview-section"
                 style="display: none; background-color: var(--color-bg-body); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: var(--space-6);">
-                <h4 style="margin-bottom: var(--space-2);">Preview (First Card)</h4>
+                <h4 style="margin-bottom: var(--space-2);">Preview (first Card)</h4>
                 <div class="preview-grid">
                     <div class="preview-column">
                         <strong
@@ -120,10 +120,10 @@
             style="margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid var(--color-border);">
             <h3 class="card-normal-title" style="margin-bottom: var(--space-2);">Format Instructions</h3>
             <p style="color: var(--color-text-muted); margin-bottom: var(--space-4);">By default, Front and Back are
-                expected to be separated by a <strong>Tab</strong> and each card on a <strong>new line</strong>.</p>
+                expected to be separated by a <strong>Tab</strong> and each Card on a <strong>new Line</strong>.</p>
             <div
                 style="background-color: var(--color-bg-surface-hover); padding: var(--space-4); border-radius: var(--radius-md); font-family: var(--font-family-mono); font-size: var(--font-size-caption);">
-                <p style="margin-bottom: var(--space-2); color: var(--color-text-muted);">Example (Comma as separator):
+                <p style="margin-bottom: var(--space-2); color: var(--color-text-muted);">Example (Comma as Separator):
                 </p>
                 Hund, Dog<br>
                 Katze, Cat<br>
@@ -255,7 +255,7 @@
         renderCardContent(document.getElementById('preview-back'), back || '(empty)');
 
         const totalCards = cards.filter(c => c.trim()).length;
-        document.getElementById('preview-note').textContent = `Total ${totalCards} card(s) recognized`;
+        document.getElementById('preview-note').textContent = `Total ${totalCards} Card(s) recognized`;
 
         document.getElementById('preview-section').style.display = 'block';
     }

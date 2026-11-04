@@ -43,14 +43,14 @@ def handle_api_errors(view: Callable) -> Callable:
         try:
             return view(*args, **kwargs)
         except (VocabSetNotFoundError, CardNotFoundError):
-            return error_response('Card or vocabulary set not found', 404)
+            return error_response('Card or Vocabulary Set not found', 404)
         except UnauthorizedAccessError:
             return error_response('Access denied', 403)
         except InvalidInputError:
-            return error_response('Invalid request data', 400)
+            return error_response('Invalid Request Data', 400)
         except Exception:
-            current_app.logger.exception('Unhandled API error in %s', view.__name__)
-            return error_response('An internal error occurred', 500)
+            current_app.logger.exception('Unhandled API Error in %s', view.__name__)
+            return error_response('An internal Error occurred', 500)
 
     return wrapped
 
@@ -65,7 +65,7 @@ def json_body() -> dict:
 def require_fields(data: dict, *fields: str) -> None:
     missing = [field for field in fields if data.get(field) is None]
     if missing:
-        raise InvalidInputError('request', f"Missing required fields: {', '.join(missing)}")
+        raise InvalidInputError('request', f"Missing required Fields: {', '.join(missing)}")
 
 
 @api_bp.route('/set/<string:set_id>')
@@ -199,7 +199,7 @@ def create_vocab_set():
     return jsonify(success_response({
         'id': vocab_set.id,
         'name': vocab_set.name,
-        'message': f'Vocabulary set "{vocab_set.name}" created successfully',
+        'message': f'Vocabulary Set "{vocab_set.name}" created successfully',
     })), 201
 
 
@@ -238,5 +238,5 @@ def api_not_found(_error):
 
 @api_bp.errorhandler(500)
 def api_internal_error(error):
-    current_app.logger.error('Internal API error: %s', error)
-    return error_response('Internal server error', 500)
+    current_app.logger.error('Internal API Error: %s', error)
+    return error_response('Internal Server Error', 500)

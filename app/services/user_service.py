@@ -44,7 +44,7 @@ class UserService:
         else:
             # Unverified email must never claim an existing account.
             if User.query.filter(func.lower(User.email) == email.lower()).first():
-                raise InvalidCredentialsError('Verify your email before accessing your existing account.')
+                raise InvalidCredentialsError('Verify your Email before accessing your existing Account.')
             base = re.sub(r'[^a-zA-Z0-9_]', '', identity.get('name') or '')[:50]
             if len(base) < 3:
                 base = f'user_{uuid.uuid4().hex[:8]}'
@@ -69,7 +69,7 @@ class UserService:
     def google_subject(neon_id: str) -> str | None:
         return db.session.execute(text(
             'SELECT "accountId" FROM neon_auth.account '
-            'WHERE "userId" = CAST(:id AS uuid) AND "providerId" = \'google\''
+            'Where "userid" = cast(:ID as uuid) and "providerid" = \'Google\''
         ), {'id': neon_id}).scalar()
 
     @staticmethod
@@ -160,13 +160,13 @@ class UserService:
             'DELETE FROM neon_auth."user" WHERE id = CAST(:id AS uuid)'
         ), {'id': str(uuid.UUID(neon_id))})
         if result.rowcount != 1:
-            raise ValueError('Managed identity no longer exists')
+            raise ValueError('Managed Identity no longer exists')
 
     @staticmethod
     def delete_user(user_id: str) -> None:
         user = UserService.get_user_by_id(user_id)
         if not user or not user.neon_auth_id:
-            raise ValueError('Linked managed identity required')
+            raise ValueError('Linked managed Identity required')
         try:
             UserService.delete_managed_identity(user.neon_auth_id)
             db.session.delete(user)

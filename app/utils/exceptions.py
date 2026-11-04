@@ -16,7 +16,7 @@ class VocabSetNotFoundError(VerveException):
     
     def __init__(self, set_name: str):
         self.set_name = set_name
-        super().__init__(f"Vocabulary set '{set_name}' not found")
+        super().__init__(f"Vocabulary Set '{set_name}' not found")
 
 
 class CardNotFoundError(VerveException):
@@ -75,5 +75,5 @@ class InvalidCredentialsError(VerveException):
     """Raised when login credentials are invalid."""
     
     def __init__(self, message=None):
-        super().__init__(message or "Invalid username/email or password")
+        super().__init__(message or "Invalid Username/Email or Password")
 

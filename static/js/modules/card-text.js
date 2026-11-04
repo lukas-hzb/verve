@@ -11,7 +11,7 @@ export function parseCardImage(line) {
         const url = new URL(source);
         if (url.protocol !== 'https:' || url.username || url.password) return null;
         if (!markdown && !/\.(avif|gif|jpe?g|png|svg|webp)$/i.test(url.pathname)) return null;
-        return { url: url.href, alt: markdown?.[1] || 'Card image' };
+        return { url: url.href, alt: markdown?.[1] || 'Card Image' };
     } catch {
         return null;
     }

@@ -26,24 +26,24 @@ def validate_set_name(set_name: str) -> str:
         InvalidInputError: If the set name is invalid
     """
     if not isinstance(set_name, str):
-        raise InvalidInputError("set_name", "Set name must be text")
+        raise InvalidInputError("set_name", "Set Name must be Text")
 
     set_name = set_name.strip()
     if not set_name:
-        raise InvalidInputError("set_name", "Set name cannot be empty")
+        raise InvalidInputError("set_name", "Set Name cannot be empty")
 
     if len(set_name) > 100:
-        raise InvalidInputError("set_name", "Set name is too long (max 100 characters)")
+        raise InvalidInputError("set_name", "Set Name is too long (max 100 Characters)")
     
     # Prevent path traversal attacks
     if ".." in set_name or "/" in set_name or "\\" in set_name:
-        raise InvalidInputError("set_name", "Set name contains illegal characters")
+        raise InvalidInputError("set_name", "Set Name contains illegal Characters")
     
-    # Allow alphanumeric characters, underscores, hyphens, spaces, and German special characters
+    # Allow alphanumeric characters, Underscores, Hyphens, spaces, and German special characters
     if not re.match(r'^[a-zA-Z0-9_\- äöüÄÖÜß]+$', set_name):
         raise InvalidInputError(
             "set_name", 
-            "Set name must contain only letters, numbers, underscores, hyphens, spaces, and German special characters"
+            "Set Name must contain only Letters, Numbers, Underscores, Hyphens, Spaces, and German special Characters"
         )
     
     return set_name
@@ -88,14 +88,14 @@ def validate_card_front(card_front: str) -> str:
         InvalidInputError: If the card front is invalid
     """
     if not isinstance(card_front, str):
-        raise InvalidInputError("card_front", "Card front must be text")
+        raise InvalidInputError("card_front", "Card Front must be Text")
 
     card_front = card_front.strip()
     if not card_front:
-        raise InvalidInputError("card_front", "Card front cannot be empty")
+        raise InvalidInputError("card_front", "Card Front cannot be empty")
 
     if len(card_front) > 255:
-        raise InvalidInputError("card_front", "Card front text is too long (max 255 characters)")
+        raise InvalidInputError("card_front", "Card Front Text is too long (max 255 Characters)")
 
     return card_front
 
@@ -103,13 +103,13 @@ def validate_card_front(card_front: str) -> str:
 def validate_card_back(card_back: str) -> str:
     """Validate the answer side of a vocabulary card."""
     if not isinstance(card_back, str):
-        raise InvalidInputError("card_back", "Card back must be text")
+        raise InvalidInputError("card_back", "Card Back must be Text")
 
     card_back = card_back.strip()
     if not card_back:
-        raise InvalidInputError("card_back", "Card back cannot be empty")
+        raise InvalidInputError("card_back", "Card Back cannot be empty")
     if len(card_back) > 10_000:
-        raise InvalidInputError("card_back", "Card back text is too long (max 10000 characters)")
+        raise InvalidInputError("card_back", "Card Back Text is too long (max 10000 Characters)")
     return card_back
 
 
@@ -168,23 +168,23 @@ def validate_username(username: str) -> str:
         InvalidInputError: If the username is invalid
     """
     if not isinstance(username, str):
-        raise InvalidInputError("username", "Username must be text")
+        raise InvalidInputError("username", "Username must be Text")
 
     username = username.strip()
     if not username:
         raise InvalidInputError("username", "Username cannot be empty")
     
     if len(username) < 3:
-        raise InvalidInputError("username", "Username must be at least 3 characters long")
+        raise InvalidInputError("username", "Username must be at least 3 Characters long")
     
     if len(username) > 50:
-        raise InvalidInputError("username", "Username must be at most 50 characters long")
+        raise InvalidInputError("username", "Username must be at most 50 Characters long")
     
-    # Allow only alphanumeric characters and underscores
+    # Allow only alphanumeric characters and Underscores
     if not re.match(r'^[a-zA-Z0-9_]+$', username):
         raise InvalidInputError(
             "username",
-            "Username must contain only letters, numbers, and underscores"
+            "Username must contain only Letters, Numbers, and Underscores"
         )
     
     return username
@@ -204,7 +204,7 @@ def validate_email(email: str) -> str:
         InvalidInputError: If the email is invalid
     """
     if not isinstance(email, str):
-        raise InvalidInputError("email", "Email must be text")
+        raise InvalidInputError("email", "Email must be Text")
 
     email = email.strip().lower()
     if not email:
@@ -213,10 +213,10 @@ def validate_email(email: str) -> str:
     # Basic email validation with regex
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(email_pattern, email):
-        raise InvalidInputError("email", "Invalid email address format")
+        raise InvalidInputError("email", "Invalid Email Address Format")
     
     if len(email) > 120:
-        raise InvalidInputError("email", "Email address is too long (max 120 characters)")
+        raise InvalidInputError("email", "Email Address is too long (max 120 Characters)")
     
     return email
 

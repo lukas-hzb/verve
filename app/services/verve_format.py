@@ -24,35 +24,35 @@ class VerveFormat:
     @staticmethod
     def _review_time(value):
         if not isinstance(value, str):
-            raise InvalidInputError('file', 'A review date is required')
+            raise InvalidInputError('file', 'A Review Date is required')
         try:
             result = datetime.fromisoformat(value.replace('Z', '+00:00'))
             if result.tzinfo is not None:
                 result = result.astimezone(UTC).replace(tzinfo=None)
             return result
         except (ValueError, OverflowError):
-            raise InvalidInputError('file', 'Invalid review date') from None
+            raise InvalidInputError('file', 'Invalid Review Date') from None
 
     @staticmethod
     def loads(content):
         try:
             data = json.loads(content)
         except (ValueError, RecursionError):
-            raise InvalidInputError('file', 'Invalid Verve file') from None
+            raise InvalidInputError('file', 'Invalid Verve File') from None
         if (not isinstance(data, dict) or data.get('format') != 'verve'
                 or type(data.get('version')) is not int or data['version'] != 1
                 or not isinstance(data.get('cards'), list)):
-            raise InvalidInputError('file', 'Unsupported Verve format or version')
+            raise InvalidInputError('file', 'Unsupported Verve Format or Version')
         records = []
         seen = set()
         for index, item in enumerate(data['cards']):
             if (not isinstance(item, dict) or type(item.get('level')) is not int
                     or type(item.get('last_answer_wrong', False)) is not bool):
-                raise InvalidInputError('file', 'Invalid card progress')
+                raise InvalidInputError('file', 'Invalid Card Progress')
             front = validate_card_front(item.get('front'))
             back = validate_card_back(item.get('back'))
             if front in seen:
-                raise InvalidInputError('file', 'Duplicate card front')
+                raise InvalidInputError('file', 'Duplicate Card Front')
             seen.add(front)
             records.append({
                 'front': front, 'back': back,

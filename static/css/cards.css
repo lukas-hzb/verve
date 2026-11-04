@@ -369,7 +369,7 @@
 .card-stat-label {
     font-size: var(--font-size-caption);
     font-weight: var(--font-weight-medium);
-    text-transform: uppercase;
+    text-transform: none;
     letter-spacing: 0.04em;
     color: var(--color-text-muted);
     line-height: var(--line-height-compact);

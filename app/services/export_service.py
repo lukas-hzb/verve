@@ -18,7 +18,7 @@ class ExportService:
         if file_format == 'verve':
             return VerveFormat.dumps(cards, set_name)
         if file_format not in ExportService.MIME_TYPES:
-            raise ExportSettingsError('Choose Verve, CSV, TSV or TXT as the export format.')
+            raise ExportSettingsError('Choose Verve, CSV, TSV or TXT as the Export Format.')
 
         def decode(value):
             return value.replace('\\n', '\n').replace('\\t', '\t').replace('\\r', '\r')
@@ -27,11 +27,11 @@ class ExportService:
         between = decode(card_separator)
         if (not field or not between or len(field) > 16 or len(between) > 16
                 or '\0' in field + between or field in between or between in field):
-            raise ExportSettingsError('Choose different, non-empty separators of up to 16 characters.')
+            raise ExportSettingsError('Choose different, non-empty Separators of up to 16 Characters.')
         if file_format == 'tsv' and field != '\t':
-            raise ExportSettingsError('TSV uses a tab between the front and back.')
+            raise ExportSettingsError('TSV Uses a Tab between the Front and Back.')
         if file_format != 'txt' and (len(field) != 1 or field in '\r\n"' or between != '\n'):
-            raise ExportSettingsError('CSV and TSV need a single field separator and a line break between cards.')
+            raise ExportSettingsError('CSV and TSV need a single Field Separator and a Line Break between Cards.')
 
         rows = [(card['front'], card['back']) for card in cards]
         if between == '\n' and len(field) == 1 and field not in '\r\n"':
@@ -42,5 +42,5 @@ class ExportService:
 
         # Custom TXT separators have no quoting convention in the importer.
         if any(field in value or between in value for row in rows for value in row):
-            raise ExportSettingsError('A TXT separator occurs in the card text. Choose another separator or export as CSV.')
+            raise ExportSettingsError('A TXT Separator occurs in the Card Text. Choose another Separator or Export as CSV.')
         return between.join(field.join(row) for row in rows)

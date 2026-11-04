@@ -126,7 +126,7 @@ class VerveTestCase(unittest.TestCase):
         self.assertIn('id="change-password-btn" class="btn-danger-secondary" disabled', page)
         self.assertIn('popovertarget="password-provider-info"', page)
         self.assertIn('id="password-provider-info" class="study-mode-info-panel" popover', page)
-        self.assertIn('This account is linked to Google.', page)
+        self.assertIn('This Account is linked to Google.', page)
         self.assertIn('https://myaccount.google.com/signinoptions/password', page)
         self.assertNotIn('href="/auth/change-password"', page)
 

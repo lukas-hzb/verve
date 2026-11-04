@@ -189,7 +189,7 @@ def setup_login_manager(app: Flask) -> None:
         try:
             return UserService.resolve_neon_user(identity)
         except InvalidCredentialsError:
-            abort(409, description='Verify your email or sign in with your original account provider.')
+            abort(409, description='Verify your Email or sign in with your original Account Provider.')
 
 
 def register_blueprints(app: Flask) -> None:
@@ -250,7 +250,7 @@ def register_error_handlers(app: Flask) -> None:
         if request.path.startswith('/api/'):
             return jsonify({
                 'status': 'error',
-                'message': 'Internal server error'
+                'message': 'Internal Server Error'
             }), 500
         
         # Return HTML for regular requests
@@ -267,7 +267,7 @@ def register_error_handlers(app: Flask) -> None:
             'base.html',
             sets=sets,
             sidebar_collapsed=sidebar_collapsed,
-            error_message='An internal error occurred. Please try again.'
+            error_message='An internal Error occurred. Please try again.'
         ), 500
 
 

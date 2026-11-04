@@ -248,7 +248,7 @@
             <span id="round-label">Round Progress</span>
             <span id="progress-text">0 / 0</span>
         </div>
-        <div class="study-progress-track" id="round-progress" role="progressbar" aria-label="Cards Answered in This Round" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+        <div class="study-progress-track" id="round-progress" role="progressbar" aria-label="Cards answered in this Round" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
             <div id="progress-correct" style="width: 0%; background-color: var(--color-accent-4);"></div>
             <div id="progress-wrong" style="width: 0%; background-color: var(--color-accent-1);"></div>
             <div id="progress-remaining" style="width: 100%; background-color: transparent;"></div>
@@ -260,7 +260,7 @@
         <div class="study-mode-badge-group">
             <span class="study-mode-pill">
                 <button type="button" class="btn-study-mode-picker study-mode-switch" data-study-mode-picker aria-haspopup="dialog" aria-controls="study-mode-picker" aria-label="Change Learning Mode">
-                    <span>{{ 'Learn Due Cards' if study_mode == 'learn' else ('Practice All Cards' if study_mode == 'practice' else 'Review Mistakes') }}</span>
+                    <span>{{ 'Learn due Cards' if study_mode == 'learn' else ('Practice all Cards' if study_mode == 'practice' else 'Review Mistakes') }}</span>
                     <svg class="study-mode-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m1.5 5 6.5 6.5 6.5-6.5" /></svg>
                 </button>
             </span>
@@ -281,10 +281,10 @@
                         <p id="card-front">Loading...</p>
                         <div id="study-completion" class="study-completion" hidden>
                             <p id="study-completion-text"></p>
-                            <button type="button" class="btn-primary" id="continue-practice-btn"><span class="material-symbols-rounded" aria-hidden="true">refresh</span><span id="continue-practice-label">Practice Again</span></button>
+                            <button type="button" class="btn-primary" id="continue-practice-btn"><span class="material-symbols-rounded" aria-hidden="true">refresh</span><span id="continue-practice-label">Practice again</span></button>
                         </div>
                         <div id="study-empty-action" class="study-empty-action" hidden>
-                            <a class="btn-primary" href="{{ url_for('main.learn_set', set_id=set_id, mode='practice') }}"><span class="material-symbols-rounded" aria-hidden="true">stacks</span> Practice All Cards</a>
+                            <a class="btn-primary" href="{{ url_for('main.learn_set', set_id=set_id, mode='practice') }}"><span class="material-symbols-rounded" aria-hidden="true">stacks</span> Practice all Cards</a>
                         </div>
                     </div>
                 </div>
@@ -298,16 +298,16 @@
         </div>
     </div>
 
-    <div id="study-mode-info" class="study-mode-info-panel" popover role="dialog" aria-label="{{ 'Learn Due Cards' if study_mode == 'learn' else ('Practice All Cards' if study_mode == 'practice' else 'Review Mistakes') }}">
+    <div id="study-mode-info" class="study-mode-info-panel" popover role="dialog" aria-label="{{ 'Learn due Cards' if study_mode == 'learn' else ('Practice all Cards' if study_mode == 'practice' else 'Review Mistakes') }}">
         {% if study_mode == 'learn' %}
-        <p>Review cards due today. Your answers update their levels and next review dates, and count toward your learning progress.</p>
+        <p>Review Cards due today. Your Answers update their Levels and next Review Dates, and count toward your Learning Progress.</p>
         {% elif study_mode == 'practice' %}
-        <p>Practice every card in this set, regardless of its level or when it is due for review.</p>
+        <p>Practice every Card in this Set, regardless of its Level or when it is due for Review.</p>
         {% else %}
-        <p>Review cards whose last answer was incorrect, whether in normal learning or practice, regardless of their level or review date. New cards and cards last answered correctly are excluded.</p>
+        <p>Review Cards whose last Answer was incorrect, whether in normal Learning or Practice, regardless of their Level or Review Date. New Cards and Cards last answered correctly are excluded.</p>
         {% endif %}
         {% if study_mode != 'learn' %}
-        <p>Practice does not change card levels, review dates or your learning progress. Answers only update whether a card was last answered incorrectly. The progress bar tracks this practice round.</p>
+        <p>Practice does not change Card Levels, Review Dates or your Learning Progress. Answers only update whether a Card was last answered incorrectly. The Progress Bar tracks this Practice Round.</p>
         {% endif %}
     </div>
 
@@ -323,7 +323,7 @@
                 </button>
             </div>
             <button class="btn-study study-actions-reset" id="restart-btn" aria-label="Reset Progress Bar"
-                title="Reset Progress Bar: Reset this round’s counter and load the currently available cards. Saved learning progress stays unchanged.">
+                title="Reset Progress Bar: Reset this Round’s Counter and load the currently available Cards. Saved Learning Progress stays unchanged.">
                 <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span> Reset Bar
             </button>
         </div>
@@ -334,10 +334,10 @@
             </button>
             <div id="feedback-btns" class="study-feedback" style="display: none;">
                 <button class="btn-danger" id="not-known-btn">
-                    <span class="material-symbols-rounded" aria-hidden="true">close</span> Didn't Know <span class="study-key-hint">(A)</span>
+                    <span class="material-symbols-rounded" aria-hidden="true">close</span> Didn't know <span class="study-key-hint">(A)</span>
                 </button>
                 <button class="btn-success" id="known-btn">
-                    <span class="material-symbols-rounded" aria-hidden="true">check</span> Knew It <span class="study-key-hint">(D)</span>
+                    <span class="material-symbols-rounded" aria-hidden="true">check</span> Knew it <span class="study-key-hint">(D)</span>
                 </button>
             </div>
         </div>

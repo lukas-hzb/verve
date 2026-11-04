@@ -56,7 +56,7 @@ document.querySelector('#google-login')?.addEventListener('click', () => perform
 ));
 document.querySelector('#forgot-password')?.addEventListener('click', async () => {
   const email = form.elements.email.value;
-  if (!email) { showError({ message: 'Enter your email address first.' }); return; }
+  if (!email) { showError({ message: 'Enter your Email Address first.' }); return; }
   const result = await perform(() => client.emailOtp.requestPasswordReset({ email }));
   if (result) location.assign('/auth/reset-password?email=' + encodeURIComponent(email));
 });

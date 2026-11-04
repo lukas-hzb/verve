@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function initializeStudyUtilityBar() {
     const toolbar = document.querySelector('.study-utility-bar');
     if (!toolbar) return;
-    const anchor = document.createComment('Round actions');
+    const anchor = document.createComment('Round Actions');
     toolbar.before(anchor);
     const mobile = window.matchMedia('(max-width: 768px)');
     const placeToolbar = () => {
@@ -248,11 +248,11 @@ function setupGlobalFunctions() {
             if (data.status === 'success') {
                 window.location.assign(`/set/${encodeURIComponent(data.id)}/overview`);
             } else {
-                alert('Error: ' + (data.message || 'Failed to create set'));
+                alert('Error: ' + (data.message || 'Failed to create Set'));
             }
         } catch (error) {
-            console.error('Error creating set:', error);
-            alert('An error occurred while creating the set.');
+            console.error('Error creating Set:', error);
+            alert('An Error occurred while creating the Set.');
         }
     };
 
@@ -260,7 +260,7 @@ function setupGlobalFunctions() {
     window.deleteVocabSet = async function (setId, setName) {
         window.showConfirmationModal({
             title: "Delete Set",
-            message: `Are you sure you want to delete the set "${setName}"? This cannot be undone.`,
+            message: `Are you sure you want to delete the Set "${setName}"? This cannot be undone.`,
             confirmText: "Delete Set",
             confirmClass: "btn-danger",
             onConfirm: async () => {
@@ -274,11 +274,11 @@ function setupGlobalFunctions() {
                     if (data.status === 'success') {
                         window.location.reload();
                     } else {
-                        alert('Error: ' + (data.message || 'Failed to delete set'));
+                        alert('Error: ' + (data.message || 'Failed to delete Set'));
                     }
                 } catch (error) {
-                    console.error('Error deleting set:', error);
-                    alert('An error occurred while deleting the set.');
+                    console.error('Error deleting Set:', error);
+                    alert('An Error occurred while deleting the Set.');
                 }
             }
         });
