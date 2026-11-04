@@ -92,24 +92,32 @@
     }
 }
 
-/* Press quickly, then settle back with a small spring on release. */
+/* Keep controls stationary on hover; press feedback never adds a vertical jump. */
 :is(.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-danger-secondary, .btn-success),
 button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):not(.popup-close-btn):not(.import-tab):not(.auth-link),
 .card-clickable,
 .card-stat-clickable,
 .create-new-card,
 .set-card {
-    transition: transform var(--motion-medium) var(--motion-spring),
+    scale: 1;
+    transition: scale var(--motion-short) var(--motion-ease),
         background-color var(--transition-fast), color var(--transition-fast),
-        border-color var(--transition-fast), box-shadow var(--transition-normal);
+        border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 :is(.btn, .btn-primary, .btn-secondary, .btn-danger, .btn-danger-secondary, .btn-success):not(:disabled):active,
-button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):not(.popup-close-btn):not(.import-tab):not(.auth-link):not(:disabled):active,
+button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):not(.popup-close-btn):not(.import-tab):not(.auth-link):not(:disabled):active {
+    transform: none;
+    scale: 0.99;
+    transition-duration: var(--motion-press);
+}
+
 .card-clickable:active,
 .card-stat-clickable:active,
-.create-new-card:active {
-    transform: translateY(0) scale(0.98);
+.create-new-card:active,
+.set-card:active {
+    scale: 1;
+    box-shadow: var(--shadow-sm);
     transition-duration: var(--motion-press);
 }
 
@@ -126,7 +134,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
 .card-list-item:focus-within .card-list-actions { transform: translateX(0); }
 
 @media (hover: hover) and (pointer: fine) {
-    .set-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-card-hover); }
+    .set-card:hover { box-shadow: var(--shadow-card-hover); }
     .card-list-item:hover .card-list-actions { transform: translateX(0); }
 }
 
@@ -139,14 +147,14 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
 .auth-theme-toggle,
 .btn-study,
 .study-mode-info-button {
-    transition: scale var(--motion-medium) var(--motion-spring),
+    transition: scale var(--motion-short) var(--motion-ease),
         background-color var(--transition-fast), color var(--transition-fast);
 }
 
 :is(.popup-close-btn, .card-list-edit-btn, .card-list-delete-btn, .set-card-delete-btn,
     .sidebar-control, .sidebar-theme-toggle, .auth-theme-toggle, .btn-study,
     .study-mode-info-button):not(:disabled):active {
-    scale: 0.92;
+    scale: 0.97;
     transition-duration: var(--motion-press);
 }
 
@@ -156,7 +164,7 @@ button:not([class*="btn-"]):not(.card-list-delete-btn):not(.card-list-edit-btn):
 @media (min-width: 769px) {
     #sidebar-toggle {
         transition: left var(--motion-medium) var(--motion-ease),
-            scale var(--motion-medium) var(--motion-spring),
+            scale var(--motion-short) var(--motion-ease),
             background-color var(--transition-fast), color var(--transition-fast);
     }
 }

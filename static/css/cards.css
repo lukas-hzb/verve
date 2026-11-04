@@ -151,12 +151,11 @@
 .card-clickable:hover,
 .card-stat-clickable:hover {
     background-color: var(--color-bg-surface-hover);
-    transform: translateY(-2px);
 }
 
 .card-clickable:active,
 .card-stat-clickable:active {
-    transform: translateY(0);
+    transform: none;
 }
 
 .card-clickable:hover {
@@ -743,7 +742,6 @@
 .create-new-card:hover {
     border-color: color-mix(in srgb, var(--color-primary) var(--border-accent-opacity), transparent);
     background-color: var(--color-bg-surface-hover);
-    transform: translateY(-2px);
 }
 
 /* Compact dashboard cards share the existing surfaces and typography. */
