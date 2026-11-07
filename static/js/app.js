@@ -74,14 +74,15 @@ function initializeStudyCardPosition() {
     let previousLayout = '';
     let baseHeight = 0;
     let baseOffset = 0;
+    let maxCenteredHeight = 0;
     let requiredHeight = 0;
     let appliedHeight;
     let appliedOffset;
     const applySize = () => {
-        // Use the space above the card while keeping the answer buttons in place.
-        const extraHeight = Math.max(0, Math.min(requiredHeight - baseHeight, baseOffset, 96));
+        // Grow equally in both directions to keep the card centered.
+        const extraHeight = Math.max(0, Math.min(requiredHeight - baseHeight, maxCenteredHeight - baseHeight, 96));
         const height = baseHeight + extraHeight;
-        const offset = baseOffset - extraHeight;
+        const offset = baseOffset - extraHeight / 2;
         if (height === appliedHeight && offset === appliedOffset) return;
         appliedHeight = height;
         appliedOffset = offset;
@@ -103,8 +104,8 @@ function initializeStudyCardPosition() {
         const aboveSpace = center - headingBottom - 12 - progressHeight - 20;
         const belowSpace = toolbar.getBoundingClientRect().top - center
             - actions.getBoundingClientRect().height - 20 - 12;
-        baseHeight = Math.max(0, Math.min(bounds.width * 5 / 8,
-            aboveSpace * 2, belowSpace * 2));
+        maxCenteredHeight = Math.max(0, 2 * Math.min(aboveSpace, belowSpace));
+        baseHeight = Math.min(bounds.width * 5 / 8, maxCenteredHeight);
         baseOffset = Math.max(0, aboveSpace - baseHeight / 2);
         applySize();
     };

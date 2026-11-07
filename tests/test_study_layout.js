@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
-test('Safari viewport height changes preserve the initial card position', () => {
+test('mobile cards grow around their center and stay in place as Safari chrome resizes', () => {
     let width = 358;
     let headingHeight = 142;
     let observerCallback;
@@ -53,7 +53,7 @@ test('Safari viewport height changes preserve the initial card position', () => 
     const initialOffset = parseFloat(initial.get('--study-card-offset'));
     resizeStudyCard(initialHeight + 50);
     assert.equal(properties.get('--study-card-height'), `${initialHeight + 50}px`);
-    assert.equal(properties.get('--study-card-offset'), `${initialOffset - 50}px`);
+    assert.equal(properties.get('--study-card-offset'), `${initialOffset - 25}px`);
     resizeStudyCard(initialHeight + 1000);
     assert.equal(properties.get('--study-card-height'), `${initialHeight + 96}px`);
     resizeStudyCard(0);
@@ -78,4 +78,12 @@ test('Safari viewport height changes preserve the initial card position', () => 
     headingHeight = 170;
     observerCallback();
     assert.equal(writes, writesBeforeResize + 4);
+
+    // On a shorter screen, stop growing before the answer buttons reach the toolbar.
+    window.innerHeight = 600;
+    headingHeight = 16;
+    observerCallback();
+    resizeStudyCard(1000);
+    assert.equal(properties.get('--study-card-height'), '312px');
+    assert.equal(properties.get('--study-card-offset'), '7px');
 });
