@@ -8,7 +8,9 @@ import { renderCardContent } from './card-text.js';
 export class FlashcardManager {
     constructor(setId, initialCards) {
         this.setId = setId;
-        this.scope = document.querySelector('.study-page')?.dataset.studyScope || 'set';
+        const studyPage = document.querySelector('.study-page');
+        this.scope = studyPage?.dataset.studyScope || 'set';
+        this.textAlignment = studyPage?.dataset.textAlignment;
         
         // Session
         this.cards = [];
@@ -17,7 +19,7 @@ export class FlashcardManager {
         this.undoHistory = [];
         
         // Mode
-        this.studyMode = document.querySelector('.study-page')?.dataset.studyMode || 'learn';
+        this.studyMode = studyPage?.dataset.studyMode || 'learn';
         this.isPracticeMode = this.studyMode !== 'learn';
         this.isWrongAnswersMode = this.studyMode === 'mistakes';
         
@@ -273,6 +275,7 @@ export class FlashcardManager {
     }
 
     updateCompletionAction(visible = false) {
+        this.flashcard.classList.remove('left-aligned');
         if (this.emptyAction) this.emptyAction.hidden = true;
         if (!this.completion) return;
         this.completion.hidden = !visible || !this.isPracticeMode;
@@ -426,13 +429,18 @@ export class FlashcardManager {
 
     updateCardContent(card) {
         this.updateCompletionAction();
+        const alignment = this.scope === 'folder' ? card.text_alignment : this.textAlignment;
+        this.flashcard.classList.toggle('left-aligned', alignment === 'left');
         const source = this.sourceSet;
         if (source) source.textContent = card.set_name || '';
         if (this.scope === 'folder' && this.studyMode !== 'practice' && this.studyTitle && card.set_name) {
             this.studyTitle.textContent = card.set_name;
         }
-        renderCardContent(this.cardFront, card.front);
-        renderCardContent(this.cardBack, card.back);
+        renderCardContent(this.cardFront, card.front, { spacedLineBreaks: true });
+        renderCardContent(this.cardBack, card.back, { spacedLineBreaks: true });
+        [this.cardFront, this.cardBack].forEach(text => {
+            if (text.parentElement) text.parentElement.scrollTop = 0;
+        });
         const displayLevel = Math.max(1, Math.min(card.level, 5));
         this.cardLevels.forEach(level => {
             level.textContent = `Level ${displayLevel}`;

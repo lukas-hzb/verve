@@ -120,6 +120,14 @@ def export_set(set_id: str):
     return response
 
 
+@api_bp.put('/set/<string:set_id>/text_alignment')
+@login_required
+@handle_api_errors
+def set_text_alignment(set_id: str):
+    VocabService.set_text_alignment(set_id, json_body().get('text_alignment'), current_user.id)
+    return jsonify(success_response())
+
+
 @api_bp.route('/update_card', methods=['POST'])
 @api_bp.route('/set/<string:set_id>/rate', methods=['POST'])
 @login_required

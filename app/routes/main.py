@@ -131,6 +131,7 @@ def learn_set(set_id: str):
             "set.html",
             set_id=set_id,
             set_name=vocab_set.name,
+            text_alignment=vocab_set.text_alignment,
             study_mode=study_mode,
             initial_cards=(VocabService.get_due_cards(set_id, current_user.id) if study_mode == 'learn'
                            else VocabService.get_all_cards(set_id, current_user.id, last_wrong_only=study_mode == 'mistakes')),
@@ -197,6 +198,8 @@ def set_overview(set_id: str):
             initial_cards=VocabService.get_all_cards(set_id, current_user.id),
             set_id=set_id,
             set_name=vocab_set.name,
+            text_alignment=vocab_set.text_alignment,
+            can_edit_set=vocab_set.user_id == current_user.id,
             dominant_level=max(1, min(dominant_level, 5)),
             sets=sets,
             sidebar_collapsed=sidebar_collapsed,

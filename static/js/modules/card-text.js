@@ -17,19 +17,26 @@ export function parseCardImage(line) {
     }
 }
 
-export function renderCardContent(element, text, { lazy = false } = {}) {
+export function renderCardContent(element, text, { lazy = false, spacedLineBreaks = false } = {}) {
     const formatted = formatCardText(text);
-    // Keep plain cards as text, including their original paragraph spacing.
-    if (!formatted.split('\n').some(line => parseCardImage(line))) {
+    const lines = formatted.split(spacedLineBreaks ? /\r\n?|\n/ : '\n');
+    const separateLines = spacedLineBreaks && lines.length > 1;
+    const images = lines.map(parseCardImage);
+    if (!separateLines && !images.some(Boolean)) {
         element.textContent = formatted;
         return;
     }
     const fragment = document.createDocumentFragment();
-    formatted.split('\n').forEach((line, index) => {
+    lines.forEach((line, index) => {
         if (index) fragment.append(document.createTextNode('\n'));
-        const image = parseCardImage(line);
+        const target = separateLines ? document.createElement('span') : fragment;
+        if (separateLines) {
+            target.className = 'card-text-line';
+            fragment.append(target);
+        }
+        const image = images[index];
         if (!image) {
-            fragment.append(document.createTextNode(line));
+            target.append(document.createTextNode(line));
             return;
         }
         const wrapper = document.createElement('span');
@@ -45,7 +52,7 @@ export function renderCardContent(element, text, { lazy = false } = {}) {
         }, { once: true });
         img.src = image.url;
         wrapper.append(img);
-        fragment.append(wrapper);
+        target.append(wrapper);
     });
     element.replaceChildren(fragment);
 }

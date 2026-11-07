@@ -530,7 +530,7 @@
     object-fit: contain;
 }
 
-.flashcard-content .card-media img {
+.flashcard-content:not(.measuring-height) .card-media img {
     max-height: min(240px, 32dvh, 100cqh);
 }
 

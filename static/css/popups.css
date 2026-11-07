@@ -45,7 +45,8 @@
 }
 .set-settings-dialog .popup-title:focus { outline: none; }
 .set-settings-options { display: grid; gap: var(--space-2); }
-.btn-set-option {
+.btn-set-option,
+.set-alignment-option {
     display: grid;
     grid-template-columns: 24px minmax(0, 1fr) 20px;
     gap: var(--space-3);
@@ -61,8 +62,24 @@
     cursor: pointer;
     transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
-.btn-set-option > :first-child { color: var(--color-primary); }
-.btn-set-option strong { font-size: var(--font-size-action-title); }
+.btn-set-option > :first-child,
+.set-alignment-option > :first-child { color: var(--color-primary); }
+.btn-set-option strong,
+.set-alignment-option strong { font-size: var(--font-size-action-title); }
+.set-alignment-option {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    cursor: default;
+}
+.set-alignment-option select {
+    max-width: 100%;
+    padding: var(--space-2);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-btn);
+    color: inherit;
+}
+.set-alignment-option [role="status"] { grid-column: 2 / -1; margin-top: 0; }
+.set-alignment-option [role="status"]:empty { display: none; }
 .set-option-description {
     display: block;
     margin-top: var(--space-1);

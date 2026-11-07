@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeStudyInfo();
     initializeStudyModePicker();
     initializeStudyUtilityBar();
-    initializeStudyCardPosition();
-    initializeStudyCardTextAlignment();
+    const resizeStudyCard = initializeStudyCardPosition();
+    initializeStudyCardTextLayout(resizeStudyCard);
 
     // Determine current page and initialize appropriate module
     initializeFolders();
@@ -72,6 +72,22 @@ function initializeStudyCardPosition() {
     const mobile = window.matchMedia('(max-width: 768px)');
     group.prepend(progress);
     let previousLayout = '';
+    let baseHeight = 0;
+    let baseOffset = 0;
+    let requiredHeight = 0;
+    let appliedHeight;
+    let appliedOffset;
+    const applySize = () => {
+        // Use the space above the card while keeping the answer buttons in place.
+        const extraHeight = Math.max(0, Math.min(requiredHeight - baseHeight, baseOffset, 96));
+        const height = baseHeight + extraHeight;
+        const offset = baseOffset - extraHeight;
+        if (height === appliedHeight && offset === appliedOffset) return;
+        appliedHeight = height;
+        appliedOffset = offset;
+        page.style.setProperty('--study-card-height', `${height}px`);
+        page.style.setProperty('--study-card-offset', `${offset}px`);
+    };
     const positionCard = () => {
         if (!mobile.matches) return;
         const bounds = page.getBoundingClientRect();
@@ -87,11 +103,10 @@ function initializeStudyCardPosition() {
         const aboveSpace = center - headingBottom - 12 - progressHeight - 20;
         const belowSpace = toolbar.getBoundingClientRect().top - center
             - actions.getBoundingClientRect().height - 20 - 12;
-        const height = Math.max(0, Math.min(bounds.width * 5 / 8,
+        baseHeight = Math.max(0, Math.min(bounds.width * 5 / 8,
             aboveSpace * 2, belowSpace * 2));
-        page.style.setProperty('--study-card-height', `${height}px`);
-        page.style.setProperty('--study-card-offset',
-            `${Math.max(0, center - height / 2 - headingBottom - 12 - progressHeight - 20)}px`);
+        baseOffset = Math.max(0, aboveSpace - baseHeight / 2);
+        applySize();
     };
     const observer = new ResizeObserver(positionCard);
     [page, above, progress, actions, toolbar].forEach(element => observer.observe(element));
@@ -101,33 +116,87 @@ function initializeStudyCardPosition() {
         positionCard();
     });
     positionCard();
+    return height => {
+        requiredHeight = height;
+        if (mobile.matches) applySize();
+    };
 }
 
-function initializeStudyCardTextAlignment() {
+function initializeStudyCardTextLayout(resizeStudyCard) {
     const flashcard = document.querySelector('.study-page .flashcard');
     if (!flashcard) return;
-    const faces = [...flashcard.querySelectorAll('.flashcard-front, .flashcard-back')];
-    const alignText = () => faces.forEach(face => {
+    const mobile = window.matchMedia('(max-width: 768px)');
+    const panels = [...flashcard.querySelectorAll('.flashcard-front, .flashcard-back')].map(face => {
         const content = face.querySelector('.flashcard-content');
-        const text = content.querySelector('p');
-        const lineHeight = parseFloat(getComputedStyle(text).lineHeight);
-        const topSpace = parseFloat(getComputedStyle(face).getPropertyValue('--study-content-top'));
+        return { face, content, text: content.querySelector('p') };
+    });
+    const fitText = ({ face, content, text, scrollTop, topSpace, hasActions }) => {
+        const textStyle = getComputedStyle(text);
+        const defaultSize = parseFloat(textStyle.fontSize);
+        const lineHeight = parseFloat(textStyle.lineHeight);
+        const nextLine = text.querySelector('.card-text-line + .card-text-line');
+        const lineGap = nextLine ? parseFloat(getComputedStyle(nextLine).marginBlockStart) : 0;
         const short = text.textContent.trim() && !text.querySelector('img')
-            && text.offsetHeight <= lineHeight * 2 + 1
+            && text.offsetHeight <= lineHeight * 2 + lineGap + 1
             && face.clientHeight - text.offsetHeight >= topSpace * 2
-            && !content.querySelector('.study-completion:not([hidden]), .study-empty-action:not([hidden])');
+            && !hasActions;
         content.classList.toggle('short-text', Boolean(short));
-    });
-    const resize = new ResizeObserver(alignText);
-    faces.forEach(face => {
-        resize.observe(face);
-        resize.observe(face.querySelector('.flashcard-content > p'));
-    });
-    new MutationObserver(alignText).observe(flashcard, {
+
+        if (!hasActions && content.clientHeight > 0 && content.scrollHeight > content.clientHeight) {
+            const setSize = size => text.style.setProperty('--fitted-card-font-size', `${size}px`);
+            // CSS clamps the measurement to the readable minimum.
+            setSize(0);
+            let min = parseFloat(textStyle.fontSize);
+            let max = defaultSize;
+            if (content.scrollHeight <= content.clientHeight) {
+                while (max - min > 0.25) {
+                    const size = (min + max) / 2;
+                    setSize(size);
+                    if (content.scrollHeight <= content.clientHeight) min = size;
+                    else max = size;
+                }
+                setSize(min);
+            }
+        }
+        content.classList.remove('measuring-text');
+        content.scrollTop = scrollTop;
+    };
+    const layoutText = () => {
+        const layouts = panels.map(panel => {
+            const { face, content, text } = panel;
+            const scrollTop = content.scrollTop;
+            const hasActions = content.querySelector('.study-completion:not([hidden]), .study-empty-action:not([hidden])');
+            content.classList.add('measuring-text');
+            content.classList.remove('short-text');
+            text.style.removeProperty('--fitted-card-font-size');
+            const topSpace = parseFloat(getComputedStyle(content).top);
+            return { ...panel, scrollTop, topSpace, hasActions };
+        });
+        if (mobile.matches) {
+            const requiredHeights = layouts.map(({ face, content, text, topSpace, hasActions }) => {
+                if (hasActions || !text.offsetHeight) return 0;
+                // Measure media independently of the current card height.
+                content.classList.add('measuring-height');
+                const height = text.offsetHeight + topSpace + parseFloat(getComputedStyle(content).paddingBottom)
+                    + face.offsetHeight - face.clientHeight;
+                content.classList.remove('measuring-height');
+                return height;
+            });
+            resizeStudyCard(Math.max(...requiredHeights));
+        }
+        layouts.forEach(fitText);
+    };
+    const resize = new ResizeObserver(layoutText);
+    panels.forEach(({ face }) => resize.observe(face));
+    new MutationObserver(layoutText).observe(flashcard, {
         subtree: true, childList: true, characterData: true,
         attributes: true, attributeFilter: ['hidden'],
     });
-    alignText();
+    flashcard.addEventListener('load', layoutText, true);
+    flashcard.addEventListener('error', layoutText, true);
+    window.addEventListener('resize', layoutText);
+    document.fonts.ready.then(layoutText);
+    layoutText();
 }
 
 

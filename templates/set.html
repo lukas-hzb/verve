@@ -15,8 +15,9 @@
     .card-container {
         --study-card-radius: 20px;
         --study-pill-height: 26px;
-        /* Account for the card's 1px border when sharing corner centers. */
-        --study-pill-inset: calc(var(--study-card-radius) - var(--study-pill-height) / 2 - 1px);
+        /* Account for the border when sharing corner centers. */
+        --study-pill-inset: calc(var(--study-card-radius) - var(--study-pill-height) / 2 - var(--border-width));
+        --study-content-top: calc(var(--study-pill-inset) + var(--study-pill-height) + 7px);
         perspective: 1000px;
         width: 100%;
         max-width: var(--study-max-width);
@@ -78,7 +79,6 @@
 
     .flashcard-front,
     .flashcard-back {
-        --study-content-top: 56px;
         container-type: size;
         position: absolute;
         width: 100%;
@@ -100,7 +100,7 @@
         line-height: var(--line-height-body);
         font-weight: var(--font-weight-medium);
         color: var(--color-text-main);
-        border: 1px solid var(--color-border);
+        border: var(--border-width) solid var(--color-border);
     }
 
     .flashcard-back {
@@ -141,17 +141,27 @@
     .flashcard-content > p {
         margin: 0;
         white-space: pre-line;
+        font-size: max(var(--font-size-body), var(--fitted-card-font-size, var(--font-size-study)));
+    }
+    .flashcard-content > p:has(> .card-text-line) {
+        white-space: normal;
+    }
+    .flashcard-content .card-text-line {
+        display: block;
+        min-block-size: 1lh;
+    }
+    .flashcard-content .card-text-line + .card-text-line {
+        margin-block-start: 0.35em;
+    }
+    .flashcard.left-aligned .flashcard-back .flashcard-content > p {
+        text-align: left;
+    }
+    .flashcard-content.measuring-text {
+        overflow-y: hidden;
     }
     .flashcard-content.short-text {
         inset: 0;
         padding-block: 0;
-    }
-
-    @container (max-width: 440px) {
-        .flashcard-front,
-        .flashcard-back {
-            --study-content-top: 44px;
-        }
     }
 
     /* Smooth Swipe Animations with subtle Tilt */
@@ -229,7 +239,7 @@
 
 </style>
 
-<div class="page-shell study-page" data-study-mode="{{ study_mode }}" data-study-scope="{{ 'folder' if folder_id else 'set' }}">
+<div class="page-shell study-page" data-study-mode="{{ study_mode }}" data-study-scope="{{ 'folder' if folder_id else 'set' }}" data-text-alignment="{{ text_alignment|default('center') }}">
     <div class="study-above-card">
     <!-- Secondary Header for Learning -->
     <div class="page-section">

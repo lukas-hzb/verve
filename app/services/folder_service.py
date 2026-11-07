@@ -122,6 +122,6 @@ class FolderService:
             query = query.filter(Card.next_review <= utc_now())
         elif mode == 'mistakes':
             query = query.filter(Card.last_practice_wrong.is_(True))
-        rows = query.order_by(Card.next_review, Card.id).all()
-        names = dict(db.session.query(VocabSet.id, VocabSet.name).filter_by(user_id=user_id).all())
-        return [dict(c.to_dict(), set_name=names[c.vocab_set_id]) for c in rows]
+        rows = query.add_columns(VocabSet.name, VocabSet.text_alignment).order_by(Card.next_review, Card.id)
+        return [dict(card.to_dict(), set_name=name, text_alignment=alignment)
+                for card, name, alignment in rows]

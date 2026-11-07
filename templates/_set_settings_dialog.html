@@ -6,6 +6,17 @@
         </button>
     </div>
     <div class="set-settings-options">
+        {% if can_edit_set %}
+        <div class="set-alignment-option">
+            <span class="material-symbols-rounded" aria-hidden="true">format_align_left</span>
+            <label for="set-text-alignment"><strong>Back Text Alignment</strong></label>
+            <select id="set-text-alignment" data-url="{{ url_for('api.set_text_alignment', set_id=set_id) }}">
+                <option value="center" {{ 'selected' if text_alignment == 'center' }}>Centered</option>
+                <option value="left" {{ 'selected' if text_alignment == 'left' }}>Left-aligned</option>
+            </select>
+            <span id="set-text-alignment-status" class="set-option-description" role="status"></span>
+        </div>
+        {% endif %}
         <button type="button" class="btn-set-option" data-settings-action="rename">
             <span class="material-symbols-rounded" aria-hidden="true">edit</span>
             <span><strong>Rename Set</strong><span class="set-option-description">Change the Name of this Set.</span></span>

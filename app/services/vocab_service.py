@@ -201,6 +201,14 @@ class VocabService:
         return vset
 
     @staticmethod
+    def set_text_alignment(set_id: str, alignment: str, user_id: str) -> None:
+        vset = VocabService.get_vocab_set(set_id, user_id, require_owner=True)
+        if alignment not in ('left', 'center'):
+            raise InvalidInputError('text_alignment', 'Choose Left or Center')
+        vset.text_alignment = alignment
+        VocabService._commit()
+
+    @staticmethod
     def create_user_set(user_id: str, set_name: str, *, commit: bool = True) -> VocabSet:
         set_name = validate_set_name(set_name)
         

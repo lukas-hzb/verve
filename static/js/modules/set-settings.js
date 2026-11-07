@@ -2,6 +2,29 @@
 const dialog = document.getElementById('set-settings-dialog');
 const trigger = document.getElementById('openSetSettings');
 if (dialog && trigger) {
+    const alignment = dialog.querySelector('#set-text-alignment');
+    const alignmentStatus = dialog.querySelector('#set-text-alignment-status');
+    let savedAlignment = alignment?.value;
+    alignment?.addEventListener('change', async () => {
+        const value = alignment.value;
+        alignment.disabled = true;
+        alignmentStatus.textContent = 'Saving…';
+        try {
+            const response = await fetch(alignment.dataset.url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text_alignment: value }),
+            });
+            if (!response.ok) throw new Error('Could not save Alignment');
+            savedAlignment = value;
+            alignmentStatus.textContent = 'Alignment saved.';
+        } catch {
+            alignment.value = savedAlignment;
+            alignmentStatus.textContent = 'Could not save Alignment. Please try again.';
+        } finally {
+            alignment.disabled = false;
+        }
+    });
     trigger.addEventListener('click', () => {
         dialog.removeAttribute('data-handoff');
         dialog.showModal();

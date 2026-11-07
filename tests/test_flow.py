@@ -22,6 +22,22 @@ from app.utils.exceptions import (
 )
 
 class VerveTestCase(unittest.TestCase):
+    def test_set_text_alignment_defaults_to_center_and_is_saved_for_study(self):
+        item = VocabService.create_user_set(self.user.id, 'Text Alignment')
+        shared = VocabSet.query.filter_by(is_shared=True).first()
+        client = self.authenticated_client()
+        study_url = f'/set/{item.id}'
+        settings_url = f'/api/set/{item.id}/text_alignment'
+
+        self.assertIn(b'data-text-alignment="center"', client.get(study_url).data)
+        self.assertEqual(client.put(settings_url, json={'text_alignment': 'left'}).status_code, 200)
+        self.assertIn(b'data-text-alignment="left"', client.get(study_url).data)
+        self.assertIn(b'value="left" selected', client.get(f'{study_url}/overview').data)
+        self.assertEqual(client.put(settings_url, json={'text_alignment': 'right'}).status_code, 400)
+        self.assertIn(b'data-text-alignment="left"', client.get(study_url).data)
+        self.assertEqual(client.put(f'/api/set/{shared.id}/text_alignment',
+                                    json={'text_alignment': 'left'}).status_code, 403)
+
     def test_folder_dialogs_are_available_on_all_library_pages(self):
         item = VocabService.create_user_set(self.user.id, 'Folder Navigation')
         client = self.authenticated_client()

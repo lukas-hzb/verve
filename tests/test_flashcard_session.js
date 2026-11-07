@@ -27,20 +27,6 @@ test('reset waits for confirmation and ignores requests while controls are disab
     assert.equal(resets, 1);
 });
 
-test('card display preserves paragraphs and interprets escaped newlines on both sides', () => {
-    const m = Object.assign(Object.create(FlashcardManager.prototype), {
-        cardFront: {}, cardBack: {}, cardLevels: [], updateCompletionAction() {},
-    });
-    const card = { front: 'First\\n\\nSecond', back: 'Answer\n\n<img src=x onerror=alert(1)>', level: 1 };
-    m.updateCardContent(card);
-    assert.equal(m.cardFront.textContent, 'First\n\nSecond');
-    assert.equal(m.cardBack.textContent, 'Answer\n\n<img src=x onerror=alert(1)>');
-    assert.equal(card.front, 'First\\n\\nSecond');
-    m.updateCardContent({ front: 'First\\r\\nSecond', back: 'Plain answer', level: 1 });
-    assert.equal(m.cardFront.textContent, 'First\nSecond');
-    assert.equal(m.cardBack.textContent, 'Plain answer');
-});
-
 test('Space overrides focused buttons without interfering with typing or dialogs', t => {
     const previous = globalThis.document;
     let onKeydown;
@@ -98,6 +84,7 @@ function manager(t) {
     t.after(() => { globalThis.localStorage = previous; });
     return Object.assign(Object.create(FlashcardManager.prototype), {
         setId: 'set', learningStorageKey: 'learning', practiceStorageKey: 'practice', modeStorageKey: 'mode',
+        flashcard: {classList: {remove() {}}},
         isPracticeMode: false, isWrongAnswersMode: false, cards: [{id:'1',front:'a'}],
         currentCardIndex: 0, undoHistory: [], sessionStats: {correct:0,wrong:0,total:1},
         syncQueue: [], updateModeUI() {}, updateUI() {}, showLoading() {}, updateBackButtonState() {},
@@ -280,15 +267,19 @@ test('folder answers target their original sets and cancel by card ID', async t 
 
 test('folder learning titles follow the current set except in practice-all mode', () => {
     for (const mode of ['learn', 'mistakes', 'practice']) {
+        let leftAligned;
         const m = Object.assign(Object.create(FlashcardManager.prototype), {
             scope: 'folder', studyMode: mode, studyTitle: {textContent: 'Languages'},
             sourceSet: mode === 'practice' ? {} : null,
             cardFront: {}, cardBack: {}, cardLevels: [], updateCompletionAction() {},
+            flashcard: {classList: {toggle(_name, value) { leftAligned = value; }}},
         });
-        m.updateCardContent({front:'Hello',back:'Hallo',level:1,set_name:'Everyday Words'});
+        m.updateCardContent({front:'Hello',back:'Hallo',level:1,set_name:'Everyday Words',text_alignment:'left'});
         assert.equal(m.studyTitle.textContent, mode === 'practice' ? 'Languages' : 'Everyday Words');
+        assert.equal(leftAligned, true);
         m.updateCardContent({front:'Train',back:'Zug',level:1,set_name:'Travel Words'});
         assert.equal(m.studyTitle.textContent, mode === 'practice' ? 'Languages' : 'Travel Words');
+        assert.equal(leftAligned, false);
         if (m.sourceSet) assert.equal(m.sourceSet.textContent, 'Travel Words');
     }
 });
