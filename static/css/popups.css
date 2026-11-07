@@ -70,22 +70,9 @@
     grid-template-columns: 24px minmax(0, 1fr) auto;
     cursor: default;
 }
-.set-alignment-picker { position: relative; }
-.set-alignment-picker select {
-    appearance: none;
-    padding: var(--space-2) calc(20px + var(--space-1)) var(--space-2) var(--space-1);
-    background: transparent;
-    border: 0;
-    color: inherit;
-    font-size: var(--font-size-caption);
+.set-alignment-option .card-input {
+    width: auto;
     cursor: pointer;
-}
-.set-alignment-picker .set-option-chevron {
-    position: absolute;
-    inset-inline-end: 0;
-    inset-block-start: 50%;
-    translate: 0 -50%;
-    pointer-events: none;
 }
 .set-alignment-option [role="status"] { grid-column: 2 / -1; margin-top: 0; }
 .set-alignment-option [role="status"]:empty { display: none; }
