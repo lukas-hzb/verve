@@ -8,7 +8,7 @@ if (dialog && trigger) {
     alignment?.addEventListener('change', async () => {
         const value = alignment.value;
         alignment.disabled = true;
-        alignmentStatus.textContent = 'Saving…';
+        alignmentStatus.textContent = '';
         try {
             const response = await fetch(alignment.dataset.url, {
                 method: 'PUT',
@@ -17,7 +17,6 @@ if (dialog && trigger) {
             });
             if (!response.ok) throw new Error('Could not save Alignment');
             savedAlignment = value;
-            alignmentStatus.textContent = 'Alignment saved.';
         } catch {
             alignment.value = savedAlignment;
             alignmentStatus.textContent = 'Could not save Alignment. Please try again.';

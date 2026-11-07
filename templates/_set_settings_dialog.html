@@ -8,12 +8,19 @@
     <div class="set-settings-options">
         {% if can_edit_set %}
         <div class="set-alignment-option">
-            <span class="material-symbols-rounded" aria-hidden="true">format_align_left</span>
-            <label for="set-text-alignment"><strong>Back Text Alignment</strong></label>
-            <select id="set-text-alignment" data-url="{{ url_for('api.set_text_alignment', set_id=set_id) }}">
-                <option value="center" {{ 'selected' if text_alignment == 'center' }}>Centered</option>
-                <option value="left" {{ 'selected' if text_alignment == 'left' }}>Left-aligned</option>
-            </select>
+            <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 10h10M4 14h16M4 18h10" /></svg>
+            <span>
+                <label for="set-text-alignment"><strong>Answer Alignment</strong></label>
+                <span id="set-text-alignment-description" class="set-option-description">Align Text on the Back of Cards.</span>
+            </span>
+            <span class="set-alignment-picker">
+                <select id="set-text-alignment" aria-describedby="set-text-alignment-description"
+                        data-url="{{ url_for('api.set_text_alignment', set_id=set_id) }}">
+                    <option value="center" {{ 'selected' if text_alignment == 'center' }}>Centered</option>
+                    <option value="left" {{ 'selected' if text_alignment == 'left' }}>Left-aligned</option>
+                </select>
+                <svg class="export-icon set-option-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+            </span>
             <span id="set-text-alignment-status" class="set-option-description" role="status"></span>
         </div>
         {% endif %}
