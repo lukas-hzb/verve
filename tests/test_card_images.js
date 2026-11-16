@@ -18,7 +18,7 @@ function installCardDom(t) {
         children = [];
         events = {};
         classes = new Set();
-        classList = { add: value => this.classes.add(value) };
+        classList = { add: value => this.classes.add(value), toggle() {} };
         constructor(tag) { this.tag = tag; }
         append(...nodes) { this.children.push(...nodes); }
         replaceChildren(fragment) { this.children = fragment.children; }

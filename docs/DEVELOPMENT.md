@@ -92,16 +92,17 @@ python devel.py
 
 Open [http://127.0.0.1:8080](http://127.0.0.1:8080). The local server reloads code changes with the interactive debugger disabled. The development startup creates missing application tables and seeds the built-in shared vocabulary set. Apply production constraints and indexes separately by following [DEPLOYMENT.md](DEPLOYMENT.md).
 
-## Build the Authentication Client
+## Build the Browser Bundles
 
-The committed browser bundle uses the official `@neondatabase/auth` SDK. Node.js 24 is needed only when changing the client:
+Node.js 24 is needed to rebuild the committed authentication and Markdown editor bundles.
 
 ```bash
 npm ci
 npm run build:auth
+npm run build:card-editor
 ```
 
-Commit `frontend/auth.js`, `package-lock.json`, and the rebuilt `static/js/neon-auth.js` together. No Node process runs alongside Flask.
+Include the changed source, lockfile and rebuilt bundle together. No Node process runs alongside Flask.
 
 ## Run Tests
 

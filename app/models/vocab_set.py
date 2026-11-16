@@ -14,12 +14,16 @@ class VocabSet(db.Model):
     user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=True) # Null for shared sets
     is_shared = db.Column(db.Boolean, nullable=False, default=False)
     text_alignment = db.Column(db.String(6), nullable=False, server_default='center')
+    text_scaling = db.Column(db.String(7), nullable=False, server_default='auto')
+    text_vertical_alignment = db.Column(db.String(6), nullable=False, server_default='center')
     created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
     updated_at = db.Column(db.DateTime, nullable=False, default=utc_now, onupdate=utc_now)
 
     __table_args__ = (
         UniqueConstraint('user_id', 'name', name='uq_vocab_sets_user_name'),
         CheckConstraint("text_alignment IN ('left', 'center')", name='ck_vocab_sets_text_alignment'),
+        CheckConstraint("text_scaling IN ('auto', 'minimum')", name='ck_vocab_sets_text_scaling'),
+        CheckConstraint("text_vertical_alignment IN ('center', 'top')", name='ck_vocab_sets_text_vertical_alignment'),
         CheckConstraint(
             '(is_shared AND user_id IS NULL) OR (NOT is_shared AND user_id IS NOT NULL)',
             name='ck_vocab_sets_owner_or_shared',

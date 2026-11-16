@@ -138,14 +138,60 @@ test('overview modes preserve three independent rounds and undo histories', t =>
     m.cards = [{id:'2',front:'practice'}]; m.currentCardIndex = 0;
     m.sessionStats = {correct:0,wrong:0,total:1}; m.undoHistory = []; m.saveSession();
     m.isWrongAnswersMode = true;
-    assert.equal(m.loadSession(), false); // Never resurrect the old Level 1 filter.
+    assert.equal(m.loadSession([]), false); // Never resurrect the old Level 1 filter.
     m.cards = [{id:'3',front:'mistake'}]; m.saveSession();
-    m.isWrongAnswersMode = false; assert.equal(m.loadSession(), true);
+    m.isWrongAnswersMode = false; assert.equal(m.loadSession([{id:'2',front:'practice'}]), true);
     assert.equal(m.cards[0].front, 'practice'); assert.equal(m.currentCardIndex, 0);
-    m.isPracticeMode = false; assert.equal(m.loadSession(), true);
+    m.isPracticeMode = false; assert.equal(m.loadSession([]), true);
     assert.equal(m.sessionStats.correct, 1); assert.equal(m.undoHistory.length, 1);
     m.isPracticeMode = true; m.isWrongAnswersMode = true;
-    assert.equal(m.loadSession(), true); assert.equal(m.cards[0].front, 'mistake');
+    assert.equal(m.loadSession([{id:'3',front:'mistake'}]), true);
+    assert.equal(m.cards[0].front, 'mistake');
+});
+
+test('resuming each mode adds newly eligible cards and drops stale pending cards', async t => {
+    const m = manager(t);
+    delete m.fetchAndLoadCards;
+    m.updateProgressBarVisibility = () => {};
+
+    const reviewed = { id: 'reviewed' };
+    const stale = { id: 'stale' };
+    const current = { id: 'pending', front: 'Updated text' };
+    const newlyEligible = { id: 'new' };
+
+    for (const mode of ['learn', 'practice', 'mistakes']) {
+        m.isPracticeMode = mode !== 'learn';
+        m.isWrongAnswersMode = mode === 'mistakes';
+        m.cards = [reviewed, stale, { id: 'pending', front: 'Old text' }];
+        m.currentCardIndex = 1;
+        m.sessionStats = { correct: 1, wrong: 0, total: 3 };
+        m.undoHistory = [{ card: reviewed, quality: 5 }];
+        m.saveSession();
+
+        await m.fetchAndLoadCards([newlyEligible, current], { resume: true });
+
+        assert.deepEqual(m.cards, [reviewed, current, newlyEligible], mode);
+        assert.equal(m.currentCardIndex, 1);
+        assert.deepEqual(m.sessionStats, { correct: 1, wrong: 0, total: 3 });
+        assert.equal(m.undoHistory.length, 1);
+    }
+});
+
+test('a previously reviewed card that becomes due again starts a fresh round', async t => {
+    const m = manager(t);
+    delete m.fetchAndLoadCards;
+    m.updateProgressBarVisibility = () => {};
+    m.cards = [{ id: 'returning', next_review: '2026-11-01T12:00:00' }];
+    m.currentCardIndex = 1;
+    m.sessionStats = { correct: 1, wrong: 0, total: 1 };
+    m.saveSession();
+
+    const dueAgain = { id: 'returning', next_review: '2026-11-02T12:00:00' };
+    await m.fetchAndLoadCards([dueAgain], { resume: true });
+
+    assert.deepEqual(m.cards, [dueAgain]);
+    assert.equal(m.currentCardIndex, 0);
+    assert.deepEqual(m.sessionStats, { correct: 0, wrong: 0, total: 1 });
 });
 
 test('empty rounds clear stale progress and completed rounds retain their result', t => {
@@ -271,7 +317,7 @@ test('folder learning titles follow the current set except in practice-all mode'
         const m = Object.assign(Object.create(FlashcardManager.prototype), {
             scope: 'folder', studyMode: mode, studyTitle: {textContent: 'Languages'},
             sourceSet: mode === 'practice' ? {} : null,
-            cardFront: {}, cardBack: {}, cardLevels: [], updateCompletionAction() {},
+            cardFront: {classList: {toggle() {}}}, cardBack: {classList: {toggle() {}}}, cardLevels: [], updateCompletionAction() {},
             flashcard: {classList: {toggle(_name, value) { leftAligned = value; }}},
         });
         m.updateCardContent({front:'Hello',back:'Hallo',level:1,set_name:'Everyday Words',text_alignment:'left'});

@@ -12,6 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import create_app
 from app.database import db
 from app.models import User, VocabSet, Card
+from app.models.card import CardReview
 from app.services import UserService, VocabService
 from app.services.import_service import ImportService
 from app.utils.exceptions import (
@@ -22,6 +23,65 @@ from app.utils.exceptions import (
 )
 
 class VerveTestCase(unittest.TestCase):
+    def test_markdown_source_round_trips_and_review_uses_id_after_edit(self):
+        item = VocabService.create_user_set(self.user.id, 'Markdown Cards')
+        client = self.authenticated_client()
+        front = '__Begriff__  '
+        back = '*Beispiel*\n\n- Eins\n- Zwei\n'
+        response = client.post(f'/set/{item.id}/add_card', json={
+            'front': front, 'back': back, 'front_format': 'markdown', 'back_format': 'markdown',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['card']['front'], front)
+        self.assertEqual(response.json['card']['back'], back)
+        card_id = response.json['card']['id']
+        response = client.patch(f'/api/set/{item.id}/card/{card_id}', json={
+            'front': '**Neuer Begriff**', 'back': back, 'front_format': 'markdown', 'back_format': 'markdown',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['card']['back'], back)
+        response = client.post(f'/api/set/{item.id}/rate', json={
+            'card_id': card_id, 'card_front': front, 'review_id': str(uuid.uuid4()), 'quality': 5,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['card']['front'], '**Neuer Begriff**')
+        self.assertEqual(CardReview.query.filter_by(card_id=card_id).one().quality, 5)
+
+    def test_two_buttons_persist_intervals_and_undo_an_idempotent_review(self):
+        item = VocabService.create_user_set(self.user.id, 'Intervals')
+        card = VocabService.add_card(item.id, 'Question', 'Answer', self.user.id)
+        client = self.authenticated_client()
+        card_id = card.id
+        rate_url = f'/api/set/{item.id}/rate'
+        intervals = []
+        for _ in range(4):
+            response = client.post(rate_url, json={'card_id': card_id, 'review_id': str(uuid.uuid4()), 'quality': 5})
+            self.assertEqual(response.status_code, 200)
+            intervals.append(response.json['interval_days'])
+        self.assertEqual(intervals, [1, 6, 16, 45])
+        before = response.json['card']
+
+        request_data = {'card_id': card_id, 'review_id': str(uuid.uuid4()), 'quality': 2}
+        first = client.post(rate_url, json=request_data)
+        repeat = client.post(rate_url, json=request_data)
+        self.assertEqual(first.json, repeat.json)
+        self.assertEqual(first.json['card']['level'], 1)
+        self.assertEqual(CardReview.query.filter_by(card_id=card_id).count(), 5)
+        response = client.post('/api/restore_card', json={
+            'set_id': item.id, 'card_id': card_id, 'review_id': request_data['review_id'],
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['card'], before)
+        self.assertIsNotNone(db.session.get(CardReview, request_data['review_id']).undone_at)
+
+        practice = client.post(f'/api/set/{item.id}/mark_wrong', json={
+            'card_id': card_id, 'review_id': str(uuid.uuid4()),
+        })
+        self.assertTrue(practice.json['card']['last_answer_wrong'])
+        self.assertEqual(practice.json['card']['next_review'], before['next_review'])
+        self.assertEqual(practice.json['card']['interval_days'], before['interval_days'])
+        self.assertEqual(db.session.get(CardReview, practice.json['review_id']).mode, 'practice')
+
     def test_set_text_alignment_defaults_to_center_and_is_saved_for_study(self):
         item = VocabService.create_user_set(self.user.id, 'Text Alignment')
         shared = VocabSet.query.filter_by(is_shared=True).first()
@@ -32,11 +92,39 @@ class VerveTestCase(unittest.TestCase):
         self.assertIn(b'data-text-alignment="center"', client.get(study_url).data)
         self.assertEqual(client.put(settings_url, json={'text_alignment': 'left'}).status_code, 200)
         self.assertIn(b'data-text-alignment="left"', client.get(study_url).data)
-        self.assertIn(b'value="left" selected', client.get(f'{study_url}/overview').data)
+        self.assertIn(b'data-layout-value="left" aria-pressed="true"', client.get(f'{study_url}/overview').data)
         self.assertEqual(client.put(settings_url, json={'text_alignment': 'right'}).status_code, 400)
         self.assertIn(b'data-text-alignment="left"', client.get(study_url).data)
         self.assertEqual(client.put(f'/api/set/{shared.id}/text_alignment',
                                     json={'text_alignment': 'left'}).status_code, 403)
+
+    def test_set_text_layout_is_independent_and_available_in_folder_study(self):
+        client = self.authenticated_client()
+        item = VocabService.create_user_set(self.user.id, 'Answer Layout')
+        shared = VocabSet.query.filter_by(is_shared=True).first()
+        folder_id = client.post('/api/folders', json={'name': 'Layout Folder'}).json['id']
+        VocabService.add_card(item.id, 'Question', 'Answer', self.user.id)
+        self.assertEqual(client.put(f'/api/set/{item.id}/folder', json={'folder_id': folder_id}).status_code, 200)
+        settings_url = f'/api/set/{item.id}/text_layout'
+        study_url = f'/set/{item.id}'
+
+        defaults = client.get(study_url).data
+        self.assertIn(b'data-text-scaling="auto"', defaults)
+        self.assertIn(b'data-text-vertical-alignment="center"', defaults)
+        for setting, value in [('text_scaling', 'minimum'), ('text_vertical_alignment', 'top')]:
+            self.assertEqual(client.put(settings_url, json={'setting': setting, 'value': value}).status_code, 200)
+        self.assertEqual(client.put(settings_url, json={'setting': 'text_scaling', 'value': 'large'}).status_code, 400)
+        self.assertEqual(client.put(f'/api/set/{shared.id}/text_layout',
+                                    json={'setting': 'text_scaling', 'value': 'minimum'}).status_code, 403)
+        study_page = client.get(study_url).data
+        self.assertIn(b'data-text-alignment="center"', study_page)
+        self.assertIn(b'data-text-scaling="minimum"', study_page)
+        self.assertIn(b'data-text-vertical-alignment="top"', study_page)
+        preview = client.get(f'{study_url}/overview').data
+        self.assertIn(b'data-layout-value="minimum" aria-pressed="true"', preview)
+        self.assertIn(b'data-layout-value="top" aria-pressed="true"', preview)
+        card = client.get(f'/api/folder/{folder_id}/due_cards').json['cards'][0]
+        self.assertEqual((card['text_scaling'], card['text_vertical_alignment']), ('minimum', 'top'))
 
     def test_folder_dialogs_are_available_on_all_library_pages(self):
         item = VocabService.create_user_set(self.user.id, 'Folder Navigation')
@@ -137,11 +225,13 @@ class VerveTestCase(unittest.TestCase):
         db.session.refresh(card)
         self.assertEqual(card.to_dict(), before)
         page = client.get(f'/set/{vocab_set.id}/overview').get_data(as_text=True)
-        header = page.split('set-overview-header')[1].split('<!-- One entry point')[0]
+        overview_header = page.split('set-overview-header', 1)[1].split('<!-- One entry point', 1)[0]
+        header, settings = overview_header.split('id="set-settings-menu"', 1)
         self.assertIn('id="openSetSettings"', header)
+        self.assertIn('popovertarget="set-settings-menu"', header)
         self.assertNotIn('openRenameModal()', header)
         self.assertNotIn('id="openExportModal"', header)
-        settings = page.split('id="set-settings-dialog"')[1].split('</dialog>')[0]
+        self.assertIn('popover="auto"', settings)
         for label in ['Rename Set', 'Add Card', 'Import Cards', 'Export Set']:
             self.assertIn(label, settings)
         self.assertEqual(page.count('id="openExportModal"'), 1)
@@ -400,7 +490,7 @@ class VerveTestCase(unittest.TestCase):
         # Tests hold an app context for DB assertions; emulate fresh request caches.
         @self.app.before_request
         def clear_request_caches():
-            for key in ('_login_user', 'neon_identity', 'neon_session_response'):
+            for key in ('_login_user', 'neon_identity', 'neon_session_response', 'csrf_token'):
                 g.pop(key, None)
 
     def tearDown(self):
@@ -708,6 +798,51 @@ class VerveTestCase(unittest.TestCase):
         with self.assertRaises(UnauthorizedAccessError):
             VocabService.delete_set(shared_set.id, self.user.id)
 
+    def test_text_reimport_updates_matching_backs_and_preserves_progress(self):
+        vocab_set = VocabService.create_user_set(self.user.id, 'Import Corrections')
+        set_id = vocab_set.id
+        existing = VocabService.add_card(set_id, 'Hund', 'Old answer', self.user.id)
+        existing.level = 4
+        existing.last_practice_wrong = True
+        existing.shuffle_order = 3
+        db.session.commit()
+        before = existing.to_dict()
+
+        client = self.authenticated_client()
+        form = {
+            'import_type': 'text', 'field_separator': 'custom', 'custom_field_separator': ';;',
+            'text_content': 'Hund;;Dog\nKatze;;Cat',
+        }
+        url = f'/set/{set_id}/import'
+        forecast = client.post(f'{url}?preview=1', data=form)
+        self.assertEqual(forecast.json, {'added': 1, 'updated': 1, 'ambiguous': 0})
+        db.session.refresh(existing)
+        self.assertEqual(existing.to_dict(), before)
+        self.assertEqual(Card.query.filter_by(vocab_set_id=set_id).count(), 1)
+        response = client.post(url, data=form, follow_redirects=True)
+        self.assertIn(b'Cards added: 1. Cards updated: 1.', response.data)
+        db.session.refresh(existing)
+        self.assertEqual(existing.to_dict(), {**before, 'back': 'Dog'})
+        self.assertEqual(Card.query.filter_by(vocab_set_id=set_id, front='Katze').one().back, 'Cat')
+
+        response = client.post(url, data=form, follow_redirects=True)
+        self.assertIn(b'No changes to import.', response.data)
+        self.assertEqual(Card.query.filter_by(vocab_set_id=set_id).count(), 2)
+
+    def test_import_does_not_overwrite_ambiguous_existing_fronts(self):
+        vocab_set = VocabService.create_user_set(self.user.id, 'Ambiguous Fronts')
+        set_id = vocab_set.id
+        db.session.add_all([
+            Card(vocab_set_id=set_id, front='Bank', back='Bench'),
+            Card(vocab_set_id=set_id, front='Bank', back='Financial institution'),
+        ])
+        db.session.commit()
+
+        result = ImportService.merge_into_set(self.user.id, set_id, text_content='Bank\tNew answer')
+        self.assertEqual((result.added, result.updated, result.ambiguous), (0, 0, 1))
+        cards = Card.query.filter_by(vocab_set_id=set_id).all()
+        self.assertCountEqual([card.back for card in cards], ['Bench', 'Financial institution'])
+
     def test_import_deduplicates_cards_atomically(self):
         set_id = ImportService.import_set(
             self.user.id,
@@ -721,6 +856,34 @@ class VerveTestCase(unittest.TestCase):
             ('two', 'zwei'),
         ])
 
+    def test_card_forms_store_real_and_escaped_line_breaks_in_one_format(self):
+        vocab_set = VocabService.create_user_set(self.user.id, 'Paragraphs')
+        client = self.authenticated_client()
+        response = client.post(f'/set/{vocab_set.id}/add_card', json={
+            'front': 'Question\nExample',
+            'back': 'First\r\n\r\nSecond\\r\\nThird',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['card']['front'], r'Question\nExample')
+        self.assertEqual(response.json['card']['back'], r'First\n\nSecond\nThird')
+
+        response = client.post(f'/set/{vocab_set.id}/import', data={
+            'import_type': 'text',
+            'field_separator': ',',
+            'text_content': '"Question\r\nExample","New\r\n\r\nAnswer"\r\nNext,Another\\nLine',
+        }, follow_redirects=True)
+        self.assertIn(b'Cards added: 1. Cards updated: 1.', response.data)
+        self.assertEqual(Card.query.filter_by(vocab_set_id=vocab_set.id, front=r'Question\nExample').one().back,
+                         r'New\n\nAnswer')
+        self.assertEqual(Card.query.filter_by(vocab_set_id=vocab_set.id, front='Next').one().back, r'Another\nLine')
+
+    def test_custom_blank_line_separator_accepts_textarea_crlf(self):
+        self.assertEqual(
+            ImportService.parse_content('One,First\r\nline\r\n\r\nTwo,Second', r'\n\n', ',',
+                                        encode_line_breaks=True),
+            [('One', r'First\nline'), ('Two', 'Second')],
+        )
+
     def test_login_rejects_external_redirect_and_logout_requires_post(self):
         client = self.authenticated_client()
         self.assertEqual(client.get('/auth/logout').status_code, 405)
@@ -729,6 +892,42 @@ class VerveTestCase(unittest.TestCase):
         self.assertEqual(client.get('/api/user/profile').status_code, 401)
         response = client.get('/auth/login?next=https://attacker.example/phishing')
         self.assertNotIn(b'data-next="https://attacker.example', response.data)
+
+    def test_import_can_refresh_csrf_after_flask_session_cookie_is_lost(self):
+        self.app.config['WTF_CSRF_ENABLED'] = True
+        vocab_set = VocabService.create_user_set(self.user.id, 'Import Session')
+        set_id = vocab_set.id
+        client = self.authenticated_client()
+        overview_url = f'/set/{set_id}/overview'
+        import_url = f'/set/{set_id}/import'
+        overview = client.get(overview_url, base_url='https://localhost')
+        stale_token = re.search(rb'<meta name="csrf-token" content="([^"]+)"', overview.data).group(1).decode()
+        self.assertIn(b'data-csrf-url="/api/csrf-token"', overview.data)
+
+        client.delete_cookie(self.app.config['SESSION_COOKIE_NAME'])
+        form = {'import_type': 'text', 'field_separator': 'custom',
+                'custom_field_separator': ';;', 'text_content': 'Hund;;Dog'}
+        base_url = 'https://localhost'
+        headers = {'Referer': base_url + overview_url}
+        rejected = client.post(import_url, base_url=base_url, headers=headers,
+                               data={**form, 'csrf_token': stale_token})
+        self.assertEqual(rejected.status_code, 303)
+        self.assertEqual(rejected.headers['Location'], overview_url)
+        self.assertEqual(Card.query.filter_by(vocab_set_id=set_id).count(), 0)
+
+        refresh = client.get('/api/csrf-token', base_url=base_url)
+        self.assertEqual(refresh.status_code, 200)
+        self.assertIn('no-store', refresh.headers['Cache-Control'])
+        fresh_token = refresh.get_json()['csrf_token']
+        self.assertNotEqual(fresh_token, stale_token)
+        imported = client.post(import_url, base_url=base_url, headers=headers,
+                               data={**form, 'csrf_token': fresh_token})
+        self.assertEqual(imported.status_code, 302)
+        card = Card.query.filter_by(vocab_set_id=set_id).one()
+        self.assertEqual((card.front, card.back), ('Hund', 'Dog'))
+
+        anonymous = self.app.test_client().get('/api/csrf-token', base_url=base_url)
+        self.assertEqual(anonymous.status_code, 401)
 
     def test_csrf_protects_neon_login(self):
         self.app.config['WTF_CSRF_ENABLED'] = True

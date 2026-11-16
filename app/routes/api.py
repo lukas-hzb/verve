@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict
 
 from flask import Blueprint, current_app, jsonify, request, send_file
 from flask_login import current_user, login_required
+from flask_wtf.csrf import generate_csrf
 from werkzeug.utils import secure_filename
 
 from app.services import VocabService
@@ -19,6 +20,12 @@ from app.utils.exceptions import (
 
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+
+@api_bp.get('/csrf-token')
+@login_required
+def csrf_token():
+    return jsonify({'csrf_token': generate_csrf()})
 
 
 def success_response(data: Any = None, message: str | None = None) -> Dict:
@@ -128,6 +135,15 @@ def set_text_alignment(set_id: str):
     return jsonify(success_response())
 
 
+@api_bp.put('/set/<string:set_id>/text_layout')
+@login_required
+@handle_api_errors
+def set_text_layout(set_id: str):
+    data = json_body()
+    VocabService.set_text_layout(set_id, data.get('setting'), data.get('value'), current_user.id)
+    return jsonify(success_response())
+
+
 @api_bp.route('/update_card', methods=['POST'])
 @api_bp.route('/set/<string:set_id>/rate', methods=['POST'])
 @login_required
@@ -135,21 +151,25 @@ def set_text_alignment(set_id: str):
 def update_card(set_id: str | None = None):
     data = json_body()
     set_id = set_id or data.get('set_id')
-    require_fields({**data, 'set_id': set_id}, 'set_id', 'card_front', 'quality')
+    reference_field = 'card_id' if 'card_id' in data else 'card_front'
+    require_fields({**data, 'set_id': set_id}, 'set_id', reference_field, 'quality')
     result = VocabService.update_card_performance(
         set_id,
-        data['card_front'],
+        data.get('card_front'),
         data['quality'],
         current_user.id,
+        card_id=data.get('card_id'),
+        review_id=data.get('review_id'),
     )
     return jsonify(success_response(result))
 
 
 def _mark_practice(set_id: str, *, wrong: bool):
     data = json_body()
-    require_fields(data, 'card_front')
+    require_fields(data, 'card_id' if 'card_id' in data else 'card_front')
     operation = VocabService.mark_practice_wrong if wrong else VocabService.mark_practice_correct
-    return jsonify(success_response(operation(set_id, data['card_front'], current_user.id)))
+    return jsonify(success_response(operation(set_id, data.get('card_front'), current_user.id,
+                                              card_id=data.get('card_id'), review_id=data.get('review_id'))))
 
 
 @api_bp.route('/set/<string:set_id>/mark_wrong', methods=['POST'])
@@ -171,6 +191,11 @@ def mark_correct(set_id: str):
 @handle_api_errors
 def restore_card():
     data = json_body()
+    if 'review_id' in data:
+        require_fields(data, 'set_id', 'card_id', 'review_id')
+        return jsonify(success_response(VocabService.undo_answer(
+            data['set_id'], data['card_id'], data['review_id'], current_user.id,
+        )))
     require_fields(data, 'set_id', 'card_front', 'level', 'next_review')
     result = VocabService.restore_card(
         data['set_id'],

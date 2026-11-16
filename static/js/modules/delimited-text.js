@@ -1,9 +1,12 @@
 /** Parse the same quoted rows accepted by the CSV/TSV importer. */
-export function parseDelimitedRows(content, cardSeparator, fieldSeparator) {
+export function parseDelimitedRows(content, cardSeparator, fieldSeparator, { preserveWhitespace = false } = {}) {
     content = content.replace(/^\uFEFF/, '');
     if (cardSeparator !== '\n' || fieldSeparator.length !== 1 || /[\r\n"]/.test(fieldSeparator)) {
+        if ([cardSeparator, fieldSeparator].some(separator => separator.includes('\n') && !separator.includes('\r'))) {
+            content = content.replace(/\r\n/g, '\n');
+        }
         const rows = cardSeparator === '\n' ? content.split(/\r\n|\r|\n/) : content.split(cardSeparator);
-        return rows.filter(row => row.trim()).map(row => row.split(fieldSeparator));
+        return rows.filter(row => row.trim()).map(row => (preserveWhitespace ? row : row.trim()).split(fieldSeparator));
     }
     const rows = [];
     let row = [], field = '', quoted = false;

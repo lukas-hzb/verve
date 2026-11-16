@@ -1,0 +1,30 @@
+{% from '_card_side_editor.html' import card_side_editor %}
+{% from '_card_preview.html' import card_preview %}
+<!-- Edit Card Modal -->
+<div id="editCardModal" class="popup-overlay">
+    <div class="card-editor-layout card-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="editCardTitle">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3 id="editCardTitle" class="popup-title">Edit Card</h3>
+                <button type="button" class="popup-close-btn" aria-label="Close Dialog" data-close-card-editor>
+                    <span class="material-symbols-rounded" aria-hidden="true">close</span>
+                </button>
+            </div>
+            <div class="popup-body">
+                <form id="editCardForm">
+                    <div class="card-editor-fields">
+                        {{ card_side_editor('editFront', 'front', 3, 255, 'plain') }}
+                        {{ card_side_editor('editBack', 'back', 9, 10000, 'plain') }}
+                    </div>
+                    <p id="editCardError" role="alert" class="card-edit-error" hidden></p>
+                    <div class="popup-footer">
+                        <button type="button" class="btn-secondary" data-close-card-editor>Cancel</button>
+                        <button id="editCardSave" type="submit" class="btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {{ card_preview('edit-preview', text_layout=text_layout) }}
+    </div>
+</div>
+<script type="module" src="{{ url_for('static', filename='js/modules/card-editor.js') }}"></script>

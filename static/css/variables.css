@@ -146,7 +146,8 @@
   --sidebar-icon-width: 24px;
   --sidebar-control-size: 40px;
   --sidebar-width-closed: 56px;
-  --sidebar-hover: color-mix(in srgb, var(--color-text-main) 6%, var(--color-bg-body));
+  --sidebar-hover-strength: 6%;
+  --sidebar-hover: color-mix(in srgb, var(--color-text-main) var(--sidebar-hover-strength), var(--color-bg-body));
   --sidebar-active: color-mix(in srgb, var(--color-text-main) 9%, var(--color-bg-body));
 }
 

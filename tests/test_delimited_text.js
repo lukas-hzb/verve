@@ -11,3 +11,8 @@ test('TSV and custom TXT previews use their selected separators', () => {
     assert.deepEqual(parseDelimitedRows('Dog\tHund\r\nCat\tKatze', '\n', '\t'), [['Dog', 'Hund'], ['Cat', 'Katze']]);
     assert.deepEqual(parseDelimitedRows('Dog -> Hund || Cat -> Katze', ' || ', ' -> '), [['Dog', 'Hund'], ['Cat', 'Katze']]);
 });
+
+test('a custom blank-line separator preserves line breaks within each card', () => {
+    assert.deepEqual(parseDelimitedRows('One,First\r\nline\r\n\r\nTwo,Second', '\n\n', ','),
+        [['One', 'First\nline'], ['Two', 'Second']]);
+});

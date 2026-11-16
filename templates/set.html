@@ -135,15 +135,15 @@
         overflow-wrap: anywhere;
     }
     /* Center short content; auto margins collapse when the text needs scrolling. */
-    .flashcard-content::before { content: ''; margin-top: auto; }
-    .flashcard-content::after { content: ''; margin-bottom: auto; }
+    .flashcard-content:not(.top-aligned)::before { content: ''; margin-top: auto; }
+    .flashcard-content:not(.top-aligned)::after { content: ''; margin-bottom: auto; }
     .flashcard-content > * { flex-shrink: 0; }
-    .flashcard-content > p {
+    .flashcard-content > .flashcard-text {
         margin: 0;
         white-space: pre-line;
         font-size: max(var(--font-size-body), var(--fitted-card-font-size, var(--font-size-study)));
     }
-    .flashcard-content > p:has(> .card-text-line) {
+    .flashcard-content > .flashcard-text:has(> .card-text-line) {
         white-space: normal;
     }
     .flashcard-content .card-text-line {
@@ -153,7 +153,7 @@
     .flashcard-content .card-text-line + .card-text-line {
         margin-block-start: 0.35em;
     }
-    .flashcard.left-aligned .flashcard-back .flashcard-content > p {
+    .flashcard.left-aligned .flashcard-back .flashcard-content > .flashcard-text {
         text-align: left;
     }
     .flashcard-content.measuring-text {
@@ -213,17 +213,39 @@
     }
 
     /* Level Indicator */
-    .card-level {
+    .study-card-badges {
         position: absolute;
         top: var(--study-pill-inset);
         right: var(--study-pill-inset);
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+    }
+    .btn-edit-study-card {
+        display: grid;
+        place-items: center;
+        width: var(--study-pill-height);
+        height: var(--study-pill-height);
+        border: 0;
+        border-radius: var(--radius-full);
+        background: color-mix(in srgb, var(--study-mode-color) 16%, var(--color-bg-surface));
+        color: var(--color-text-main);
+        cursor: pointer;
+    }
+    .btn-edit-study-card .material-symbols-rounded { font-size: 1rem; }
+    .btn-edit-study-card:hover { background: var(--color-bg-surface-hover); }
+    .btn-edit-study-card:focus-visible { outline: 2px solid currentColor; }
+    .btn-edit-study-card[hidden] { display: none; }
+    .flashcard.flipped .flashcard-front .btn-edit-study-card,
+    .flashcard:not(.flipped) .flashcard-back .btn-edit-study-card { visibility: hidden; }
+    .card-level {
         height: var(--study-pill-height);
         padding: var(--space-1) var(--space-3);
         border-radius: var(--radius-full);
         font-size: var(--font-size-badge);
         line-height: var(--line-height-control);
         color: white;
-        z-index: 10;
         font-weight: var(--font-weight-medium);
         box-shadow: var(--shadow-sm);
     }
@@ -239,7 +261,9 @@
 
 </style>
 
-<div class="page-shell study-page" data-study-mode="{{ study_mode }}" data-study-scope="{{ 'folder' if folder_id else 'set' }}" data-text-alignment="{{ text_alignment|default('center') }}">
+<div class="page-shell study-page" data-study-mode="{{ study_mode }}" data-study-scope="{{ 'folder' if folder_id else 'set' }}"
+     data-text-alignment="{{ text_alignment|default('center') }}" data-text-scaling="{{ text_scaling|default('auto') }}"
+     data-text-vertical-alignment="{{ text_vertical_alignment|default('center') }}">
     <div class="study-above-card">
     <!-- Secondary Header for Learning -->
     <div class="page-section">
@@ -280,7 +304,15 @@
             </span>
         </div>
         <!-- Level Indicator (ID matches what flashcard.js expects) -->
-        <div id="{{ level_id }}" class="card-level" style="display: none;">Level 1</div>
+        <div class="study-card-badges">
+            {% if can_edit_set or folder_id %}
+            <button type="button" class="btn-edit-study-card" data-edit-study-card aria-label="Edit Card" title="Edit Card"
+                    aria-haspopup="dialog" aria-controls="editCardModal" hidden>
+                <span class="material-symbols-rounded" aria-hidden="true">edit</span>
+            </button>
+            {% endif %}
+            <div id="{{ level_id }}" class="card-level" style="display: none;">Level 1</div>
+        </div>
 
     {% endmacro %}
 
@@ -292,7 +324,7 @@
                 <div class="flashcard-front" id="card-front-container">
                     {{ card_badges("card-level") }}
                     <div class="flashcard-content">
-                        <p id="card-front">Loading...</p>
+                        <div id="card-front" class="flashcard-text">Loading...</div>
                         <div id="study-completion" class="study-completion" hidden>
                             <p id="study-completion-text"></p>
                             <button type="button" class="btn-primary" id="continue-practice-btn"><span class="material-symbols-rounded" aria-hidden="true">refresh</span><span id="continue-practice-label">Practice again</span></button>
@@ -305,7 +337,7 @@
                 <div class="flashcard-back" id="card-back-container">
                     {{ card_badges("card-level-back") }}
                     <div class="flashcard-content">
-                        <p id="card-back"></p>
+                        <div id="card-back" class="flashcard-text"></div>
                     </div>
                 </div>
             </div>
@@ -361,4 +393,8 @@
 </div>
 
 <script id="initial-page-data" type="application/json">{{ initial_cards | tojson }}</script>
+{% if can_edit_set or folder_id %}
+    {% set text_layout = {'text_alignment': text_alignment|default('center'), 'text_scaling': text_scaling|default('auto'), 'text_vertical_alignment': text_vertical_alignment|default('center')} %}
+    {% include '_edit_card_dialog.html' %}
+{% endif %}
 {% endblock %}

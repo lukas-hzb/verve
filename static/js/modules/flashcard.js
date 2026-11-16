@@ -11,6 +11,8 @@ export class FlashcardManager {
         const studyPage = document.querySelector('.study-page');
         this.scope = studyPage?.dataset.studyScope || 'set';
         this.textAlignment = studyPage?.dataset.textAlignment;
+        this.textScaling = studyPage?.dataset.textScaling;
+        this.textVerticalAlignment = studyPage?.dataset.textVerticalAlignment;
         
         // Session
         this.cards = [];
@@ -39,10 +41,12 @@ export class FlashcardManager {
         this.studyTitle = document.getElementById('study-title');
         this.cardFront = document.getElementById("card-front");
         this.cardBack = document.getElementById("card-back");
+        this.backFace = document.getElementById('card-back-container');
         this.flashcard = document.getElementById("flashcard");
         this.cardContainer = document.getElementById('flashcard-wrapper') || document.querySelector('.card-container');
         this.cardLevel = document.getElementById("card-level");
         this.cardLevels = [this.cardLevel, document.getElementById("card-level-back")].filter(Boolean);
+        this.editButtons = [...this.flashcard.querySelectorAll('[data-edit-study-card]')];
         this.flipBtn = document.getElementById("flip-btn");
         this.feedbackBtns = document.getElementById("feedback-btns");
         this.knownBtn = document.getElementById("known-btn");
@@ -93,15 +97,7 @@ export class FlashcardManager {
         this.attachKeyboardListeners();
         this.disableControls();
         try {
-        
-        // Try loading session first
-        if (this.scope === 'folder' || !this.loadSession()) {
-             await this.fetchAndLoadCards(initialCards);
-        } else {
-             console.log("Session restored from local Storage.");
-             this.updateBackButtonState();
-             this.updateUI();
-        }
+            await this.fetchAndLoadCards(initialCards, { resume: this.scope !== 'folder' });
         } finally {
             this.enableControls();
         }
@@ -155,7 +151,7 @@ export class FlashcardManager {
         this.updateProgress();
     }
 
-    loadSession() {
+    loadSession(eligibleCards) {
         const legacyKey = this.isPracticeMode ? this.practiceStorageKey : this.learningStorageKey;
         const currentSaved = localStorage.getItem(this.getStorageKey());
         if (!currentSaved && this.isWrongAnswersMode) return false; // Do not restore the old Level 1 filter.
@@ -165,12 +161,35 @@ export class FlashcardManager {
         try {
             const data = JSON.parse(saved);
             if (Boolean(data.isWrongAnswersMode) !== this.isWrongAnswersMode) return false;
-            // Optional: Expiry check (e.g. 24 hours)? For now, keep it simple.
-            
-            this.cards = data.cards || [];
-            this.currentCardIndex = data.currentCardIndex || 0;
+            const { cards, currentCardIndex = 0 } = data;
+            if (!Array.isArray(cards) || !Number.isInteger(currentCardIndex)
+                || currentCardIndex < 0 || currentCardIndex > cards.length) return false;
+            const stats = data.paddingStats || { correct: 0, wrong: 0 };
+            if (stats.correct + stats.wrong !== currentCardIndex) return false;
+
+            const reviewed = cards.slice(0, currentCardIndex);
+            const eligibleById = new Map(eligibleCards.map(card => [card.id, card]));
+            if (!this.isPracticeMode && reviewed.some(card => {
+                const eligible = eligibleById.get(card.id);
+                return eligible && eligible.next_review !== card.next_review;
+            })) {
+                // A card from the old round has since become due again.
+                return false;
+            }
+            for (const card of reviewed) eligibleById.delete(card.id);
+
+            // Keep the order of pending cards and refresh their content from the server.
+            const pending = [];
+            for (const savedCard of cards.slice(currentCardIndex)) {
+                const eligible = eligibleById.get(savedCard.id);
+                if (!eligible) continue;
+                pending.push(eligible);
+                eligibleById.delete(savedCard.id);
+            }
+            this.cards = [...reviewed, ...pending, ...eligibleById.values()];
+            this.currentCardIndex = currentCardIndex;
             this.undoHistory = data.undoHistory || [];
-            this.sessionStats = data.paddingStats || { correct: 0, wrong: 0, total: this.cards.length };
+            this.sessionStats = { correct: stats.correct, wrong: stats.wrong, total: this.cards.length };
             // Mode is determined by checkbox state, not saved data
             this.updateModeUI();
             
@@ -219,6 +238,7 @@ export class FlashcardManager {
     }
 
     attachEventListeners() {
+        this.editButtons?.forEach(button => button.addEventListener('click', () => this.editCurrentCard(button)));
         this.flipBtn?.addEventListener("click", () => {
             this.flipCard();
             this.flipBtn.blur();
@@ -276,6 +296,7 @@ export class FlashcardManager {
 
     updateCompletionAction(visible = false) {
         this.flashcard.classList.remove('left-aligned');
+        this.editButtons?.forEach(button => { button.hidden = true; });
         if (this.emptyAction) this.emptyAction.hidden = true;
         if (!this.completion) return;
         this.completion.hidden = !visible || !this.isPracticeMode;
@@ -305,6 +326,7 @@ export class FlashcardManager {
             // Cancel native Space activation even on the answer side or while
             // controls are busy, so it cannot re-click the focused button.
             if (event.code === 'Space') {
+                if (this.editButtons?.includes(activeElement)) return;
                 event.preventDefault();
                 // Space is a card shortcut here, not keyboard interaction with
                 // the previously clicked button. Release that stale focus so
@@ -331,10 +353,7 @@ export class FlashcardManager {
         });
     }
 
-    async fetchAndLoadCards(initialCards) {
-        // Clear old session when fetching new
-        this.clearSession();
-        
+    async fetchAndLoadCards(initialCards, { resume = false } = {}) {
         let url;
         if (this.isPracticeMode || this.isWrongAnswersMode) {
             url = `/api/${this.scope || 'set'}/${this.setId}/cards`;
@@ -354,25 +373,17 @@ export class FlashcardManager {
                 if (!response.ok) throw new Error('Could not load Cards');
                 data = await response.json();
             }
-            let loadedCards = data.cards || [];
-            
-            this.cards = loadedCards;
-            this.undoHistory = [];
+            const loadedCards = data.cards || [];
+            if (!resume || !this.loadSession(loadedCards)) {
+                this.clearSession();
+                this.cards = loadedCards;
+                this.undoHistory = [];
+                this.currentCardIndex = 0;
+                this.sessionStats = { correct: 0, wrong: 0, total: loadedCards.length };
+            }
             this.updateBackButtonState();
-            this.currentCardIndex = 0;
-            
-            // IMPORTANT: total represents due cards at session start (learning mode only)
-            this.sessionStats = { correct: 0, wrong: 0, total: loadedCards.length };
-
-            // Auto-shuffle removed to respect persisted order
-            // if (this.isPracticeMode) {
-            //    this.shuffleArray(this.cards);
-            // }
-            
-            // Update progress bar visibility based on mode
             this.updateProgressBarVisibility();
-
-            this.saveSession(); // Initial save
+            this.saveSession();
             this.updateUI();
 
         } catch (error) {
@@ -431,13 +442,18 @@ export class FlashcardManager {
         this.updateCompletionAction();
         const alignment = this.scope === 'folder' ? card.text_alignment : this.textAlignment;
         this.flashcard.classList.toggle('left-aligned', alignment === 'left');
+        if (this.backFace) {
+            this.backFace.dataset.textScaling = (this.scope === 'folder' ? card.text_scaling : this.textScaling) || 'auto';
+            this.backFace.dataset.textVerticalAlignment =
+                (this.scope === 'folder' ? card.text_vertical_alignment : this.textVerticalAlignment) || 'center';
+        }
         const source = this.sourceSet;
         if (source) source.textContent = card.set_name || '';
         if (this.scope === 'folder' && this.studyMode !== 'practice' && this.studyTitle && card.set_name) {
             this.studyTitle.textContent = card.set_name;
         }
-        renderCardContent(this.cardFront, card.front, { spacedLineBreaks: true });
-        renderCardContent(this.cardBack, card.back, { spacedLineBreaks: true });
+        renderCardContent(this.cardFront, card.front, { spacedLineBreaks: true, format: card.front_format });
+        renderCardContent(this.cardBack, card.back, { spacedLineBreaks: true, format: card.back_format });
         [this.cardFront, this.cardBack].forEach(text => {
             if (text.parentElement) text.parentElement.scrollTop = 0;
         });
@@ -448,6 +464,20 @@ export class FlashcardManager {
             level.style.color = displayLevel === 3 ? 'var(--color-text-on-yellow)' : 'white';
             level.style.display = 'block';
         });
+        this.editButtons?.forEach(button => { button.hidden = false; });
+    }
+
+    editCurrentCard(trigger) {
+        const card = this.cards[this.currentCardIndex];
+        if (!card || this.areControlsDisabled) return;
+        document.getElementById('editCardModal')?.dispatchEvent(new CustomEvent('edit-card', { detail: {
+            card, trigger, setId: card.vocab_set_id || this.setId,
+            onSaved: updated => {
+                for (const field of ['front', 'back', 'front_format', 'back_format']) card[field] = updated[field];
+                this.updateCardContent(card);
+                this.saveSession();
+            },
+        }}));
     }
 
     loadCard(index, isFirstLoad = false) {
@@ -507,7 +537,8 @@ export class FlashcardManager {
 
         setTimeout(() => {
             const originalCard = { ...this.cards[this.currentCardIndex] };
-            this.undoHistory.push({ card: originalCard, quality: quality });
+            const reviewId = globalThis.crypto?.randomUUID?.();
+            this.undoHistory.push({ card: originalCard, quality, reviewId });
             this.updateBackButtonState();
 
             // Queue sync based on mode
@@ -517,6 +548,7 @@ export class FlashcardManager {
                 this.queuePracticeSync({
                     cardFront: originalCard.front,
                     cardId: originalCard.id,
+                    reviewId,
                     setId: originalCard.vocab_set_id || this.setId,
                     endpoint: endpoint,
                     timestamp: Date.now(),
@@ -527,6 +559,7 @@ export class FlashcardManager {
                 this.queueSync({
                     cardFront: originalCard.front,
                     cardId: originalCard.id,
+                    reviewId,
                     setId: originalCard.vocab_set_id || this.setId,
                     quality: quality,
                     timestamp: Date.now(),
@@ -581,58 +614,53 @@ export class FlashcardManager {
     }
 
     async undoLastCard() {
-        if (this.undoHistory.length === 0) return;
+        const historyItem = this.undoHistory.at(-1);
+        if (!historyItem) return;
+        const { card, quality, reviewId } = historyItem;
+        const cardIndex = this.cards.findIndex(candidate => candidate.id === card.id);
+        if (cardIndex === -1) return;
         this.disableControls();
+
         try {
-
-        const historyItem = this.undoHistory.pop();
-        const cardToRestore = historyItem.card;
-        const quality = historyItem.quality;
-        this.updateBackButtonState();
-        
-        // Revert stats
-        if (quality === 5) {
-            this.sessionStats.correct = Math.max(0, this.sessionStats.correct - 1);
-        } else {
-            this.sessionStats.wrong = Math.max(0, this.sessionStats.wrong - 1);
-        }
-        this.updateProgress();
-        
-        // Find index
-        const cardIndexInSet = this.cards.findIndex(c => c.id === cardToRestore.id);
-
-        if (cardIndexInSet !== -1) {
-            // Restore functionality:
-            // 1. Reset card content
-            this.cards[cardIndexInSet] = cardToRestore; // Reset local state
-            this.loadCard(cardIndexInSet);
-
-            // 2. Cancel Sync
-            this.cancelPendingSync(cardToRestore.front, cardToRestore.id);
-
-            // Let in-flight feedback finish before restoring its original state.
+            this.cancelPendingSync(card.front, card.id, reviewId);
+            // An in-flight answer must finish before the server can undo it.
             await this.processSyncQueue();
-            if (!this.isPracticeMode) {
-                try {
-                    await fetch("/api/restore_card", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            set_id: cardToRestore.vocab_set_id || this.setId,
-                            card_front: cardToRestore.front,
-                            level: cardToRestore.level,
-                            next_review: cardToRestore.next_review,
-                            last_answer_wrong: cardToRestore.last_answer_wrong ?? cardToRestore.last_practice_wrong ?? false
-                        })
-                    });
-                } catch (error) {
-                    console.error("Error restoring Card:", error);
-                }
+            let restoredCard = card;
+            const setId = card.vocab_set_id || this.setId;
+            if (reviewId || !this.isPracticeMode) {
+                const reference = reviewId
+                    ? { card_id: card.id, review_id: reviewId }
+                    : {
+                        card_front: card.front,
+                        level: card.level,
+                        next_review: card.next_review,
+                        last_answer_wrong: card.last_answer_wrong ?? card.last_practice_wrong ?? false,
+                    };
+                const response = await fetch('/api/restore_card', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ set_id: setId, ...reference }),
+                });
+                if (!response.ok) throw new Error('Could not undo this answer');
+                const result = await response.json();
+                restoredCard = { ...card, ...result.card };
             } else {
-                const wasWrong = cardToRestore.last_answer_wrong ?? cardToRestore.last_practice_wrong ?? false;
-                this.queuePracticeSync({cardId: cardToRestore.id, setId: cardToRestore.vocab_set_id || this.setId, cardFront: cardToRestore.front, endpoint: wasWrong ? 'mark_wrong' : 'mark_correct', retries: 0});
+                const wasWrong = card.last_answer_wrong ?? card.last_practice_wrong ?? false;
+                this.queuePracticeSync({
+                    cardFront: card.front, cardId: card.id, setId,
+                    endpoint: wasWrong ? 'mark_wrong' : 'mark_correct', retries: 0,
+                });
             }
-        }
+
+            this.undoHistory.pop();
+            const stat = quality === 5 ? 'correct' : 'wrong';
+            this.sessionStats[stat] = Math.max(0, this.sessionStats[stat] - 1);
+            this.cards[cardIndex] = restoredCard;
+            this.loadCard(cardIndex);
+            this.saveSession();
+        } catch (error) {
+            console.error('Error restoring Card:', error);
+            window.alert('Could not undo this answer. Refresh the set if its progress changed in another tab.');
         } finally {
             this.enableControls();
         }
@@ -748,7 +776,10 @@ export class FlashcardManager {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        card_front: syncItem.cardFront,
+                        ...(syncItem.reviewId ? {
+                            card_id: syncItem.cardId,
+                            review_id: syncItem.reviewId,
+                        } : { card_front: syncItem.cardFront }),
                         ...(endpoint === 'rate' ? { quality: syncItem.quality } : {})
                     })
                 });
@@ -771,7 +802,10 @@ export class FlashcardManager {
         this.queueSync(syncItem);
     }
 
-    cancelPendingSync(cardFront, cardId) {
-        this.syncQueue = this.syncQueue.filter(item => cardId ? item.cardId !== cardId : item.cardFront !== cardFront);
+    cancelPendingSync(cardFront, cardId, reviewId) {
+        this.syncQueue = this.syncQueue.filter(item => {
+            if (reviewId) return item.reviewId !== reviewId;
+            return cardId ? item.cardId !== cardId : item.cardFront !== cardFront;
+        });
     }
 }

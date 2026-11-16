@@ -12,6 +12,7 @@ from flask_login import login_required, current_user
 
 from app.services import VocabService
 from app.services.import_service import ImportService
+from app.utils.validators import encode_card_line_breaks
 from app.utils.exceptions import (
     CardNotFoundError,
     InvalidInputError,
@@ -84,7 +85,8 @@ def import_set():
                 file=file, 
                 text_content=text_content,
                 card_separator=card_separator,
-                field_separator=field_separator
+                field_separator=field_separator,
+                content_format=request.form.get('content_format', 'plain'),
             )
             
             flash(f"Set '{set_name}' imported successfully!", "success")
@@ -132,6 +134,9 @@ def learn_set(set_id: str):
             set_id=set_id,
             set_name=vocab_set.name,
             text_alignment=vocab_set.text_alignment,
+            text_scaling=vocab_set.text_scaling,
+            text_vertical_alignment=vocab_set.text_vertical_alignment,
+            can_edit_set=vocab_set.user_id == current_user.id,
             study_mode=study_mode,
             initial_cards=(VocabService.get_due_cards(set_id, current_user.id) if study_mode == 'learn'
                            else VocabService.get_all_cards(set_id, current_user.id, last_wrong_only=study_mode == 'mistakes')),
@@ -199,6 +204,8 @@ def set_overview(set_id: str):
             set_id=set_id,
             set_name=vocab_set.name,
             text_alignment=vocab_set.text_alignment,
+            text_scaling=vocab_set.text_scaling,
+            text_vertical_alignment=vocab_set.text_vertical_alignment,
             can_edit_set=vocab_set.user_id == current_user.id,
             dominant_level=max(1, min(dominant_level, 5)),
             sets=sets,
@@ -223,7 +230,13 @@ def add_card(set_id: str):
         if not front or not back:
             return jsonify({"error": "Front and Back are required"}), 400
             
-        card = VocabService.add_card(set_id, front, back, current_user.id)
+        front_format = data.get('front_format', 'plain')
+        back_format = data.get('back_format', 'plain')
+        card = VocabService.add_card(
+            set_id, encode_card_line_breaks(front) if front_format == 'plain' else front,
+            encode_card_line_breaks(back) if back_format == 'plain' else back, current_user.id,
+            front_format=front_format, back_format=back_format,
+        )
         
         return jsonify({
             "message": "Card added successfully",
@@ -282,6 +295,7 @@ def rename_set(set_id: str):
 @login_required
 def import_into_set(set_id: str):
     """Import cards into an existing set."""
+    preview_only = request.args.get('preview') == '1'
     try:
         import_type = request.form.get("import_type", "file")
         
@@ -301,30 +315,47 @@ def import_into_set(set_id: str):
         if import_type == "file":
             file = request.files.get("file")
             if not file or not file.filename:
+                if preview_only:
+                    return jsonify(error='Select a file first.'), 400
                 flash("Please select a File.", "error")
                 return redirect(url_for('main.set_overview', set_id=set_id))
         else:
             text_content = request.form.get("text_content")
             if not text_content:
+                if preview_only:
+                    return jsonify(error='Enter text first.'), 400
                 flash("Please enter Vocabulary.", "error")
                 return redirect(url_for('main.set_overview', set_id=set_id))
             
-        count = ImportService.import_into_set(
+        result = ImportService.merge_into_set(
             current_user.id, 
             set_id, 
             file=file, 
             text_content=text_content,
             card_separator=card_separator,
-            field_separator=field_separator
+            field_separator=field_separator,
+            content_format=request.form.get('content_format', 'plain'),
+            preview_only=preview_only,
         )
+        if preview_only:
+            return jsonify(result._asdict())
         
-        flash(f"{count} Cards imported successfully!", "success")
+        if result.added or result.updated:
+            flash(f"Cards added: {result.added}. Cards updated: {result.updated}.", "success")
+        elif not result.ambiguous:
+            flash("No changes to import.", "info")
+        if result.ambiguous:
+            flash(f"Skipped {result.ambiguous} cards with conflicting matches.", "info")
         return redirect(url_for('main.set_overview', set_id=set_id))
     except (InvalidInputError, VocabSetNotFoundError, UnauthorizedAccessError):
+        if preview_only:
+            return jsonify(error='Cannot check this import. Check the card format, separators and set access.'), 400
         flash("The Operation could not be completed. Check your Input and Access Permissions.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
     except Exception:
         current_app.logger.exception('Import into Vocabulary Set failed')
+        if preview_only:
+            return jsonify(error='Could not check the import.'), 500
         flash("The Import failed. Please try again.", "error")
         return redirect(url_for('main.set_overview', set_id=set_id))
 
@@ -337,7 +368,10 @@ def edit_card(set_id: str, card_id: str):
     if not isinstance(data, dict):
         return jsonify({"error": "JSON Body required"}), 400
     try:
-        card = VocabService.edit_card(set_id, card_id, data.get('front'), data.get('back'), current_user.id)
+        card = VocabService.edit_card(
+            set_id, card_id, data.get('front'), data.get('back'), current_user.id,
+            front_format=data.get('front_format'), back_format=data.get('back_format'),
+        )
         return jsonify({"card": card.to_dict()})
     except InvalidInputError:
         return jsonify({"error": "Enter valid Text for both Sides of the Card (Front: up to 255 Characters; Back: up to 10,000 Characters)."}), 400
