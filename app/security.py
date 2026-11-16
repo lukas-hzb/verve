@@ -2,7 +2,7 @@
 
 from urllib.parse import urljoin, urlparse
 
-from flask import jsonify, request
+from flask import flash, jsonify, redirect, request, url_for
 from flask_wtf.csrf import CSRFError, CSRFProtect
 
 
@@ -28,6 +28,17 @@ def init_security(app) -> None:
 
     @app.errorhandler(CSRFError)
     def handle_csrf_error(error):
+        if request.method == 'POST' and not request.is_json:
+            if request.endpoint == 'main.import_into_set':
+                destination = url_for('main.set_overview', set_id=request.view_args['set_id'])
+            elif request.endpoint == 'main.import_set':
+                destination = url_for('main.import_set')
+            else:
+                destination = None
+            if destination:
+                flash('The import could not be verified. Please open the import form and try again.', 'error')
+                return redirect(destination, code=303)
+
         if request.path.startswith("/api/") or request.is_json:
             return jsonify({
                 "status": "error",

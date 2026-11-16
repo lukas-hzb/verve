@@ -3,10 +3,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:auth": "esbuild frontend/auth.js --bundle --minify --format=esm --target=es2022 --outfile=static/js/neon-auth.js"
+    "build:auth": "esbuild frontend/auth.js --bundle --minify --format=esm --target=es2022 --outfile=static/js/neon-auth.js",
+    "build:card-editor": "esbuild frontend/card-markdown.js --bundle --format=esm --minify --legal-comments=inline --outfile=static/js/card-markdown.js"
   },
   "dependencies": {
-    "@neondatabase/auth": "0.7.0-beta"
+    "@neondatabase/auth": "0.7.0-beta",
+    "prosemirror-commands": "^1.7.2",
+    "prosemirror-history": "^1.5.1",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-markdown": "^1.13.9",
+    "prosemirror-model": "^1.25.13",
+    "prosemirror-schema-list": "^1.6.0",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-view": "^1.42.9"
   },
   "devDependencies": {
     "esbuild": "0.25.12"

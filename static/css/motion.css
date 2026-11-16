@@ -61,8 +61,6 @@
 }
 
 /* Action dialogs take over immediately instead of appearing under a closing menu. */
-.set-settings-dialog.popup-content[data-handoff],
-.set-settings-dialog[data-handoff]::backdrop { transition: none; }
 
 .study-mode-info-panel[popover] {
     opacity: 0;

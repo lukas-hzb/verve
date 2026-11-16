@@ -1,0 +1,22 @@
+{% macro card_layout_buttons(setting, selected) %}
+{% set choices = {
+    'text_alignment': [
+        ('left', 'Align left', 'M4 6h16M4 10h10M4 14h16M4 18h10'),
+        ('center', 'Align horizontally to center', 'M4 6h16M7 10h10M4 14h16M7 18h10'),
+    ],
+    'text_scaling': [
+        ('auto', 'Automatic text scaling', 'M9 5H5v4m10 10h4v-4M9 15l3-6 3 6m-5-2h4'),
+        ('minimum', 'Use minimum text size', 'M5 19h14M8 15l4-9 4 9m-6.5-3h5'),
+    ],
+    'text_vertical_alignment': [
+        ('center', 'Align vertically to center', 'M4 12h16m-8-8v5m-2-2 2 2 2-2m-2 13v-5m-2 2 2-2 2 2'),
+        ('top', 'Align to top', 'M4 5h16m-8 14V9m-4 4 4-4 4 4'),
+    ],
+} %}
+{% for value, label, path in choices[setting] %}
+<button type="button" class="btn-card-align" data-layout-value="{{ value }}" aria-pressed="{{ 'true' if value == selected else 'false' }}"
+        aria-label="{{ label }}" title="{{ label }}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="{{ path }}"/></svg>
+</button>
+{% endfor %}
+{% endmacro %}

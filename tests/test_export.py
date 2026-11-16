@@ -13,7 +13,7 @@ class ExportSerializationTests(unittest.TestCase):
                    'next_review': '2026-12-03T18:30:00+02:00', 'last_answer_wrong': True}]
         content = ExportService.serialize(source, set_name='Languages')
         payload = json.loads(content)
-        self.assertEqual(payload['version'], 1)
+        self.assertEqual(payload['version'], 2)
         self.assertEqual(payload['set_name'], 'Languages')
         self.assertEqual(payload['cards'][0]['next_review'], '2026-12-03T16:30:00Z')
         restored = VerveFormat.loads(content)[0]
@@ -31,10 +31,19 @@ class ExportSerializationTests(unittest.TestCase):
             data['cards'][0].update(change)
             with self.subTest(change=change), self.assertRaises(InvalidInputError):
                 VerveFormat.loads(json.dumps(data))
-        for content in ['invalid', '[]', '{"format":"verve","version":2,"cards":[]}',
+        for content in ['invalid', '[]', '{"format":"verve","version":3,"cards":[]}',
                         '{"format":"other","version":1,"cards":[]}']:
             with self.subTest(content=content), self.assertRaises(InvalidInputError):
                 VerveFormat.loads(content)
+
+    def test_verve_round_trips_markdown_source_and_scheduler_state(self):
+        card = {'id': '6c7db795-3846-4481-9618-d95246933aa5', 'front': '__Begriff__  ',
+                'back': '**Beispiel**\n\n- Punkt\n', 'front_format': 'markdown', 'back_format': 'markdown',
+                'level': 4, 'interval_days': 16, 'ease_factor': 2.8, 'next_review': '2026-12-03T16:30:00Z'}
+        restored = VerveFormat.loads(VerveFormat.dumps([card]))[0]
+        self.assertEqual(restored['import_key'], card['id'])
+        for field in ('front', 'back', 'front_format', 'back_format', 'level', 'interval_days', 'ease_factor'):
+            self.assertEqual(restored[field], card[field])
 
     def test_csv_tsv_and_text_round_trip_quotes_multiline_unicode_and_image_links(self):
         cards = [{'front': 'Grüße, "hello"\tbonjour',

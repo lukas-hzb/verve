@@ -1,0 +1,31 @@
+{% from '_card_layout_controls.html' import card_layout_buttons %}
+<div id="set-settings-menu" class="anchored-menu set-settings-menu" popover="auto" role="group" aria-label="Set Options"
+     data-layout-url="{{ url_for('api.set_text_layout', set_id=set_id) }}">
+    <button type="button" class="btn-menu-option" data-settings-action="rename">
+        <span class="material-symbols-rounded" aria-hidden="true">edit</span> Rename Set
+    </button>
+    <button type="button" class="btn-menu-option" data-settings-action="add">
+        <span class="material-symbols-rounded" aria-hidden="true">add</span> Add Card
+    </button>
+    <button type="button" class="btn-menu-option" data-settings-action="import">
+        <span class="material-symbols-rounded" aria-hidden="true">upload_file</span> Import Cards
+    </button>
+    <button type="button" class="btn-menu-option" id="openExportModal" data-settings-action="export">
+        <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v4h4m-6 3v7m-3-3 3 3 3-3"/></svg> Export Set
+    </button>
+    {% if can_edit_set %}
+    <div class="set-layout-options">
+        {% for setting, label, selected in [
+            ('text_alignment', 'Answer Alignment', text_alignment),
+            ('text_vertical_alignment', 'Vertical Alignment', text_vertical_alignment),
+            ('text_scaling', 'Answer Text Size', text_scaling),
+        ] %}
+        <div class="set-alignment-option" role="group" aria-labelledby="set-{{ setting }}-label" data-layout-setting="{{ setting }}">
+            <span id="set-{{ setting }}-label">{{ label }}</span>
+            <div class="set-alignment-buttons">{{ card_layout_buttons(setting, selected) }}</div>
+        </div>
+        {% endfor %}
+        <p class="set-layout-status" role="status"></p>
+    </div>
+    {% endif %}
+</div>

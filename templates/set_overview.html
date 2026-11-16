@@ -1,17 +1,21 @@
 {% extends "base.html" %}
+{% from '_card_side_editor.html' import card_side_editor %}
+{% from "_card_preview.html" import card_preview %}
 
 {% block content %}
+{% set text_layout = {'text_alignment': text_alignment, 'text_scaling': text_scaling, 'text_vertical_alignment': text_vertical_alignment} %}
 <div class="page-shell">
 
     <!-- Secondary Header -->
     <div class="page-section">
         <div class="card-header-secondary set-overview-header">
             <h1 class="card-header-secondary-title">{{ set_name }}</h1>
-            <button type="button" class="btn-secondary set-settings-trigger" id="openSetSettings"
-                aria-label="Set Settings" aria-haspopup="dialog" aria-controls="set-settings-dialog">
+            <button type="button" class="btn-secondary set-settings-trigger anchored-menu-trigger" id="openSetSettings"
+                aria-label="Set Options" popovertarget="set-settings-menu" data-menu-align="end">
                 <svg class="export-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m10 3-.5 2-2 .9-1.9-.6-2 3.4 1.5 1.4v2.3l-1.5 1.4 2 3.4 1.9-.6 2 .9.5 2h4l.5-2 2-.9 1.9.6 2-3.4-1.5-1.4v-2.3l1.5-1.4-2-3.4-1.9.6-2-.9L14 3z" /><circle cx="12" cy="11.65" r="3" /></svg>
-                <span class="set-settings-label">Settings</span>
+                <span class="set-settings-label">Options</span>
             </button>
+            {% include '_set_settings_menu.html' %}
         </div>
     </div>
 
@@ -115,169 +119,66 @@
 
 <!-- Add Card Modal -->
 <div id="addCardModal" class="popup-overlay">
-    <div class="popup-content">
-        <div class="popup-header">
-            <h3 class="popup-title">Add new Card</h3>
-            <button class="popup-close-btn" aria-label="Close Dialog" onclick="closeAddCardModal()">
-                <span class="material-symbols-rounded" aria-hidden="true">close</span>
-            </button>
+    <div class="card-editor-layout card-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="add-card-title">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3 class="popup-title" id="add-card-title">Add new Card</h3>
+                <button class="popup-close-btn" aria-label="Close Dialog" onclick="closeAddCardModal()">
+                    <span class="material-symbols-rounded" aria-hidden="true">close</span>
+                </button>
+            </div>
+            <div class="popup-body">
+                <form id="addCardForm" onsubmit="handleAddCard(event)">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="card-editor-fields">
+                        {{ card_side_editor('front', 'front', 3, 255, 'markdown') }}
+                        {{ card_side_editor('back', 'back', 9, 10000, 'markdown') }}
+                    </div>
+                    <div class="popup-footer">
+                        <button type="button" class="btn-secondary" onclick="closeAddCardModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Add</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="popup-body">
-            <form id="addCardForm" onsubmit="handleAddCard(event)">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="card-input-group">
-                    <label for="front" class="card-input-label">Front</label>
-                    <textarea id="front" name="front" required maxlength="255" class="card-input" placeholder="Hello"></textarea>
-                    <div class="card-input-description">Shown first</div>
-                </div>
-                <div class="card-input-group">
-                    <label for="back" class="card-input-label">Back</label>
-                    <textarea id="back" name="back" required maxlength="10000" class="card-input" placeholder="Hallo"></textarea>
-                    <div class="card-input-description">The Answer you want to learn</div>
-                </div>
-                <div class="popup-footer">
-                    <button type="button" class="btn-secondary" onclick="closeAddCardModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Add</button>
-                </div>
-            </form>
-        </div>
+        {{ card_preview('add-preview', text_layout=text_layout) }}
     </div>
 </div>
 
-<!-- Edit Card Modal -->
-<div id="editCardModal" class="popup-overlay">
-    <div class="popup-content" role="dialog" aria-modal="true" aria-labelledby="editCardTitle">
-        <div class="popup-header">
-            <h3 id="editCardTitle" class="popup-title">Edit Card</h3>
-            <button type="button" class="popup-close-btn" aria-label="Close Dialog" onclick="closeEditCardModal()">
-                <span class="material-symbols-rounded" aria-hidden="true">close</span>
-            </button>
-        </div>
-        <div class="popup-body">
-            <form id="editCardForm" onsubmit="handleEditCard(event)">
-                <div class="card-input-group">
-                    <label for="editFront" class="card-input-label">Front</label>
-                    <textarea id="editFront" name="front" required maxlength="255" class="card-input"></textarea>
-                </div>
-                <div class="card-input-group">
-                    <label for="editBack" class="card-input-label">Back</label>
-                    <textarea id="editBack" name="back" required maxlength="10000" class="card-input"></textarea>
-                </div>
-                <p id="editCardError" role="alert" class="card-edit-error" hidden></p>
-                <div class="popup-footer">
-                    <button type="button" class="btn-secondary" onclick="closeEditCardModal()">Cancel</button>
-                    <button id="editCardSave" type="submit" class="btn-primary">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{% include '_edit_card_dialog.html' %}
 
 <!-- Import Modal -->
 <div id="importModal" class="popup-overlay">
-    <div class="popup-content" style="max-width: 600px;">
-        <div class="popup-header">
-            <h3 class="popup-title">Import Cards</h3>
-            <button class="popup-close-btn" aria-label="Close Dialog" onclick="closeImportModal()">
-                <span class="material-symbols-rounded" aria-hidden="true">close</span>
-            </button>
+    <div class="card-editor-layout card-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="import-cards-title">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3 class="popup-title" id="import-cards-title">Import Cards</h3>
+                <button class="popup-close-btn" aria-label="Close Dialog" onclick="closeImportModal()">
+                    <span class="material-symbols-rounded" aria-hidden="true">close</span>
+                </button>
+            </div>
+            <div class="popup-body">
+                <form action="{{ url_for('main.import_into_set', set_id=set_id) }}" method="POST"
+                    enctype="multipart/form-data" id="importForm" data-csrf-url="{{ url_for('api.csrf_token') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    {% with upload_id='import-file', default_field_separator=',' %}
+                        {% include '_card_import_fields.html' %}
+                    {% endwith %}
+
+                    <p data-import-error class="card-edit-error" role="alert" hidden></p>
+                    <div class="popup-footer">
+                        <button type="button" class="btn-secondary" onclick="closeImportModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Import</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="popup-body">
-            <form action="{{ url_for('main.import_into_set', set_id=set_id) }}" method="POST"
-                enctype="multipart/form-data" id="importForm">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                <div class="import-tabs">
-                    <div class="import-tab active" id="tab-file" onclick="switchTab('file')">File Upload</div>
-                    <div class="import-tab" id="tab-text" onclick="switchTab('text')">Text Input</div>
-                </div>
-
-                <input type="hidden" name="import_type" id="import_type" value="file">
-
-                <div id="file-section" class="import-section">
-                    <div class="card-input-group">
-                        <label class="card-input-label">Select File (Verve, CSV, TSV, TXT)</label>
-                        <div class="import-file-area" onclick="document.getElementById('import-file').click()">
-                            <span class="material-symbols-rounded import-file-icon" aria-hidden="true">upload_file</span>
-                            <span class="import-file-text">Click to upload File</span>
-                            <input type="file" id="import-file" name="file" accept=".verve,.csv,.tsv,.txt"
-                                style="display: none;" onchange="updateFileName(this)">
-                            <span id="file-name" class="import-file-name"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="text-section" class="import-section" style="display: none;">
-                    <div class="card-input-group">
-                        <label for="text_content" class="card-input-label">Enter Vocabulary</label>
-                        <textarea id="text_content" name="text_content" class="card-input import-textarea" rows="3"
-                            placeholder="Dog, Hund&#10;Cat, Katze"></textarea>
-                    </div>
-                </div>
-
-                <div class="import-box">
-                    <div class="card-input-label" style="margin-bottom: var(--space-3);">Settings
-                    </div>
-                    <div class="import-settings-grid">
-                        <div class="preview-column">
-                            <select id="field_separator" name="field_separator" class="card-input"
-                                onchange="toggleCustom('field'); updatePreview()">
-                                <option value="\t">Tab (\t)</option>
-                                <option value="," selected>Comma (,)</option>
-                                <option value=";">Semicolon (;)</option>
-                                <option value="|">Pipe (|)</option>
-                                <option value="custom">Custom</option>
-                            </select>
-                            <input type="text" id="custom_field_separator" name="custom_field_separator"
-                                class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
-                                placeholder="E.g. - or \t" oninput="updatePreview()">
-                            <label for="field_separator" class="card-input-description">Field Separator</label>
-                        </div>
-                        <div class="preview-column">
-                            <select id="card_separator" name="card_separator" class="card-input"
-                                onchange="toggleCustom('card'); updatePreview()">
-                                <option value="\n">Line Break (Enter)</option>
-                                <option value=";">Semicolon (;)</option>
-                                <option value="|">Pipe (|)</option>
-                                <option value="custom">Custom</option>
-                            </select>
-                            <input type="text" id="custom_card_separator" name="custom_card_separator"
-                                class="card-input mt-2" style="display: none; margin-top: var(--space-2);"
-                                placeholder="E.g. \n\n or ;" oninput="updatePreview()">
-                            <label for="card_separator" class="card-input-description">Between Cards</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="preview-section" class="preview-section import-preview-box" style="display: none;">
-                    <div class="preview-header-container">
-                        <div class="card-input-label" style="margin-bottom: 0;">Preview (first Card)</div>
-                        <span id="preview-note" class="preview-note"></span>
-                    </div>
-                    <div class="preview-grid">
-                        <div class="preview-column">
-                            <strong class="preview-label-compact">Front</strong>
-                            <div id="preview-front" class="preview-content"></div>
-                        </div>
-                        <div class="preview-separator"></div>
-                        <div class="preview-column">
-                            <strong class="preview-label-compact">Back</strong>
-                            <div id="preview-back" class="preview-content"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="popup-footer">
-                    <button type="button" class="btn-secondary" onclick="closeImportModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Import</button>
-                </div>
-            </form>
-        </div>
+        {{ card_preview('import-preview', import_navigation=true, import_check=true, text_layout=text_layout) }}
     </div>
 </div>
 
 {% include '_export_dialog.html' %}
-{% include '_set_settings_dialog.html' %}
 <script type="module" src="{{ url_for('static', filename='js/modules/set-export.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='js/modules/set-settings.js') }}"></script>
 
@@ -306,28 +207,32 @@
             div.addEventListener('click', (event) => {
                 if (!event.target.closest('button, a')) div.focus({ preventScroll: true });
             });
-            if (card.last_practice_wrong || card.level === 1) {
+            if (card.last_practice_wrong) {
                 div.classList.add('card-list-item-wrong');
             }
 
             const info = document.createElement('div');
             info.className = 'card-list-item-info';
-            for (const [className, text] of [['card-list-item-title', card.front], ['card-list-item-subtitle', card.back]]) {
-                const span = document.createElement('span');
+            for (const [className, text, format] of [
+                ['card-list-item-title', card.front, card.front_format],
+                ['card-list-item-subtitle', card.back, card.back_format],
+            ]) {
+                const span = document.createElement(format === 'markdown' ? 'div' : 'span');
                 span.className = className;
-                renderCardContent(span, text, { lazy: true });
-                span.dataset.searchText = text;
+                renderCardContent(span, text, { lazy: true, format });
+                span.dataset.searchText = span.textContent || text;
                 info.appendChild(span);
             }
             const actions = document.createElement('div');
             actions.className = 'card-list-actions';
+            const frontLabel = info.firstElementChild.textContent.trim() || card.front;
             for (const [action, iconName] of [['Edit', 'edit'], ['Delete', 'delete']]) {
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = action === 'Edit' ? 'card-list-edit-btn' : 'card-list-delete-btn';
                 button.dataset.cardId = card.id;
                 button.title = `${action} Card`;
-                button.setAttribute('aria-label', `${action} Card: ${card.front}`);
+                button.setAttribute('aria-label', `${action} Card: ${frontLabel}`);
                 const icon = document.createElement('span');
                 icon.className = 'material-symbols-rounded';
                 icon.setAttribute('aria-hidden', 'true');
@@ -342,87 +247,15 @@
         filterCards();
     }
 
-    let editingCardId = null;
-    let editTrigger = null;
-    let editSaving = false;
-
     function openEditCardModal(card, trigger) {
-        editingCardId = card.id;
-        editTrigger = trigger;
-        document.getElementById('editFront').value = card.front;
-        document.getElementById('editBack').value = card.back;
-        document.getElementById('editCardError').hidden = true;
-        document.getElementById('editCardModal').classList.add('active');
-        document.getElementById('editFront').focus();
-    }
-
-    function closeEditCardModal() {
-        if (editSaving) return;
-        document.getElementById('editCardModal').classList.remove('active');
-        if (editTrigger?.isConnected) editTrigger.focus();
-    }
-
-    async function handleEditCard(event) {
-        event.preventDefault();
-        if (editSaving) return;
-        const error = document.getElementById('editCardError');
-        const save = document.getElementById('editCardSave');
-        const front = document.getElementById('editFront');
-        const back = document.getElementById('editBack');
-        error.hidden = true;
-        editSaving = true;
-        save.disabled = true;
-        save.textContent = 'Saving…';
-        front.readOnly = back.readOnly = true;
-        let saved = false;
-        try {
-            const response = await fetch(`/api/set/${window.setId}/card/${editingCardId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ front: front.value, back: back.value })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Saving the Card failed.');
-            saved = true;
-        } catch (failure) {
-            error.textContent = failure.message || 'Saving the Card failed. Please try again.';
-            error.hidden = false;
-        } finally {
-            editSaving = false;
-            save.disabled = false;
-            save.textContent = 'Save';
-            front.readOnly = back.readOnly = false;
-        }
-        if (saved) {
-            closeEditCardModal();
-            await fetchCards();
-            const trigger = [...document.querySelectorAll('.card-list-edit-btn')].find(button => button.dataset.cardId === editingCardId);
-            trigger?.focus();
-        }
-    }
-
-    document.addEventListener('keydown', event => {
-        const modal = document.getElementById('editCardModal');
-        if (!modal.classList.contains('active')) return;
-        if (event.key === 'Escape') {
-            event.preventDefault();
-            closeEditCardModal();
-        } else if (event.key === 'Tab') {
-            const controls = [...modal.querySelectorAll('button:not(:disabled), input, textarea')];
-            const first = controls[0];
-            const last = controls[controls.length - 1];
-            if (event.shiftKey && document.activeElement === first) {
-                event.preventDefault();
-                last.focus();
-            } else if (!event.shiftKey && document.activeElement === last) {
-                event.preventDefault();
-                first.focus();
+        document.getElementById('editCardModal').dispatchEvent(new CustomEvent('edit-card', { detail: {
+            card, trigger, setId: window.setId,
+            async onSaved() {
+                await fetchCards();
+                document.querySelector(`.card-list-edit-btn[data-card-id="${card.id}"]`)?.focus();
             }
-        }
-    });
-
-    // ... (Remainder of functions: openAddCardModal, closeAddCardModal, openImportModal, etc.)
-    // Keeping logic consistent with previous version but ensuring new HTML elements are targeted correctly.
+        }}));
+    }
 
     function openAddCardModal() { document.getElementById('addCardModal').classList.add('active'); }
     function closeAddCardModal() { document.getElementById('addCardModal').classList.remove('active'); }
@@ -430,29 +263,17 @@
     function openImportModal() { document.getElementById('importModal').classList.add('active'); }
     function closeImportModal() { document.getElementById('importModal').classList.remove('active'); }
 
-    function updateFileName(input) {
-        const fileNameDisplay = document.getElementById('file-name');
-        if (input.files && input.files[0]) {
-            fileNameDisplay.textContent = input.files[0].name;
-            // No need to set color here as it is handled by CSS class .import-file-name
-        } else {
-            fileNameDisplay.textContent = '';
-        }
-    }
-
     async function handleAddCard(event) {
         event.preventDefault();
-        const front = document.getElementById('front').value;
-        const back = document.getElementById('back').value;
+        const draft = Object.fromEntries(new FormData(event.target));
         const response = await fetch(`/set/${window.setId}/add_card`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ front, back })
+            body: JSON.stringify(draft)
         });
         if (response.ok) {
             closeAddCardModal();
-            document.getElementById('front').value = '';
-            document.getElementById('back').value = '';
+            event.target.reset();
             fetchCards();
         } else {
             const data = await response.json();
@@ -500,66 +321,8 @@
 
     window.onclick = function (event) {
         if (event.target.classList.contains('popup-overlay')) {
-            if (event.target.id === 'editCardModal') {
-                closeEditCardModal();
-                return;
-            }
+            if (event.target.id === 'editCardModal') return;
             event.target.classList.remove('active');
-        }
-    }
-
-    function switchTab(type) {
-        const tabFile = document.getElementById('tab-file');
-        const tabText = document.getElementById('tab-text');
-
-        // Reset both
-        tabFile.classList.remove('active');
-        tabText.classList.remove('active');
-
-        // Activate selected
-        if (type === 'file') {
-            tabFile.classList.add('active');
-        } else {
-            tabText.classList.add('active');
-        }
-
-        document.getElementById('import_type').value = type;
-
-        if (type === 'file') {
-            document.getElementById('file-section').style.display = 'block';
-            document.getElementById('text-section').style.display = 'none';
-            document.getElementById('text_content').required = false;
-            document.getElementById('text_content').value = '';
-            updatePreview();
-        } else {
-            document.getElementById('file-section').style.display = 'none';
-            document.getElementById('text-section').style.display = 'block';
-            document.getElementById('import-file').required = false;
-            document.getElementById('text_content').required = true;
-            const fileInput = document.getElementById('import-file');
-            fileInput.value = '';
-            const fileNameDisplay = document.getElementById('file-name');
-            if (fileNameDisplay) {
-                fileNameDisplay.textContent = '';
-            }
-            updatePreview();
-        }
-    }
-
-    // Default tab
-    // No need to call it here if we want to default to file, the HTML already has file active.
-    // Calling it ensures state is consistent.
-    switchTab('file');
-
-    function toggleCustom(type) {
-        const select = document.getElementById(type + '_separator');
-        const customInput = document.getElementById('custom_' + type + '_separator');
-        if (select.value === 'custom') {
-            customInput.style.display = 'block';
-            customInput.required = true;
-        } else {
-            customInput.style.display = 'none';
-            customInput.required = false;
         }
     }
 
@@ -608,54 +371,6 @@
         }
     }
 
-    async function updatePreview() {
-
-        const importType = document.getElementById('import_type').value;
-        let content = '';
-        if (importType === 'text') {
-            content = document.getElementById('text_content').value;
-        } else {
-            document.getElementById('preview-section').style.display = 'none';
-            return;
-        }
-        if (!content.trim()) {
-            document.getElementById('preview-section').style.display = 'none';
-            return;
-        }
-        let cardSep = document.getElementById('card_separator').value;
-        let fieldSep = document.getElementById('field_separator').value;
-        if (cardSep === 'custom') {
-            cardSep = document.getElementById('custom_card_separator').value || '\n';
-        }
-        if (fieldSep === 'custom') {
-            fieldSep = document.getElementById('custom_field_separator').value || '\t';
-        }
-        cardSep = cardSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
-        fieldSep = fieldSep.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
-        const { parseDelimitedRows } = await import({{ url_for('static', filename='js/modules/delimited-text.js') | tojson }});
-        const cards = parseDelimitedRows(content, cardSep, fieldSep)
-            .filter(parts => parts.length >= 2 && parts[0].trim() && parts[1].trim());
-        if (!cards.length) {
-            document.getElementById('preview-section').style.display = 'none';
-            return;
-        }
-        const parts = cards[0];
-        const front = parts[0] ? parts[0].trim() : '';
-        const back = parts[1] ? parts[1].trim() : '';
-        const { renderCardContent } = await import({{ url_for('static', filename='js/modules/card-text.js') | tojson }});
-        renderCardContent(document.getElementById('preview-front'), front || '(empty)');
-        renderCardContent(document.getElementById('preview-back'), back || '(empty)');
-        const totalCards = cards.length;
-        document.getElementById('preview-note').textContent = `Total ${totalCards} Card(s) recognized`;
-        document.getElementById('preview-section').style.display = 'block';
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const textArea = document.getElementById('text_content');
-        if (textArea) {
-            textArea.addEventListener('input', updatePreview);
-        }
-    });
 </script>
 <script type="module" src="{{ url_for('static', filename='js/modules/import-format.js') }}"></script>
 {% endblock %}

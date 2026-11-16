@@ -74,6 +74,13 @@ def validate_quality_score(quality: int) -> int:
     return quality
 
 
+def encode_card_line_breaks(text: str) -> str:
+    r"""Store real and escaped line endings as the card text code \n."""
+    if not isinstance(text, str):
+        return text
+    return re.sub(r'\\r\\n|\\r|\\n|\r\n?|\n', lambda _: r'\n', text.strip())
+
+
 def validate_card_front(card_front: str) -> str:
     """
     Validate a card front text.
@@ -111,6 +118,17 @@ def validate_card_back(card_back: str) -> str:
     if len(card_back) > 10_000:
         raise InvalidInputError("card_back", "Card Back Text is too long (max 10000 Characters)")
     return card_back
+
+
+def validate_card_source(source, card_format, *, front=False):
+    if card_format not in ('plain', 'markdown'):
+        raise InvalidInputError('format', 'Unknown card format')
+    normalized = (validate_card_front if front else validate_card_back)(source)
+    if card_format == 'markdown':
+        if len(source) > (255 if front else 10_000):
+            raise InvalidInputError('content', 'Markdown source exceeds the card character limit')
+        return source.replace('\r\n', '\n').replace('\r', '\n')
+    return normalized
 
 
 def validate_card_level(level: int) -> int:

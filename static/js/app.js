@@ -9,6 +9,7 @@ import { initializeFolders } from './modules/folders.js';
 
 import { SidebarManager } from './modules/sidebar.js';
 import { FlashcardManager } from './modules/flashcard.js';
+import { fitCardText, prepareCardTextLayout } from './modules/card-text-layout.js';
 import { StatsManager } from './modules/stats.js';
 import { initializeWelcomeMascot } from './modules/mascot.js';
 import { initializeStudyInfo } from './modules/study-info.js';
@@ -129,50 +130,13 @@ function initializeStudyCardTextLayout(resizeStudyCard) {
     const mobile = window.matchMedia('(max-width: 768px)');
     const panels = [...flashcard.querySelectorAll('.flashcard-front, .flashcard-back')].map(face => {
         const content = face.querySelector('.flashcard-content');
-        return { face, content, text: content.querySelector('p') };
+        return { face, content, text: content.querySelector('.flashcard-text') };
     });
-    const fitText = ({ face, content, text, scrollTop, topSpace, hasActions }) => {
-        const textStyle = getComputedStyle(text);
-        const defaultSize = parseFloat(textStyle.fontSize);
-        const lineHeight = parseFloat(textStyle.lineHeight);
-        const nextLine = text.querySelector('.card-text-line + .card-text-line');
-        const lineGap = nextLine ? parseFloat(getComputedStyle(nextLine).marginBlockStart) : 0;
-        const short = text.textContent.trim() && !text.querySelector('img')
-            && text.offsetHeight <= lineHeight * 2 + lineGap + 1
-            && face.clientHeight - text.offsetHeight >= topSpace * 2
-            && !hasActions;
-        content.classList.toggle('short-text', Boolean(short));
-
-        if (!hasActions && content.clientHeight > 0 && content.scrollHeight > content.clientHeight) {
-            const setSize = size => text.style.setProperty('--fitted-card-font-size', `${size}px`);
-            // CSS clamps the measurement to the readable minimum.
-            setSize(0);
-            let min = parseFloat(textStyle.fontSize);
-            let max = defaultSize;
-            if (content.scrollHeight <= content.clientHeight) {
-                while (max - min > 0.25) {
-                    const size = (min + max) / 2;
-                    setSize(size);
-                    if (content.scrollHeight <= content.clientHeight) min = size;
-                    else max = size;
-                }
-                setSize(min);
-            }
-        }
-        content.classList.remove('measuring-text');
-        content.scrollTop = scrollTop;
-    };
     const layoutText = () => {
-        const layouts = panels.map(panel => {
-            const { face, content, text } = panel;
-            const scrollTop = content.scrollTop;
-            const hasActions = content.querySelector('.study-completion:not([hidden]), .study-empty-action:not([hidden])');
-            content.classList.add('measuring-text');
-            content.classList.remove('short-text');
-            text.style.removeProperty('--fitted-card-font-size');
-            const topSpace = parseFloat(getComputedStyle(content).top);
-            return { ...panel, scrollTop, topSpace, hasActions };
-        });
+        const layouts = panels.map(panel => prepareCardTextLayout({
+            ...panel,
+            hasActions: panel.content.querySelector('.study-completion:not([hidden]), .study-empty-action:not([hidden])'),
+        }));
         if (mobile.matches) {
             const requiredHeights = layouts.map(({ face, content, text, topSpace, hasActions }) => {
                 if (hasActions || !text.offsetHeight) return 0;
@@ -185,13 +149,13 @@ function initializeStudyCardTextLayout(resizeStudyCard) {
             });
             resizeStudyCard(Math.max(...requiredHeights));
         }
-        layouts.forEach(fitText);
+        layouts.forEach(fitCardText);
     };
     const resize = new ResizeObserver(layoutText);
     panels.forEach(({ face }) => resize.observe(face));
     new MutationObserver(layoutText).observe(flashcard, {
         subtree: true, childList: true, characterData: true,
-        attributes: true, attributeFilter: ['hidden'],
+        attributes: true, attributeFilter: ['hidden', 'data-text-scaling', 'data-text-vertical-alignment'],
     });
     flashcard.addEventListener('load', layoutText, true);
     flashcard.addEventListener('error', layoutText, true);

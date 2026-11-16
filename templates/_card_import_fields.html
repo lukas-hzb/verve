@@ -1,0 +1,56 @@
+<div class="import-tabs" role="group" aria-label="Import source">
+    <button type="button" class="import-tab active" id="tab-file" aria-pressed="true" aria-controls="file-section">File Upload</button>
+    <button type="button" class="import-tab" id="tab-text" aria-pressed="false" aria-controls="text-section">Text Input</button>
+</div>
+<input type="hidden" name="import_type" id="import_type" value="file">
+<div class="card-editor-fields">
+    <div id="file-section">
+        <label class="card-input-label" for="{{ upload_id }}">Select File (Verve, CSV, TSV, TXT)</label>
+        <label class="import-file-area" for="{{ upload_id }}">
+            <span class="material-symbols-rounded import-file-icon" aria-hidden="true">upload_file</span>
+            <span class="import-file-text">Choose File</span>
+            <span class="import-file-name" data-import-filename></span>
+        </label>
+        <input type="file" id="{{ upload_id }}" name="file" class="import-file-input" accept=".verve,.csv,.tsv,.txt" required>
+    </div>
+
+    <div class="import-box">
+        <div class="import-settings-grid">
+            <div>
+                <label for="field_separator" class="card-input-label">Between Front and Back</label>
+                <select id="field_separator" name="field_separator" class="card-input">
+                    <option value="\t">Tab (\t)</option>
+                    <option value="," {{ 'selected' if default_field_separator == ',' }}>Comma (,)</option>
+                    <option value=";">Semicolon (;)</option>
+                    <option value="|">Pipe (|)</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <input type="text" id="custom_field_separator" name="custom_field_separator" class="card-input import-custom"
+                    aria-label="Custom separator between front and back" placeholder="E.g. :: or \t" hidden disabled>
+            </div>
+            <div>
+                <label for="card_separator" class="card-input-label">Between Cards</label>
+                <select id="card_separator" name="card_separator" class="card-input">
+                    <option value="\n">Line Break (\n)</option>
+                    <option value=";">Semicolon (;)</option>
+                    <option value="|">Pipe (|)</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <input type="text" id="custom_card_separator" name="custom_card_separator" class="card-input import-custom"
+                    aria-label="Custom separator between cards" placeholder="E.g. ---, \n\n, or \r" hidden disabled>
+            </div>
+        </div>
+        <label for="import_content_format" class="card-input-label">Card Format</label>
+        <select id="import_content_format" name="content_format" class="card-input">
+            <option value="plain">Plain Text</option>
+            <option value="markdown">Markdown</option>
+        </select>
+    </div>
+
+    <div id="text-section" hidden>
+        <label for="text_content" class="card-input-label">Vocabulary Text</label>
+        <textarea id="text_content" name="text_content" class="card-input import-textarea" rows="10"
+            aria-describedby="import-card-format" spellcheck="false"></textarea>
+        {% with format_help_id='import-card-format' %}{% include '_card_format_help.html' %}{% endwith %}
+    </div>
+</div>

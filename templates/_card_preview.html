@@ -1,0 +1,43 @@
+{% from '_card_layout_controls.html' import card_layout_buttons %}
+{% macro card_preview(preview_id, import_navigation=false, import_check=false, text_layout={}) %}
+{% set alignment = text_layout.get('text_alignment', 'center') %}
+{% set scaling = text_layout.get('text_scaling', 'auto') %}
+{% set vertical_alignment = text_layout.get('text_vertical_alignment', 'center') %}
+<section class="card-editor-preview" aria-labelledby="{{ preview_id }}-title">
+    <div class="card-preview-faces" id="{{ preview_id }}-faces">
+        <h2 class="study-mode-pill preview-pill" id="{{ preview_id }}-title">Preview</h2>
+        <div class="preview-card" role="group" aria-label="Front">
+            <div class="preview-card-scroll"><div class="preview-card-text" data-preview-front></div></div>
+        </div>
+        <div class="preview-card preview-card-back" role="group" aria-label="Back" data-text-alignment="{{ alignment }}"
+             data-text-scaling="{{ scaling }}" data-text-vertical-alignment="{{ vertical_alignment }}" hidden>
+            <div class="preview-alignment">
+                {% for setting, label, selected in [
+                    ('text_alignment', 'Back horizontal alignment', alignment),
+                    ('text_scaling', 'Back text size', scaling),
+                    ('text_vertical_alignment', 'Back vertical alignment', vertical_alignment),
+                ] %}
+                <div class="preview-layout-options" role="group" aria-label="{{ label }}" data-layout-setting="{{ setting }}">
+                    {{ card_layout_buttons(setting, selected) }}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="preview-card-scroll"><div class="preview-card-text" data-preview-back></div></div>
+        </div>
+    </div>
+    <button type="button" class="btn-preview-flip" aria-controls="{{ preview_id }}-faces" data-preview-flip>Show Back</button>
+    {% if import_navigation %}
+    <div class="preview-card-navigation" data-preview-navigation hidden>
+        <button type="button" class="btn-secondary" data-preview-step="-1">Previous</button>
+        <span data-preview-position aria-live="polite"></span>
+        <button type="button" class="btn-secondary" data-preview-step="1">Next</button>
+    </div>
+    {% endif %}
+    {% if import_check %}
+    <div class="preview-import-check" data-preview-check hidden>
+        <button type="button" class="btn-secondary" data-check-import>Check Import</button>
+        <p class="editor-help" data-import-summary role="status" hidden></p>
+    </div>
+    {% endif %}
+</section>
+{% endmacro %}

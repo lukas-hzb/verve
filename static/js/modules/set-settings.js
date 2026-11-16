@@ -1,51 +1,48 @@
-/** One native settings dialog for desktop and mobile. */
-const dialog = document.getElementById('set-settings-dialog');
+import { connectAnchoredMenu } from './anchored-menu.js';
+
+const menu = document.getElementById('set-settings-menu');
 const trigger = document.getElementById('openSetSettings');
-if (dialog && trigger) {
-    const alignment = dialog.querySelector('#set-text-alignment');
-    const alignmentStatus = dialog.querySelector('#set-text-alignment-status');
-    let savedAlignment = alignment?.value;
-    alignment?.addEventListener('change', async () => {
-        const value = alignment.value;
-        alignment.disabled = true;
-        alignmentStatus.textContent = '';
+if (menu && trigger) {
+    connectAnchoredMenu(menu);
+    const layoutOptions = menu.querySelector('.set-layout-options');
+    const layoutStatus = layoutOptions?.querySelector('[role="status"]');
+    layoutOptions?.addEventListener('click', async event => {
+        const button = event.target.closest('[data-layout-value]');
+        if (!button || button.getAttribute('aria-pressed') === 'true') return;
+        const group = button.closest('[data-layout-setting]');
+        if (group.hasAttribute('aria-busy')) return;
+        const setting = group.dataset.layoutSetting;
+        const value = button.dataset.layoutValue;
+        group.setAttribute('aria-busy', 'true');
+        layoutStatus.textContent = '';
         try {
-            const response = await fetch(alignment.dataset.url, {
+            const response = await fetch(menu.dataset.layoutUrl, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text_alignment: value }),
+                body: JSON.stringify({ setting, value }),
             });
-            if (!response.ok) throw new Error('Could not save Alignment');
-            savedAlignment = value;
+            if (!response.ok) throw new Error('Could not save text layout');
+            for (const option of group.querySelectorAll('[data-layout-value]')) {
+                option.setAttribute('aria-pressed', String(option === button));
+            }
+            document.dispatchEvent(new CustomEvent('set-text-layout-changed', { detail: { setting, value } }));
         } catch {
-            alignment.value = savedAlignment;
-            alignmentStatus.textContent = 'Could not save Alignment. Please try again.';
+            layoutStatus.textContent = 'Could not save text layout. Please try again.';
         } finally {
-            alignment.disabled = false;
+            group.removeAttribute('aria-busy');
         }
-    });
-    trigger.addEventListener('click', () => {
-        dialog.removeAttribute('data-handoff');
-        dialog.showModal();
-    });
-    dialog.querySelector('[data-close-settings]').addEventListener('click', () => dialog.close());
-    dialog.addEventListener('click', event => {
-        const bounds = dialog.getBoundingClientRect();
-        if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right
-            || event.clientY < bounds.top || event.clientY > bounds.bottom)) dialog.close();
     });
     const actions = {
         rename: ['renameModal', () => window.openRenameModal()],
         add: ['addCardModal', () => window.openAddCardModal()],
         import: ['importModal', () => window.openImportModal()],
     };
-    // Close the top-layer dialog before opening an existing action popup.
+    // Close the menu before opening an existing action popup.
     // Export keeps its own click handler, which runs after this capture listener.
-    dialog.addEventListener('click', event => {
+    menu.addEventListener('click', event => {
         const option = event.target.closest('[data-settings-action]');
         if (!option) return;
-        dialog.setAttribute('data-handoff', '');
-        dialog.close();
+        menu.hidePopover();
         const action = actions[option.dataset.settingsAction];
         if (action) {
             action[1]();
@@ -70,7 +67,7 @@ if (dialog && trigger) {
             event.preventDefault();
             popup.classList.remove('active');
         } else if (event.key === 'Tab') {
-            const controls = [...popup.querySelectorAll('button, input, textarea, select, a[href]')]
+            const controls = [...popup.querySelectorAll('button, input, textarea, select, a[href], [contenteditable="true"]')]
                 .filter(control => !control.disabled && control.getClientRects().length);
             const first = controls[0], last = controls[controls.length - 1];
             if (event.shiftKey && document.activeElement === first) {

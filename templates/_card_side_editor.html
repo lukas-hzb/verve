@@ -1,0 +1,62 @@
+{% macro card_side_editor(id, side, rows, length, default_format) %}
+<div class="card-side-editor" data-card-side-editor data-default-format="{{ default_format }}">
+    <div class="card-side-toolbar" role="group" aria-label="{{ side|capitalize }} editor">
+        <label for="{{ id }}" class="card-input-label" id="{{ id }}-label">{{ side|capitalize }}</label>
+        <button type="button" class="btn-secondary anchored-menu-trigger card-tools-trigger" popovertarget="{{ id }}-tools"
+                aria-label="Formatting tools" title="Formatting tools" data-tools-trigger hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 10 5l5 14M7 14h6m4-3h4m-2-2v4"/></svg>
+        </button>
+        <div class="card-format-tools" id="{{ id }}-tools" data-format-tools role="group" aria-label="Formatting tools" hidden>
+            <button type="button" class="btn-secondary anchored-menu-trigger" popovertarget="{{ id }}-headings"
+                    aria-label="Paragraph and headings" title="Paragraph and headings"><strong aria-hidden="true">H</strong></button>
+            <div class="anchored-menu" id="{{ id }}-headings" popover="auto" data-heading-picker role="group" aria-label="Text style">
+                <button type="button" class="btn-menu-option" data-heading-level="0">Paragraph</button>
+                {% for level in range(1, 7) %}
+                <button type="button" class="btn-menu-option" data-heading-level="{{ level }}">Heading {{ level }}</button>
+                {% endfor %}
+            </div>
+            <button type="button" class="btn-secondary" data-markdown-command="bold" aria-label="Bold" title="Bold"><strong>B</strong></button>
+            <button type="button" class="btn-secondary" data-markdown-command="italic" aria-label="Italic" title="Italic"><em>I</em></button>
+            <button type="button" class="btn-secondary" data-markdown-command="bullets" aria-label="Bullet List" title="Bullet List">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+            </button>
+            <button type="button" class="btn-secondary" data-markdown-command="numbered" aria-label="Numbered List" title="Numbered List">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 7h10M10 17h10M3 5l2-1v6M3 10h4M3 15c0-2 4-2 4 0 0 2-4 3-4 5h4"/></svg>
+            </button>
+            <button type="button" class="btn-secondary anchored-menu-trigger card-color-trigger" popovertarget="{{ id }}-colors"
+                    aria-label="Highlight Color" title="Highlight Color">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 15-3-3L16 2l5 5-10 10-2-2Zm0 0-4 4H2m0 3h20"/></svg>
+            </button>
+            <div class="anchored-menu card-color-options" id="{{ id }}-colors" popover="auto" data-color-picker role="group" aria-label="Highlight Color">
+                {% for level in range(1, 6) %}
+                <button type="button" class="btn-menu-option" aria-label="Level {{ level }} Color" title="Level {{ level }} Color" aria-pressed="false" data-card-color="{{ level }}"><mark data-level="{{ level }}">A</mark></button>
+                {% endfor %}
+                <button type="button" class="btn-menu-option" aria-label="Remove Color" title="Remove Color" data-card-color="">×</button>
+            </div>
+            <button type="button" class="btn-secondary anchored-menu-trigger" popovertarget="{{ id }}-link"
+                    aria-label="Link" title="Link">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14l4-4m-6 6-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 10a4 4 0 0 0 6 0l4-4a4 4 0 0 0-6-6l-1 1" transform="translate(1 1) scale(.9)"/></svg>
+            </button>
+            <div class="anchored-menu card-link-options" id="{{ id }}-link" popover="auto" data-link-picker role="group" aria-label="Edit link">
+                <label for="{{ id }}-link-url">Link address</label>
+                <input class="card-input" id="{{ id }}-link-url" type="text" inputmode="url" autocomplete="off" placeholder="https://example.com">
+                <div class="card-link-actions">
+                    <button type="button" class="btn-secondary" data-remove-link>Remove link</button>
+                    <button type="button" class="btn-primary" data-apply-link>Apply link</button>
+                </div>
+                <p class="editor-help" data-link-error role="status" hidden>Use an HTTP, HTTPS or mailto address.</p>
+            </div>
+        </div>
+        <button type="button" class="btn-secondary card-source-toggle" data-source-toggle aria-pressed="false" aria-label="Markdown source" title="Markdown source" hidden><code aria-hidden="true">&lt;/&gt;</code></button>
+        <button type="button" class="btn-secondary" data-enable-markdown hidden>Enable Markdown</button>
+    </div>
+    <div class="card-input card-editor-surface" style="--editor-rows: {{ rows }}">
+        <textarea id="{{ id }}" name="{{ side }}" maxlength="{{ length }}" class="card-editor-textarea"
+            rows="{{ rows }}" required></textarea>
+        <div class="card-rich-input" data-rich-input hidden>
+            <div class="card-rich-placeholder" data-rich-placeholder aria-hidden="true" inert hidden></div>
+        </div>
+    </div>
+    <input type="hidden" name="{{ side }}_format" value="{{ default_format }}">
+</div>
+{% endmacro %}

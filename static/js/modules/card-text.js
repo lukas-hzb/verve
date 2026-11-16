@@ -1,3 +1,5 @@
+import { renderMarkdown } from '../card-markdown.js';
+
 /** Interpret escaped newlines without changing the stored card text. */
 export function formatCardText(text) {
     return text.replace(/\\r\\n|\\n|\\r/g, '\n');
@@ -17,7 +19,12 @@ export function parseCardImage(line) {
     }
 }
 
-export function renderCardContent(element, text, { lazy = false, spacedLineBreaks = false } = {}) {
+export function renderCardContent(element, text, { lazy = false, spacedLineBreaks = false, format } = {}) {
+    element.classList.toggle('card-markdown', format === 'markdown');
+    if (format === 'markdown') {
+        renderMarkdown(element, text, { lazy });
+        return;
+    }
     const formatted = formatCardText(text);
     const lines = formatted.split(spacedLineBreaks ? /\r\n?|\n/ : '\n');
     const separateLines = spacedLineBreaks && lines.length > 1;
