@@ -1,24 +1,45 @@
 /* Popup Overlay/Backdrop */
-.study-mode-picker {
-    margin: auto;
-    max-width: 720px;
-    width: calc(100% - 32px);
-    transform: none;
-}
 .study-mode-picker::backdrop { background: rgb(0 0 0 / .4); backdrop-filter: blur(8px); }
-.study-mode-options { display: grid; gap: var(--space-4); }
-.study-mode-picker .card-clickable {
-    --action-art-width: 230px;
+.study-mode-options { display: grid; gap: var(--space-3); }
+.study-mode-picker .study-mode-option {
+    --action-art-width: 154px;
+    --study-option-art-inset: var(--space-3);
+    --study-option-surface: var(--color-bg-surface);
+    display: flex;
+    align-items: center;
     border-radius: var(--radius-btn);
-    min-height: 132px;
+    min-height: 108px;
+    padding: var(--space-3) calc(var(--action-art-width) + var(--study-option-art-inset) + var(--space-3)) var(--space-3) var(--space-4);
     overflow: hidden;
+    border-color: var(--color-border);
+    background: var(--study-option-surface);
+    color: var(--color-text-main);
+    box-shadow: none;
 }
+.study-mode-picker [data-study-choice="practice"] {
+    --study-option-surface: color-mix(in srgb, var(--color-practice-all) 18%, var(--color-bg-surface));
+}
+.study-mode-picker [data-study-choice="mistakes"] {
+    --study-option-surface: color-mix(in srgb, var(--color-accent-1) 18%, var(--color-bg-surface));
+}
+.study-mode-picker .study-mode-option:hover {
+    background: color-mix(in srgb, var(--color-text-main) 5%, var(--study-option-surface));
+    box-shadow: none;
+}
+.study-mode-picker .study-mode-option:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+.study-mode-picker .card-action-illustration {
+    right: var(--study-option-art-inset);
+    height: min(80px, 100%);
+}
+.study-mode-picker .study-mode-option .card-clickable-icon { color: var(--color-text-main); }
 .study-mode-picker .card-clickable-title { font-size: var(--font-size-action-title); }
 .study-mode-picker .card-clickable-text { font-size: var(--font-size-caption); }
-.study-mode-picker .card-action-primary .card-clickable-text { color: white; }
 @media (max-width: 540px) {
     .study-mode-picker { padding: var(--space-4); }
-    .study-mode-picker .card-clickable {
+    .study-mode-picker .study-mode-option {
         min-height: 0;
         padding: var(--space-3) var(--space-4);
     }
@@ -33,7 +54,7 @@
     inset: 0;
     margin: auto;
     transform: none;
-    max-width: 720px;
+    max-width: 620px;
     width: calc(100% - 32px);
 }
 .set-settings-dialog.popup-content {
