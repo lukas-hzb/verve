@@ -237,7 +237,6 @@
     .btn-edit-study-card:hover { background: var(--color-bg-surface-hover); }
     .btn-edit-study-card:focus-visible { outline: 2px solid currentColor; }
     .btn-edit-study-card[hidden] { display: none; }
-    .flashcard.flipped .flashcard-front .btn-edit-study-card,
     .flashcard:not(.flipped) .flashcard-back .btn-edit-study-card { visibility: hidden; }
     .card-level {
         height: var(--study-pill-height);
@@ -294,7 +293,7 @@
     </div>
     </div>
 
-    {% macro card_badges(level_id) %}
+    {% macro card_badges(level_id, show_edit=false) %}
         <div class="study-mode-badge-group">
             <span class="study-mode-pill">
                 <button type="button" class="btn-study-mode-picker study-mode-switch" data-study-mode-picker aria-haspopup="dialog" aria-controls="study-mode-picker" aria-label="Change Learning Mode">
@@ -305,7 +304,7 @@
         </div>
         <!-- Level Indicator (ID matches what flashcard.js expects) -->
         <div class="study-card-badges">
-            {% if can_edit_set or folder_id %}
+            {% if show_edit and (can_edit_set or folder_id) %}
             <button type="button" class="btn-edit-study-card" data-edit-study-card aria-label="Edit Card" title="Edit Card"
                     aria-haspopup="dialog" aria-controls="editCardModal" hidden>
                 <span class="material-symbols-rounded" aria-hidden="true">edit</span>
@@ -335,7 +334,7 @@
                     </div>
                 </div>
                 <div class="flashcard-back" id="card-back-container">
-                    {{ card_badges("card-level-back") }}
+                    {{ card_badges("card-level-back", show_edit=true) }}
                     <div class="flashcard-content">
                         <div id="card-back" class="flashcard-text"></div>
                     </div>

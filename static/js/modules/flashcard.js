@@ -46,7 +46,7 @@ export class FlashcardManager {
         this.cardContainer = document.getElementById('flashcard-wrapper') || document.querySelector('.card-container');
         this.cardLevel = document.getElementById("card-level");
         this.cardLevels = [this.cardLevel, document.getElementById("card-level-back")].filter(Boolean);
-        this.editButtons = [...this.flashcard.querySelectorAll('[data-edit-study-card]')];
+        this.editButton = this.flashcard.querySelector('[data-edit-study-card]');
         this.flipBtn = document.getElementById("flip-btn");
         this.feedbackBtns = document.getElementById("feedback-btns");
         this.knownBtn = document.getElementById("known-btn");
@@ -238,7 +238,7 @@ export class FlashcardManager {
     }
 
     attachEventListeners() {
-        this.editButtons?.forEach(button => button.addEventListener('click', () => this.editCurrentCard(button)));
+        this.editButton?.addEventListener('click', () => this.editCurrentCard(this.editButton));
         this.flipBtn?.addEventListener("click", () => {
             this.flipCard();
             this.flipBtn.blur();
@@ -296,7 +296,7 @@ export class FlashcardManager {
 
     updateCompletionAction(visible = false) {
         this.flashcard.classList.remove('left-aligned');
-        this.editButtons?.forEach(button => { button.hidden = true; });
+        if (this.editButton) this.editButton.hidden = true;
         if (this.emptyAction) this.emptyAction.hidden = true;
         if (!this.completion) return;
         this.completion.hidden = !visible || !this.isPracticeMode;
@@ -326,7 +326,7 @@ export class FlashcardManager {
             // Cancel native Space activation even on the answer side or while
             // controls are busy, so it cannot re-click the focused button.
             if (event.code === 'Space') {
-                if (this.editButtons?.includes(activeElement)) return;
+                if (this.editButton && activeElement === this.editButton) return;
                 event.preventDefault();
                 // Space is a card shortcut here, not keyboard interaction with
                 // the previously clicked button. Release that stale focus so
@@ -464,12 +464,12 @@ export class FlashcardManager {
             level.style.color = displayLevel === 3 ? 'var(--color-text-on-yellow)' : 'white';
             level.style.display = 'block';
         });
-        this.editButtons?.forEach(button => { button.hidden = false; });
+        if (this.editButton) this.editButton.hidden = false;
     }
 
     editCurrentCard(trigger) {
         const card = this.cards[this.currentCardIndex];
-        if (!card || this.areControlsDisabled) return;
+        if (!card || this.areControlsDisabled || !this.flashcard.classList.contains('flipped')) return;
         document.getElementById('editCardModal')?.dispatchEvent(new CustomEvent('edit-card', { detail: {
             card, trigger, setId: card.vocab_set_id || this.setId,
             onSaved: updated => {
