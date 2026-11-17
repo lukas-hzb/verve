@@ -508,7 +508,7 @@ textarea.popup-input {
     cursor: pointer;
 }
 /* Center the visible glyphs within the pill. */
-.study-mode-switch > span { transform: translateY(1px); }
+.study-mode-switch > span { transform: translateY(0.5px); }
 .study-mode-switch::after {
     content: "";
     position: absolute;
