@@ -256,6 +256,10 @@ a:where(:not(.btn, [class*="btn-"])):hover {
     box-shadow: none;
 }
 
+.card-input:is(textarea, input[type="text"]):focus {
+    border-color: color-mix(in srgb, var(--color-text-muted) 45%, var(--color-border));
+}
+
 /* Keep native select behavior with a consistent inset for the chevron. */
 select.card-input {
     -webkit-appearance: none;

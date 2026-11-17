@@ -973,7 +973,9 @@ dialog::backdrop { overscroll-behavior-y: contain; }
     overflow: hidden;
     resize: vertical;
 }
-.card-input.card-editor-surface:focus-within { border-color: var(--color-primary-muted); }
+.card-input.card-editor-surface:focus-within {
+    border-color: color-mix(in srgb, var(--color-text-muted) 45%, var(--color-border));
+}
 .card-editor-textarea,
 .card-rich-input,
 .card-rich-input .ProseMirror {
