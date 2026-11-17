@@ -44,8 +44,12 @@ export function initializeCardSide(panel) {
 
     renderCardContent(placeholder, example.markdown, { format: 'markdown' });
     for (const menu of [tools, picker, headingPicker, linkPicker]) connectAnchoredMenu(menu);
-    for (const trigger of panel.querySelectorAll('[popovertarget]')) {
-        trigger.addEventListener('mousedown', event => event.preventDefault());
+    // Keep the editor selection and mobile keyboard when using formatting controls.
+    for (const button of panel.querySelectorAll('.card-side-toolbar button:not([data-source-toggle]):not([data-enable-markdown])')) {
+        button.addEventListener('pointerdown', event => {
+            if (event.button === 0) event.preventDefault();
+        });
+        button.addEventListener('mousedown', event => event.preventDefault());
     }
 
     function closeTools() {
@@ -110,7 +114,6 @@ export function initializeCardSide(panel) {
         source.dispatchEvent(new Event('input', { bubbles: true }));
     });
     for (const button of panel.querySelectorAll('[data-markdown-command]')) {
-        button.addEventListener('mousedown', event => event.preventDefault());
         button.addEventListener('click', () => {
             closeTools();
             editor?.run(button.dataset.markdownCommand);
@@ -118,7 +121,6 @@ export function initializeCardSide(panel) {
     }
 
     for (const button of colorButtons) {
-        button.addEventListener('mousedown', event => event.preventDefault());
         button.addEventListener('click', () => {
             picker.hidePopover();
             closeTools();
@@ -127,7 +129,6 @@ export function initializeCardSide(panel) {
     }
 
     for (const button of headingPicker.querySelectorAll('[data-heading-level]')) {
-        button.addEventListener('mousedown', event => event.preventDefault());
         button.addEventListener('click', () => {
             headingPicker.hidePopover();
             closeTools();

@@ -5,7 +5,7 @@ import { defaultMarkdownParser, defaultMarkdownSerializer, MarkdownParser, Markd
 import { baseKeymap, chainCommands, setBlockType, toggleMark } from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
 import { history, redo, undo } from 'prosemirror-history';
-import { splitListItem, wrapInList } from 'prosemirror-schema-list';
+import { liftListItem, sinkListItem, splitListItem, wrapInList } from 'prosemirror-schema-list';
 
 const schema = new Schema({
     nodes: baseSchema.spec.nodes,
@@ -116,11 +116,27 @@ export function plainToMarkdown(text, parseImage) {
     return defaultMarkdownSerializer.serialize(schema.nodes.doc.create(null, blocks));
 }
 
+function listCommand(type) {
+    return (state, dispatch) => {
+        const { $from } = state.selection;
+        for (let depth = $from.depth; depth > 0; depth--) {
+            const list = $from.node(depth);
+            if (list.type !== schema.nodes.bullet_list && list.type !== schema.nodes.ordered_list) continue;
+            if (list.type === type) return liftListItem(schema.nodes.list_item)(state, dispatch);
+            if (dispatch) dispatch(state.tr.setNodeMarkup($from.before(depth), type, { tight: list.attrs.tight }).scrollIntoView());
+            return true;
+        }
+        return wrapInList(type)(state, dispatch);
+    };
+}
+
 const commands = {
     bold: toggleMark(schema.marks.strong),
     italic: toggleMark(schema.marks.em),
-    bullets: wrapInList(schema.nodes.bullet_list),
-    numbered: wrapInList(schema.nodes.ordered_list),
+    bullets: listCommand(schema.nodes.bullet_list),
+    numbered: listCommand(schema.nodes.ordered_list),
+    indent: sinkListItem(schema.nodes.list_item),
+    outdent: liftListItem(schema.nodes.list_item),
 };
 
 function selectedMarkRange(selection, type, expectedMark) {
@@ -168,6 +184,10 @@ export function mountMarkdownEditor(container, source, attributes, onChange, onC
                 'Mod-i': commands.italic,
                 'Mod-z': undo,
                 'Mod-Shift-z': redo,
+                Tab: commands.indent,
+                'Shift-Tab': commands.outdent,
+                'Mod-[': commands.outdent,
+                'Mod-]': commands.indent,
                 Enter: chainCommands(splitListItem(schema.nodes.list_item), baseKeymap.Enter),
             }), keymap(baseKeymap)],
         }),
